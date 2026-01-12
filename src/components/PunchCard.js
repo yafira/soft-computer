@@ -2,10 +2,9 @@
 
 import Script from "next/script";
 import { useEffect, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
 
 const STORAGE_KEY = "softcomputer_process_2026";
-
-// month index -> label
 const months = [
   "jan",
   "feb",
@@ -32,12 +31,10 @@ function emptyState() {
 }
 
 function loadState() {
-  if (typeof window === "undefined") return emptyState();
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return emptyState();
     const parsed = JSON.parse(raw);
-    // basic shape check
     if (!parsed?.punched || !parsed?.logs) return emptyState();
     return parsed;
   } catch {
@@ -48,28 +45,28 @@ function loadState() {
 function saveState(state) {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  } catch {
-    // ignore
-  }
+  } catch {}
 }
 
 export default function PunchCard() {
   const mountRef = useRef(null);
   const p5Ref = useRef(null);
-  const [ready, setReady] = useState(false);
+  const pathname = usePathname();
+
+  const [ready, setReady] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return !!window.p5;
+  });
 
   useEffect(() => {
     if (!ready) return;
     if (!mountRef.current) return;
     if (!window.p5) return;
-
-    // avoid double-mount in dev
     if (p5Ref.current) return;
 
-    const state = loadState();
+    let state = loadState();
 
     const sketch = (p) => {
-      // layout
       const cardMarginX = 40;
       const cardMarginY = 30;
 
@@ -81,9 +78,15 @@ export default function PunchCard() {
       const rows = 12;
       const cols = 31;
 
-      // ui (p5 dom)
-      let inputBox, saveBtn, cancelBtn;
-      let activeEdit = null; // { r, c }
+      let inputBox, saveBtn, cancelBtn, deleteBtn;
+      let activeEdit = null;
+      let hover = null;
+
+      // ✅ callable from React side
+      p.reloadFromStorage = () => {
+        state = loadState();
+        p.redraw();
+      };
 
       p.setup = () => {
         p.createCanvas(800, 360).parent(mountRef.current);
@@ -100,10 +103,15 @@ export default function PunchCard() {
         cancelBtn = p.createButton("cancel");
         cancelBtn.mousePressed(hideEditor);
         cancelBtn.hide();
+
+        deleteBtn = p.createButton("delete");
+        deleteBtn.mousePressed(onDeleteLog);
+        deleteBtn.hide();
       };
 
       p.draw = () => {
-        // purple palette
+        hover = null;
+
         const bg = p.color(32, 25, 60);
         const card = p.color(232, 224, 250);
         const ink = p.color(70, 55, 120);
@@ -111,22 +119,18 @@ export default function PunchCard() {
 
         p.background(bg);
 
-        // card geometry
         const cardX = cardMarginX;
         const cardY = cardMarginY;
         const cardW = p.width - 2 * cardMarginX;
         const cardH = p.height - 2 * cardMarginY;
 
-        // base
         p.noStroke();
         p.fill(card);
         p.rect(cardX, cardY, cardW, cardH, 22);
 
-        // clipped corner
         p.fill(bg);
         p.triangle(cardX, cardY, cardX + 24, cardY, cardX, cardY + 24);
 
-        // title
         p.fill(ink);
         p.textAlign(p.LEFT, p.CENTER);
         p.textSize(15);
@@ -139,7 +143,6 @@ export default function PunchCard() {
           cardY + 40
         );
 
-        // grid area (leave strip space)
         const gridX = cardX + leftMargin;
         const gridY = cardY + topMargin;
         const gridW = cardW - leftMargin - rightMargin;
@@ -148,7 +151,6 @@ export default function PunchCard() {
         const rowH = gridH / rows;
         const colW = gridW / cols;
 
-        // day numbers
         p.textAlign(p.CENTER, p.CENTER);
         p.textSize(8);
         p.fill(ink);
@@ -157,7 +159,6 @@ export default function PunchCard() {
           p.text(String(c + 1), x, gridY - 10);
         }
 
-        // faint guides
         p.stroke(p.red(border), p.green(border), p.blue(border), 120);
         p.strokeWeight(0.4);
         for (let c = 0; c < cols; c++) {
@@ -165,7 +166,6 @@ export default function PunchCard() {
           p.line(x, gridY - 4, x, gridY + gridH + 4);
         }
 
-        // slots
         p.textAlign(p.RIGHT, p.CENTER);
         p.textSize(10);
 
@@ -184,17 +184,23 @@ export default function PunchCard() {
             const x = centerX - slotW / 2;
             const y = centerY - slotH / 2;
 
+            const isHovered =
+              p.mouseX >= x &&
+              p.mouseX <= x + slotW &&
+              p.mouseY >= y &&
+              p.mouseY <= y + slotH;
+
+            if (isHovered && (state.logs?.[r]?.[c] || "").trim().length > 0) {
+              hover = { r, c, x: centerX, y: centerY };
+            }
+
             p.stroke(border);
             p.strokeWeight(0.8);
-
-            if (state.punched[r][c]) p.fill(bg);
-            else p.fill(card);
-
+            p.fill(state.punched[r][c] ? bg : card);
             p.rect(x, y, slotW, slotH, 2);
           }
         }
 
-        // bottom-left label (for the editor)
         if (activeEdit) {
           p.noStroke();
           p.fill(ink);
@@ -207,7 +213,6 @@ export default function PunchCard() {
           );
         }
 
-        // key bottom-right (as before)
         const legendX = cardX + cardW - 210;
         const legendY = cardY + cardH - 24;
 
@@ -231,10 +236,35 @@ export default function PunchCard() {
         p.noStroke();
         p.fill(ink);
         p.text("empty", legendX + 142, legendY);
+
+        if (hover) {
+          const text = (state.logs?.[hover.r]?.[hover.c] || "").trim();
+          if (text) {
+            const shown = text.length > 64 ? text.slice(0, 64) + "…" : text;
+            const pad = 7;
+
+            p.textSize(10);
+            p.textAlign(p.LEFT, p.CENTER);
+
+            const w = p.textWidth(shown) + pad * 2;
+            const h = 20;
+
+            const bx = hover.x + 12;
+            const by = hover.y - h / 2;
+
+            p.noStroke();
+            p.fill(40, 30, 80, 230);
+            p.rect(bx, by, w, h, 8);
+
+            p.fill(232, 224, 250);
+            p.text(shown, bx + pad, hover.y);
+          }
+        }
       };
 
+      p.mouseMoved = () => p.redraw();
+
       p.mousePressed = () => {
-        // compute grid geometry (must match draw)
         const cardX = cardMarginX;
         const cardY = cardMarginY;
         const cardW = p.width - 2 * cardMarginX;
@@ -278,10 +308,7 @@ export default function PunchCard() {
         activeEdit = { r, c };
         inputBox.value(state.logs[r][c] || "");
 
-        // bottom-left editor placement
-        const canvasEl = p.canvas;
-        const rect = canvasEl.getBoundingClientRect();
-
+        const rect = p.canvas.getBoundingClientRect();
         const cardX = cardMarginX;
         const cardY = cardMarginY;
         const cardH = p.height - 2 * cardMarginY;
@@ -313,11 +340,24 @@ export default function PunchCard() {
         );
         cancelBtn.show();
 
+        deleteBtn.position(
+          rect.left +
+            inputX +
+            inputBox.width +
+            saveBtn.width +
+            cancelBtn.width +
+            24 +
+            window.scrollX,
+          rect.top + inputY + window.scrollY
+        );
+        deleteBtn.show();
+
         p.redraw();
       }
 
       function onSaveLog() {
         if (!activeEdit) return;
+
         const r = activeEdit.r;
         const c = activeEdit.c;
 
@@ -326,6 +366,24 @@ export default function PunchCard() {
         state.punched[r][c] = text.length > 0;
 
         saveState(state);
+        window.dispatchEvent(new Event("softcomputer-update"));
+
+        hideEditor();
+        p.redraw();
+      }
+
+      function onDeleteLog() {
+        if (!activeEdit) return;
+
+        const r = activeEdit.r;
+        const c = activeEdit.c;
+
+        state.logs[r][c] = "";
+        state.punched[r][c] = false;
+
+        saveState(state);
+        window.dispatchEvent(new Event("softcomputer-update"));
+
         hideEditor();
         p.redraw();
       }
@@ -335,6 +393,7 @@ export default function PunchCard() {
         inputBox.hide();
         saveBtn.hide();
         cancelBtn.hide();
+        deleteBtn.hide();
       }
     };
 
@@ -348,20 +407,28 @@ export default function PunchCard() {
     };
   }, [ready]);
 
+  // ✅ route-aware reload
+  useEffect(() => {
+    if (pathname !== "/punch") return;
+    try {
+      p5Ref.current?.reloadFromStorage?.();
+    } catch {}
+  }, [pathname]);
+
   return (
     <div className="panel">
       <div className="h1" style={{ marginBottom: 6 }}>
         punch card
       </div>
       <p className="p">
-        click a day → write a short log → saved to your browser. later this
-        becomes the timeline.
+        click a day → write a short log → saved to your browser. hover punched
+        holes to preview.
       </p>
 
       <Script
         src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"
         strategy="afterInteractive"
-        onLoad={() => setReady(true)}
+        onReady={() => setReady(true)}
       />
 
       <div ref={mountRef} />

@@ -35,9 +35,8 @@ export default function HomePage() {
       <hr />
 
       <p className="p">
-        tip: this demo saves to <span className="kbd">localStorage</span> so it
-        persists on your browser. later we’ll swap to a real backend (md files,
-        json, notion, etc).
+        currently saves to <span className="kbd">localStorage</span> (so it
+        persists). later we can swap to md files, json, notion, etc.
       </p>
     </section>
   );

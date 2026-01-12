@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 const STORAGE_KEY = "softcomputer_process_2026";
 const months = [
@@ -29,11 +29,21 @@ function load() {
 }
 
 export default function LogPage() {
-  // ✅ read once, on first client render (no effect needed)
-  const [data] = useState(() => {
+  const [data, setData] = useState(() => {
     if (typeof window === "undefined") return null;
     return load();
   });
+
+  // ✅ live updates when punch card saves
+  useEffect(() => {
+    const update = () => setData(load());
+    window.addEventListener("softcomputer-update", update);
+    window.addEventListener("storage", update);
+    return () => {
+      window.removeEventListener("softcomputer-update", update);
+      window.removeEventListener("storage", update);
+    };
+  }, []);
 
   const entries = useMemo(() => {
     if (!data?.logs) return [];
@@ -63,7 +73,8 @@ export default function LogPage() {
     <section className="panel">
       <div className="h1">timeline</div>
       <p className="p">
-        everything you’ve logged so far (pulled from your punch card).
+        everything you’ve logged so far (updates instantly when you save a
+        punch).
       </p>
 
       {!data && (
