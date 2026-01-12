@@ -1,8 +1,9 @@
+// src/components/PunchCard.js
 "use client";
 
 import Script from "next/script";
 import { useEffect, useRef, useState } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 
 const STORAGE_KEY = "softcomputer_process_2026";
 const months = [
@@ -51,12 +52,14 @@ function saveState(state) {
 export default function PunchCard() {
   const mountRef = useRef(null);
   const p5Ref = useRef(null);
-  const pathname = usePathname();
 
   const [ready, setReady] = useState(() => {
     if (typeof window === "undefined") return false;
     return !!window.p5;
   });
+
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
 
   useEffect(() => {
     if (!ready) return;
@@ -82,10 +85,17 @@ export default function PunchCard() {
       let activeEdit = null;
       let hover = null;
 
-      // ✅ callable from React side
       p.reloadFromStorage = () => {
         state = loadState();
         p.redraw();
+      };
+
+      // ✅ allow React to open a specific slot
+      p.openAt = (m, d) => {
+        if (m == null || d == null) return;
+        if (m < 0 || m > 11) return;
+        if (d < 0 || d > 30) return;
+        openEditor(m, d);
       };
 
       p.setup = () => {
@@ -414,6 +424,23 @@ export default function PunchCard() {
       p5Ref.current?.reloadFromStorage?.();
     } catch {}
   }, [pathname]);
+
+  // ✅ open editor when coming from timeline (e.g. /punch?m=2&d=14)
+  useEffect(() => {
+    if (pathname !== "/punch") return;
+    if (!ready) return;
+
+    const m = Number(searchParams.get("m"));
+    const d = Number(searchParams.get("d"));
+
+    if (Number.isNaN(m) || Number.isNaN(d)) return;
+
+    setTimeout(() => {
+      try {
+        p5Ref.current?.openAt?.(m, d);
+      } catch {}
+    }, 50);
+  }, [pathname, searchParams, ready]);
 
   return (
     <div className="panel">
