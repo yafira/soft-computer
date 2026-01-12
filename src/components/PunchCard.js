@@ -1,4 +1,3 @@
-// src/components/PunchCard.js
 "use client";
 
 import Script from "next/script";
@@ -52,6 +51,9 @@ function saveState(state) {
 export default function PunchCard() {
   const mountRef = useRef(null);
   const p5Ref = useRef(null);
+
+  // prevents reopening the editor repeatedly
+  const didAutoOpenRef = useRef(false);
 
   const [ready, setReady] = useState(() => {
     if (typeof window === "undefined") return false;
@@ -210,7 +212,7 @@ export default function PunchCard() {
           }
         }
 
-        // status line (no popups, just subtle help)
+        // status line (quiet)
         if (activeEdit) {
           p.noStroke();
           p.fill(ink);
@@ -224,7 +226,6 @@ export default function PunchCard() {
 
           p.textAlign(p.RIGHT, p.CENTER);
           p.textSize(9);
-
           const undoHint = lastDeleted ? "  cmd/ctrl+z=undo" : "";
         }
 
@@ -327,7 +328,6 @@ export default function PunchCard() {
         windowKeyHandler = (e) => {
           if (!activeEdit) return;
 
-          // esc = close
           if (e.key === "Escape") {
             e.preventDefault();
             hideEditor();
@@ -335,21 +335,18 @@ export default function PunchCard() {
             return;
           }
 
-          // enter = save
           if (e.key === "Enter" && !e.shiftKey) {
             e.preventDefault();
             onSaveLog();
             return;
           }
 
-          // delete/backspace = erase entry
           if (e.key === "Backspace" || e.key === "Delete") {
             e.preventDefault();
             onDeleteLog();
             return;
           }
 
-          // cmd/ctrl+z = undo last delete
           const meta = e.metaKey || e.ctrlKey;
           if (meta && (e.key === "z" || e.key === "Z")) {
             e.preventDefault();
@@ -431,7 +428,6 @@ export default function PunchCard() {
         saveState(state);
         window.dispatchEvent(new Event("softcomputer-update"));
 
-        // keep editor open but clear field
         inputBox.value("");
         p.redraw();
       }
@@ -447,7 +443,6 @@ export default function PunchCard() {
         saveState(state);
         window.dispatchEvent(new Event("softcomputer-update"));
 
-        // if currently editing that same slot, restore input too
         if (activeEdit && activeEdit.r === r && activeEdit.c === c) {
           inputBox.value(text);
         }
@@ -481,26 +476,50 @@ export default function PunchCard() {
     } catch {}
   }, [pathname]);
 
-  // deep link: open editor at query
+  // ritual mode: open today if no query, or open deep link if provided
   useEffect(() => {
     if (pathname !== "/punch") return;
     if (!ready) return;
 
-    let m = Number(mParam);
-    let d = Number(dParam);
+    // only auto-open once per visit to /punch
+    if (didAutoOpenRef.current) return;
 
-    // if no query → auto-open today
-    if (Number.isNaN(m) || Number.isNaN(d)) {
-      const today = new Date();
-      m = today.getMonth();
-      d = today.getDate() - 1; // zero-indexed
-    }
+    const tryOpen = () => {
+      if (!p5Ref.current?.openAt) return false;
 
-    setTimeout(() => {
-      try {
-        p5Ref.current?.openAt?.(m, d);
-      } catch {}
-    }, 50);
+      const hasParams = mParam !== null && dParam !== null;
+
+      let m, d;
+
+      if (hasParams) {
+        m = Number(mParam);
+        d = Number(dParam);
+        if (Number.isNaN(m) || Number.isNaN(d)) {
+          // fallback to today if params are junk
+          const today = new Date();
+          m = today.getMonth();
+          d = today.getDate() - 1;
+        }
+      } else {
+        const today = new Date();
+        m = today.getMonth();
+        d = today.getDate() - 1;
+      }
+
+      p5Ref.current.openAt(m, d);
+      return true;
+    };
+
+    const t = setTimeout(() => {
+      const ok = tryOpen();
+      if (ok) didAutoOpenRef.current = true;
+    }, 120);
+
+    // IMPORTANT: reset when leaving /punch (in cleanup)
+    return () => {
+      clearTimeout(t);
+      didAutoOpenRef.current = false;
+    };
   }, [pathname, ready, mParam, dParam]);
 
   return (
