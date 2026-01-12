@@ -486,9 +486,15 @@ export default function PunchCard() {
     if (pathname !== "/punch") return;
     if (!ready) return;
 
-    const m = Number(mParam);
-    const d = Number(dParam);
-    if (Number.isNaN(m) || Number.isNaN(d)) return;
+    let m = Number(mParam);
+    let d = Number(dParam);
+
+    // if no query → auto-open today
+    if (Number.isNaN(m) || Number.isNaN(d)) {
+      const today = new Date();
+      m = today.getMonth();
+      d = today.getDate() - 1; // zero-indexed
+    }
 
     setTimeout(() => {
       try {
