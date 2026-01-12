@@ -1,3 +1,4 @@
+// src/components/PunchCard.js
 "use client";
 
 import Script from "next/script";
@@ -59,8 +60,6 @@ export default function PunchCard() {
 
   const pathname = usePathname();
   const searchParams = useSearchParams();
-
-  // route query (stable deps)
   const mParam = searchParams.get("m");
   const dParam = searchParams.get("d");
 
@@ -84,11 +83,14 @@ export default function PunchCard() {
       const rows = 12;
       const cols = 31;
 
-      let inputBox, saveBtn, cancelBtn, deleteBtn;
+      let inputBox;
       let activeEdit = null;
       let hover = null;
 
-      // keyboard shortcut handler (attached to window while editor is open)
+      // undo buffer for last delete: { r, c, text, punched }
+      let lastDeleted = null;
+
+      // keyboard shortcut handler attached while editor open
       let windowKeyHandler = null;
 
       p.reloadFromStorage = () => {
@@ -96,7 +98,7 @@ export default function PunchCard() {
         p.redraw();
       };
 
-      // allow React to open a specific slot (no highlight)
+      // allow React to open a specific slot
       p.openAt = (m, d) => {
         if (m == null || d == null) return;
         if (m < 0 || m > 11) return;
@@ -109,20 +111,8 @@ export default function PunchCard() {
         p.noLoop();
 
         inputBox = p.createInput("");
-        inputBox.size(320);
+        inputBox.size(380);
         inputBox.hide();
-
-        saveBtn = p.createButton("save");
-        saveBtn.mousePressed(onSaveLog);
-        saveBtn.hide();
-
-        cancelBtn = p.createButton("cancel");
-        cancelBtn.mousePressed(hideEditor);
-        cancelBtn.hide();
-
-        deleteBtn = p.createButton("delete");
-        deleteBtn.mousePressed(onDeleteLog);
-        deleteBtn.hide();
       };
 
       p.draw = () => {
@@ -154,7 +144,7 @@ export default function PunchCard() {
 
         p.textSize(10);
         p.text(
-          "click a slot to “write to memory” for that day",
+          "click a slot to write memory for that day",
           cardX + 26,
           cardY + 40
         );
@@ -167,6 +157,7 @@ export default function PunchCard() {
         const rowH = gridH / rows;
         const colW = gridW / cols;
 
+        // day numbers
         p.textAlign(p.CENTER, p.CENTER);
         p.textSize(8);
         p.fill(ink);
@@ -175,6 +166,7 @@ export default function PunchCard() {
           p.text(String(c + 1), x, gridY - 10);
         }
 
+        // faint vertical lines
         p.stroke(p.red(border), p.green(border), p.blue(border), 120);
         p.strokeWeight(0.4);
         for (let c = 0; c < cols; c++) {
@@ -182,6 +174,7 @@ export default function PunchCard() {
           p.line(x, gridY - 4, x, gridY + gridH + 4);
         }
 
+        // months + slots
         p.textAlign(p.RIGHT, p.CENTER);
         p.textSize(10);
 
@@ -217,6 +210,7 @@ export default function PunchCard() {
           }
         }
 
+        // status line (no popups, just subtle help)
         if (activeEdit) {
           p.noStroke();
           p.fill(ink);
@@ -228,16 +222,13 @@ export default function PunchCard() {
             cardY + cardH - 24
           );
 
-          // tiny hint
           p.textAlign(p.RIGHT, p.CENTER);
           p.textSize(9);
-          p.text(
-            "enter=save  esc=cancel  cmd/ctrl+d=delete",
-            cardX + cardW - 26,
-            cardY + cardH - 24
-          );
+
+          const undoHint = lastDeleted ? "  cmd/ctrl+z=undo" : "";
         }
 
+        // legend
         const legendX = cardX + cardW - 210;
         const legendY = cardY + cardH - 24;
 
@@ -262,6 +253,7 @@ export default function PunchCard() {
         p.fill(ink);
         p.text("empty", legendX + 142, legendY);
 
+        // hover preview
         if (hover) {
           const text = (state.logs?.[hover.r]?.[hover.c] || "").trim();
           if (text) {
@@ -335,9 +327,7 @@ export default function PunchCard() {
         windowKeyHandler = (e) => {
           if (!activeEdit) return;
 
-          const meta = e.metaKey || e.ctrlKey;
-
-          // esc = cancel
+          // esc = close
           if (e.key === "Escape") {
             e.preventDefault();
             hideEditor();
@@ -352,23 +342,22 @@ export default function PunchCard() {
             return;
           }
 
-          // cmd/ctrl + d = delete (reliable)
-          if (meta && (e.key === "d" || e.key === "D")) {
-            e.preventDefault();
-            onDeleteLog();
-            return;
-          }
-
-          // cmd/ctrl + backspace/delete = delete entry (may be intercepted in some browsers, but capture helps)
-          // backspace or delete = erase this punch
+          // delete/backspace = erase entry
           if (e.key === "Backspace" || e.key === "Delete") {
             e.preventDefault();
             onDeleteLog();
             return;
           }
+
+          // cmd/ctrl+z = undo last delete
+          const meta = e.metaKey || e.ctrlKey;
+          if (meta && (e.key === "z" || e.key === "Z")) {
+            e.preventDefault();
+            onUndoDelete();
+            return;
+          }
         };
 
-        // capture = true so we can override browser behaviors
         window.addEventListener("keydown", windowKeyHandler, { capture: true });
       }
 
@@ -400,35 +389,6 @@ export default function PunchCard() {
         inputBox.show();
         inputBox.elt.focus();
 
-        saveBtn.position(
-          rect.left + inputX + inputBox.width + 8 + window.scrollX,
-          rect.top + inputY + window.scrollY
-        );
-        saveBtn.show();
-
-        cancelBtn.position(
-          rect.left +
-            inputX +
-            inputBox.width +
-            saveBtn.width +
-            16 +
-            window.scrollX,
-          rect.top + inputY + window.scrollY
-        );
-        cancelBtn.show();
-
-        deleteBtn.position(
-          rect.left +
-            inputX +
-            inputBox.width +
-            saveBtn.width +
-            cancelBtn.width +
-            24 +
-            window.scrollX,
-          rect.top + inputY + window.scrollY
-        );
-        deleteBtn.show();
-
         attachShortcuts();
         p.redraw();
       }
@@ -456,13 +416,43 @@ export default function PunchCard() {
         const r = activeEdit.r;
         const c = activeEdit.c;
 
+        const prevText = (state.logs[r][c] || "").trim();
+        const prevPunched = !!state.punched[r][c];
+
+        if (prevText.length > 0 || prevPunched) {
+          lastDeleted = { r, c, text: prevText, punched: prevPunched };
+        } else {
+          lastDeleted = null;
+        }
+
         state.logs[r][c] = "";
         state.punched[r][c] = false;
 
         saveState(state);
         window.dispatchEvent(new Event("softcomputer-update"));
 
-        hideEditor();
+        // keep editor open but clear field
+        inputBox.value("");
+        p.redraw();
+      }
+
+      function onUndoDelete() {
+        if (!lastDeleted) return;
+
+        const { r, c, text, punched } = lastDeleted;
+
+        state.logs[r][c] = text;
+        state.punched[r][c] = punched;
+
+        saveState(state);
+        window.dispatchEvent(new Event("softcomputer-update"));
+
+        // if currently editing that same slot, restore input too
+        if (activeEdit && activeEdit.r === r && activeEdit.c === c) {
+          inputBox.value(text);
+        }
+
+        lastDeleted = null;
         p.redraw();
       }
 
@@ -470,9 +460,6 @@ export default function PunchCard() {
         activeEdit = null;
         detachShortcuts();
         inputBox.hide();
-        saveBtn.hide();
-        cancelBtn.hide();
-        deleteBtn.hide();
       }
     };
 
@@ -516,8 +503,8 @@ export default function PunchCard() {
         punch card
       </div>
       <p className="p">
-        click a day → write a short log → saved to your browser. hover punched
-        holes to preview.
+        click a day → write a log → enter to save. delete/backspace erases.
+        cmd/ctrl+z undoes last erase.
       </p>
 
       <Script
