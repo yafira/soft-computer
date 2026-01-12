@@ -60,6 +60,10 @@ export default function PunchCard() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
+  // route query (stable deps)
+  const mParam = searchParams.get("m");
+  const dParam = searchParams.get("d");
+
   useEffect(() => {
     if (!ready) return;
     if (!mountRef.current) return;
@@ -84,23 +88,20 @@ export default function PunchCard() {
       let activeEdit = null;
       let hover = null;
 
-      // highlight state
-      let highlight = null; // { r, c, until }
+      // keyboard shortcut handler (attached to window while editor is open)
+      let windowKeyHandler = null;
 
       p.reloadFromStorage = () => {
         state = loadState();
         p.redraw();
       };
 
-      // ✅ allow React to open a specific slot + highlight it
+      // allow React to open a specific slot (no highlight)
       p.openAt = (m, d) => {
         if (m == null || d == null) return;
         if (m < 0 || m > 11) return;
         if (d < 0 || d > 30) return;
-
-        highlight = { r: m, c: d, until: Date.now() + 1500 };
         openEditor(m, d);
-        p.redraw();
       };
 
       p.setup = () => {
@@ -131,7 +132,6 @@ export default function PunchCard() {
         const card = p.color(232, 224, 250);
         const ink = p.color(70, 55, 120);
         const border = p.color(145, 130, 185);
-        const glow = p.color(205, 180, 255); // soft purple glow
 
         p.background(bg);
 
@@ -185,9 +185,6 @@ export default function PunchCard() {
         p.textAlign(p.RIGHT, p.CENTER);
         p.textSize(10);
 
-        const now = Date.now();
-        const highlightActive = highlight && now <= highlight.until;
-
         for (let r = 0; r < rows; r++) {
           const centerY = gridY + r * rowH + rowH / 2;
 
@@ -213,26 +210,10 @@ export default function PunchCard() {
               hover = { r, c, x: centerX, y: centerY };
             }
 
-            // base hole
             p.stroke(border);
             p.strokeWeight(0.8);
             p.fill(state.punched[r][c] ? bg : card);
             p.rect(x, y, slotW, slotH, 2);
-
-            // glow highlight for deep-linked slot
-            if (highlightActive && highlight.r === r && highlight.c === c) {
-              const t = (highlight.until - now) / 1500; // 1..0
-              const alpha = 180 * t;
-
-              p.noFill();
-              p.stroke(p.red(glow), p.green(glow), p.blue(glow), alpha);
-              p.strokeWeight(2.2);
-              p.rect(x - 2, y - 2, slotW + 4, slotH + 4, 4);
-
-              p.stroke(p.red(glow), p.green(glow), p.blue(glow), alpha * 0.6);
-              p.strokeWeight(5);
-              p.rect(x - 5, y - 5, slotW + 10, slotH + 10, 6);
-            }
           }
         }
 
@@ -244,6 +225,15 @@ export default function PunchCard() {
           p.text(
             `editing: ${months[activeEdit.r]} ${activeEdit.c + 1}`,
             cardX + 26,
+            cardY + cardH - 24
+          );
+
+          // tiny hint
+          p.textAlign(p.RIGHT, p.CENTER);
+          p.textSize(9);
+          p.text(
+            "enter=save  esc=cancel  cmd/ctrl+d=delete",
+            cardX + cardW - 26,
             cardY + cardH - 24
           );
         }
@@ -295,13 +285,6 @@ export default function PunchCard() {
             p.text(shown, bx + pad, hover.y);
           }
         }
-
-        // keep animating highlight fade-out
-        if (highlightActive) {
-          p.redraw();
-        } else if (highlight) {
-          highlight = null;
-        }
       };
 
       p.mouseMoved = () => p.redraw();
@@ -345,6 +328,58 @@ export default function PunchCard() {
           }
         }
       };
+
+      function attachShortcuts() {
+        detachShortcuts();
+
+        windowKeyHandler = (e) => {
+          if (!activeEdit) return;
+
+          const meta = e.metaKey || e.ctrlKey;
+
+          // esc = cancel
+          if (e.key === "Escape") {
+            e.preventDefault();
+            hideEditor();
+            p.redraw();
+            return;
+          }
+
+          // enter = save
+          if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            onSaveLog();
+            return;
+          }
+
+          // cmd/ctrl + d = delete (reliable)
+          if (meta && (e.key === "d" || e.key === "D")) {
+            e.preventDefault();
+            onDeleteLog();
+            return;
+          }
+
+          // cmd/ctrl + backspace/delete = delete entry (may be intercepted in some browsers, but capture helps)
+          // backspace or delete = erase this punch
+          if (e.key === "Backspace" || e.key === "Delete") {
+            e.preventDefault();
+            onDeleteLog();
+            return;
+          }
+        };
+
+        // capture = true so we can override browser behaviors
+        window.addEventListener("keydown", windowKeyHandler, { capture: true });
+      }
+
+      function detachShortcuts() {
+        if (windowKeyHandler) {
+          window.removeEventListener("keydown", windowKeyHandler, {
+            capture: true,
+          });
+        }
+        windowKeyHandler = null;
+      }
 
       function openEditor(r, c) {
         activeEdit = { r, c };
@@ -394,6 +429,7 @@ export default function PunchCard() {
         );
         deleteBtn.show();
 
+        attachShortcuts();
         p.redraw();
       }
 
@@ -432,6 +468,7 @@ export default function PunchCard() {
 
       function hideEditor() {
         activeEdit = null;
+        detachShortcuts();
         inputBox.hide();
         saveBtn.hide();
         cancelBtn.hide();
@@ -449,6 +486,7 @@ export default function PunchCard() {
     };
   }, [ready]);
 
+  // route-aware reload
   useEffect(() => {
     if (pathname !== "/punch") return;
     try {
@@ -456,12 +494,13 @@ export default function PunchCard() {
     } catch {}
   }, [pathname]);
 
+  // deep link: open editor at query
   useEffect(() => {
     if (pathname !== "/punch") return;
     if (!ready) return;
 
-    const m = Number(searchParams.get("m"));
-    const d = Number(searchParams.get("d"));
+    const m = Number(mParam);
+    const d = Number(dParam);
     if (Number.isNaN(m) || Number.isNaN(d)) return;
 
     setTimeout(() => {
@@ -469,7 +508,7 @@ export default function PunchCard() {
         p5Ref.current?.openAt?.(m, d);
       } catch {}
     }, 50);
-  }, [pathname, searchParams, ready]);
+  }, [pathname, ready, mParam, dParam]);
 
   return (
     <div className="panel">
