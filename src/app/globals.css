@@ -107,3 +107,48 @@ hr {
   border-top: 1px solid rgba(232, 224, 250, 0.12);
   margin: 14px 0;
 }
+
+.input {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.92);
+  outline: none;
+}
+.input::placeholder {
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.cardRow {
+  display: grid;
+  grid-template-columns: 92px 1fr;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(8px);
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 12px;
+  letter-spacing: 0.2px;
+}
+
+.logText {
+  color: rgba(255, 255, 255, 0.92);
+  line-height: 1.45;
+  font-size: 14px;
+  white-space: pre-wrap;
+}
