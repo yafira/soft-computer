@@ -73,24 +73,18 @@ function buildEntries(state) {
   return entries;
 }
 
-// first line if present, else first sentence, else first N chars
-function previewText(raw, maxChars = 84) {
+function previewText(raw, maxChars = 120) {
   const t = (raw || "").trim();
   if (!t) return "";
 
   const firstLine = t.split("\n").find((line) => line.trim().length > 0) || "";
   const line = firstLine.trim();
 
-  // if the first line is already short, use it
-  if (line.length <= maxChars) return line;
-
-  // fall back: first sentence-ish
   const sentenceMatch = line.match(/^(.+?[.!?])(\s|$)/);
   const sentence = sentenceMatch ? sentenceMatch[1].trim() : "";
 
-  if (sentence && sentence.length <= maxChars) return sentence;
-
-  return `${line.slice(0, maxChars).trim()}…`;
+  const out = sentence || line;
+  return out.slice(0, maxChars).trim();
 }
 
 export default function LogNotebookPage() {

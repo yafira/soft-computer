@@ -70,21 +70,23 @@ function buildEntries(state) {
   return entries;
 }
 
+// title-only preview: first non-empty line, prefers first sentence, no ellipsis
+function previewText(raw, maxChars = 120) {
+  const t = (raw || "").trim();
+  if (!t) return "";
+
+  const firstLine = t.split("\n").find((line) => line.trim().length > 0) || "";
+  const line = firstLine.trim();
+
+  const sentenceMatch = line.match(/^(.+?[.!?])(\s|$)/);
+  const sentence = sentenceMatch ? sentenceMatch[1].trim() : "";
+
+  const out = sentence || line;
+  return out.slice(0, maxChars).trim();
+}
+
 export default function TimelinePreview() {
-  const [state, setState] = useState(() => emptyState());
-
-  useEffect(() => {
-    let alive = true;
-
-    queueMicrotask(() => {
-      if (!alive) return;
-      setState(loadState());
-    });
-
-    return () => {
-      alive = false;
-    };
-  }, []);
+  const [state, setState] = useState(() => loadState());
 
   useEffect(() => {
     const onUpdate = () => setState(loadState());
@@ -96,10 +98,11 @@ export default function TimelinePreview() {
     };
   }, []);
 
+  // limit to latest 5
   const recent = useMemo(() => buildEntries(state).slice(0, 5), [state]);
 
   return (
-    <div className="panel" suppressHydrationWarning>
+    <div className="panel">
       <div className="panelTitleRow">
         <div className="h2">recent log</div>
       </div>
@@ -114,11 +117,16 @@ export default function TimelinePreview() {
             <a
               key={e.id}
               className="miniRow"
-              href={`/log?focus=${encodeURIComponent(e.id)}`}
-              title="open in notebook"
+              href={`/log?focus=${e.id}`}
+              title="open in log"
             >
-              <div className="chip">{e.label}</div>
-              <div className="miniText">{e.text}</div>
+              <div className="miniLeft">
+                <div className="chip">{e.label}</div>
+              </div>
+
+              <div className="miniRight">
+                <div className="miniText">{previewText(e.text)}</div>
+              </div>
             </a>
           ))
         )}
