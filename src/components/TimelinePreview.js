@@ -30,6 +30,7 @@ function emptyState() {
 
 function loadState() {
   try {
+    if (typeof window === "undefined") return emptyState();
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return emptyState();
     const parsed = JSON.parse(raw);
@@ -51,8 +52,12 @@ function buildEntries(state) {
     for (let d = 0; d < max; d++) {
       const text = (state.logs?.[m]?.[d] || "").trim();
       if (!text) continue;
+
       entries.push({
-        id: `2026-${String(m + 1).padStart(2, "0")}-${String(d + 1).padStart(2, "0")}`,
+        id: `2026-${String(m + 1).padStart(2, "0")}-${String(d + 1).padStart(
+          2,
+          "0",
+        )}`,
         monthIndex: m,
         dayIndex: d,
         label: `${months[m]} ${d + 1}`,
@@ -61,6 +66,8 @@ function buildEntries(state) {
       });
     }
   }
+
+  // newest -> oldest
   entries.sort((a, b) => b.dateValue - a.dateValue);
   return entries;
 }
@@ -78,7 +85,8 @@ export default function TimelinePreview() {
     };
   }, []);
 
-  const recent = useMemo(() => buildEntries(state).slice(0, 7), [state]);
+  // limit to latest 5
+  const recent = useMemo(() => buildEntries(state).slice(0, 5), [state]);
 
   return (
     <div className="panel">
@@ -88,10 +96,6 @@ export default function TimelinePreview() {
           open log →
         </a>
       </div>
-
-      <p className="p subtle" style={{ marginBottom: 10 }}>
-        a compact preview of your most recent entries.
-      </p>
 
       <div className="miniList">
         {recent.length === 0 ? (

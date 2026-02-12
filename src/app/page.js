@@ -22,14 +22,14 @@ export default function HomePage() {
         {/* left: cover image */}
         <div className="panel">
           <div className="panelTitleRow">
-            <div className="h2">cover</div>
-            <div className="small subtle">full image, minimal cropping</div>
+            <div className="h2">the soft computer concept</div>
+            <div className="small subtle"></div>
           </div>
 
           {/* replace with your actual path */}
           <div className="coverFrame">
             <Image
-              src="/cover.jpg"
+              src="/sc.png"
               alt="soft computer cover"
               fill
               priority
