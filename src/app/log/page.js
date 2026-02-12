@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 
 const STORAGE_KEY = "softcomputer_process_2026";
-const NOTES_KEY = "softcomputer_notebook_2026";
 
 const months = [
   "jan",
@@ -30,7 +30,7 @@ function emptyState() {
   return { punched, logs };
 }
 
-function loadPunchState() {
+function loadState() {
   try {
     if (typeof window === "undefined") return emptyState();
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -43,17 +43,11 @@ function loadPunchState() {
   }
 }
 
-function savePunchState(state) {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  } catch {}
-}
-
 function daysInMonth(monthIndex, year = 2026) {
   return new Date(year, monthIndex + 1, 0).getDate();
 }
 
-function buildEntriesNewestFirst(state) {
+function buildEntries(state) {
   const entries = [];
   for (let m = 0; m < 12; m++) {
     const max = daysInMonth(m, 2026);
@@ -61,11 +55,12 @@ function buildEntriesNewestFirst(state) {
       const text = (state.logs?.[m]?.[d] || "").trim();
       if (!text) continue;
 
+      const id = `2026-${String(m + 1).padStart(2, "0")}-${String(
+        d + 1,
+      ).padStart(2, "0")}`;
+
       entries.push({
-        id: `2026-${String(m + 1).padStart(2, "0")}-${String(d + 1).padStart(
-          2,
-          "0",
-        )}`,
+        id,
         monthIndex: m,
         dayIndex: d,
         label: `${months[m]} ${d + 1}`,
@@ -78,50 +73,50 @@ function buildEntriesNewestFirst(state) {
   return entries;
 }
 
-function loadNotebook() {
-  try {
-    if (typeof window === "undefined") return "";
-    const raw = localStorage.getItem(NOTES_KEY);
-    if (!raw) return "";
-    const parsed = JSON.parse(raw);
-    return typeof parsed?.text === "string" ? parsed.text : "";
-  } catch {
-    return "";
-  }
-}
+// first line if present, else first sentence, else first N chars
+function previewText(raw, maxChars = 84) {
+  const t = (raw || "").trim();
+  if (!t) return "";
 
-function saveNotebook(text) {
-  try {
-    localStorage.setItem(
-      NOTES_KEY,
-      JSON.stringify({ text, updatedAt: new Date().toISOString() }),
-    );
-  } catch {}
-}
+  const firstLine = t.split("\n").find((line) => line.trim().length > 0) || "";
+  const line = firstLine.trim();
 
-async function fetchAdminStatus() {
-  try {
-    const res = await fetch("/api/admin/me", { cache: "no-store" });
-    if (!res.ok) return false;
-    const data = await res.json();
-    return !!data?.admin;
-  } catch {
-    return false;
-  }
+  // if the first line is already short, use it
+  if (line.length <= maxChars) return line;
+
+  // fall back: first sentence-ish
+  const sentenceMatch = line.match(/^(.+?[.!?])(\s|$)/);
+  const sentence = sentenceMatch ? sentenceMatch[1].trim() : "";
+
+  if (sentence && sentence.length <= maxChars) return sentence;
+
+  return `${line.slice(0, maxChars).trim()}…`;
 }
 
 export default function LogNotebookPage() {
-  const [state, setState] = useState(() => loadPunchState());
-  const [admin, setAdmin] = useState(false);
-  const [checkingAdmin, setCheckingAdmin] = useState(true);
+  const searchParams = useSearchParams();
 
-  const [notes, setNotes] = useState(() => loadNotebook());
-
-  // quick filter/search
+  const [state, setState] = useState(() => emptyState());
   const [query, setQuery] = useState("");
+  const [activeId, setActiveId] = useState(null);
 
+  // load after hydration (prevents hydration mismatch)
   useEffect(() => {
-    const onUpdate = () => setState(loadPunchState());
+    let alive = true;
+
+    queueMicrotask(() => {
+      if (!alive) return;
+      setState(loadState());
+    });
+
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  // listen for updates from punch card saves/deletes
+  useEffect(() => {
+    const onUpdate = () => setState(loadState());
     window.addEventListener("softcomputer-update", onUpdate);
     window.addEventListener("storage", onUpdate);
     return () => {
@@ -130,16 +125,8 @@ export default function LogNotebookPage() {
     };
   }, []);
 
-  useEffect(() => {
-    (async () => {
-      const isAdmin = await fetchAdminStatus();
-      setAdmin(isAdmin);
-      setCheckingAdmin(false);
-    })();
-  }, []);
-
   const entries = useMemo(() => {
-    const all = buildEntriesNewestFirst(state);
+    const all = buildEntries(state);
     const q = query.trim().toLowerCase();
     if (!q) return all;
     return all.filter(
@@ -148,186 +135,112 @@ export default function LogNotebookPage() {
     );
   }, [state, query]);
 
-  async function unlockAdmin() {
-    const pw = window.prompt("admin password");
-    if (!pw) return;
-
-    try {
-      const res = await fetch("/api/admin/login", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ password: pw }),
-      });
-
-      if (!res.ok) {
-        alert("nope");
-        return;
-      }
-
-      setAdmin(true);
-      alert("admin mode on");
-    } catch {
-      alert("could not log in");
+  // set active entry on first load:
+  // 1) focus param, else 2) newest entry
+  useEffect(() => {
+    const focus = searchParams.get("focus");
+    if (focus && typeof focus === "string") {
+      setActiveId(focus);
+      return;
     }
-  }
 
-  async function logoutAdmin() {
-    try {
-      await fetch("/api/admin/logout", { method: "POST" });
-    } catch {}
-    setAdmin(false);
-  }
+    if (!activeId && entries.length > 0) {
+      setActiveId(entries[0].id);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, entries]);
 
-  function saveNotesNow() {
-    saveNotebook(notes);
-  }
-
-  function updateEntryText(monthIndex, dayIndex, nextText) {
-    const next = loadPunchState();
-    next.logs[monthIndex][dayIndex] = nextText;
-    next.punched[monthIndex][dayIndex] = nextText.trim().length > 0;
-    savePunchState(next);
-    setState(next);
-    window.dispatchEvent(new Event("softcomputer-update"));
-  }
+  const activeEntry = useMemo(() => {
+    if (!activeId) return null;
+    return entries.find((e) => e.id === activeId) || null;
+  }, [entries, activeId]);
 
   return (
-    <div className="wrap">
-      <section className="panel notebookHeader">
-        <div className="notebookTopRow">
+    <main className="wrap">
+      <section className="panel">
+        <div className="panelTitleRow">
           <div>
             <div className="h1" style={{ marginBottom: 6 }}>
               log
             </div>
             <p className="p subtle" style={{ margin: 0 }}>
-              notebook view of punched entries + a freeform notes page.
+              notebook view of punched entries.
             </p>
-          </div>
-
-          <div className="notebookAdmin">
-            {checkingAdmin ? (
-              <div className="small">checking…</div>
-            ) : admin ? (
-              <div className="adminRow">
-                <span className="chip">admin mode</span>
-                <button className="btn ghost" onClick={logoutAdmin}>
-                  log out
-                </button>
-              </div>
-            ) : (
-              <button className="btn" onClick={unlockAdmin}>
-                unlock writing
-              </button>
-            )}
           </div>
         </div>
 
-        <div className="notebookControls">
+        <div className="logTopBar">
           <input
             className="input"
+            placeholder="search entries..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="search entries…"
           />
-          <div className="small">
+          <div className="small subtle" style={{ whiteSpace: "nowrap" }}>
             {entries.length} entr{entries.length === 1 ? "y" : "ies"}
           </div>
         </div>
       </section>
 
-      <section className="notebookGrid">
-        {/* left page: entries */}
-        <div className="panel notebookPage">
-          <div className="notebookPageTitleRow">
+      <section className="logGrid">
+        {/* left: entries list (title + preview) */}
+        <div className="panel logCol">
+          <div className="panelTitleRow">
             <div className="h2">entries</div>
           </div>
 
-          {entries.length === 0 ? (
-            <div className="emptyState">no entries yet. punch the card ✿</div>
-          ) : (
-            <div className="entryList">
-              {entries.map((e) => (
-                <div key={e.id} className="entryCard">
-                  <div className="entryMeta">
-                    <a
-                      className="chip"
-                      href={`/#punch-card?m=${e.monthIndex}&d=${e.dayIndex}`}
-                      title="open on punch card"
-                    >
-                      {e.label}
-                    </a>
+          <div className="entryList">
+            {entries.length === 0 ? (
+              <div className="emptyState">no entries yet. punch the card ✿</div>
+            ) : (
+              entries.map((e) => {
+                const isActive = e.id === activeId;
+                const prev = previewText(e.text);
 
-                    <div className="entryActions">
-                      <a
-                        className="kbd"
-                        href={`/#punch-card?m=${e.monthIndex}&d=${e.dayIndex}`}
-                        title="open on punch card"
-                      >
-                        open →
-                      </a>
+                return (
+                  <button
+                    key={e.id}
+                    type="button"
+                    className={isActive ? "entryRow active" : "entryRow"}
+                    onClick={() => setActiveId(e.id)}
+                    title="view notes"
+                  >
+                    <div className="entryRowTop">
+                      <div className="chip">{e.label}</div>
                     </div>
-                  </div>
 
-                  {admin ? (
-                    <textarea
-                      className="entryTextarea"
-                      value={e.text}
-                      onChange={(ev) =>
-                        updateEntryText(
-                          e.monthIndex,
-                          e.dayIndex,
-                          ev.target.value,
-                        )
-                      }
-                      rows={3}
-                    />
-                  ) : (
-                    <div className="entryText">{e.text}</div>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
+                    <div className="entryPreview">{prev}</div>
+                  </button>
+                );
+              })
+            )}
+          </div>
         </div>
 
-        {/* right page: freeform notes */}
-        <div className="panel notebookPage">
-          <div className="notebookPageTitleRow">
+        {/* right: notes (full log text) */}
+        <div className="panel logCol">
+          <div className="panelTitleRow">
             <div className="h2">notes</div>
-            <div className="small subtle">
-              {admin ? "editable" : "read-only"}
-            </div>
+            <div className="small subtle">read-only</div>
           </div>
 
-          {admin ? (
-            <>
-              <textarea
-                className="notebookTextarea"
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                placeholder="freeform notes…"
-                rows={18}
-              />
-              <div className="notebookNotesActions">
-                <button className="btn" onClick={saveNotesNow}>
-                  save notes
-                </button>
-                <div className="small subtle">
-                  saved locally (we can move this to a real db later)
+          {activeEntry ? (
+            <article className="notePaper">
+              <div className="noteHeader">
+                <div className="h2" style={{ margin: 0 }}>
+                  {activeEntry.label}
                 </div>
               </div>
-            </>
+
+              <div className="noteBody">{activeEntry.text}</div>
+            </article>
           ) : (
-            <div className="notebookReadonly">
-              {notes.trim().length ? (
-                <pre className="notesPre">{notes}</pre>
-              ) : (
-                <div className="emptyState">no notes yet.</div>
-              )}
+            <div className="notePaper emptyState">
+              select an entry to read it.
             </div>
           )}
         </div>
       </section>
-    </div>
+    </main>
   );
 }

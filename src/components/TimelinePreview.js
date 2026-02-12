@@ -66,14 +66,25 @@ function buildEntries(state) {
       });
     }
   }
-
-  // newest -> oldest
   entries.sort((a, b) => b.dateValue - a.dateValue);
   return entries;
 }
 
 export default function TimelinePreview() {
-  const [state, setState] = useState(() => loadState());
+  const [state, setState] = useState(() => emptyState());
+
+  useEffect(() => {
+    let alive = true;
+
+    queueMicrotask(() => {
+      if (!alive) return;
+      setState(loadState());
+    });
+
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   useEffect(() => {
     const onUpdate = () => setState(loadState());
@@ -85,16 +96,12 @@ export default function TimelinePreview() {
     };
   }, []);
 
-  // limit to latest 5
   const recent = useMemo(() => buildEntries(state).slice(0, 5), [state]);
 
   return (
-    <div className="panel">
+    <div className="panel" suppressHydrationWarning>
       <div className="panelTitleRow">
         <div className="h2">recent log</div>
-        <a href="/log" className="kbd">
-          open log →
-        </a>
       </div>
 
       <div className="miniList">
@@ -107,8 +114,8 @@ export default function TimelinePreview() {
             <a
               key={e.id}
               className="miniRow"
-              href={`/#punch-card?m=${e.monthIndex}&d=${e.dayIndex}`}
-              title="open this day on the punch card"
+              href={`/log?focus=${encodeURIComponent(e.id)}`}
+              title="open in notebook"
             >
               <div className="chip">{e.label}</div>
               <div className="miniText">{e.text}</div>

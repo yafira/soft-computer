@@ -380,9 +380,9 @@ export default function PunchCard() {
               >
                 soft computer — process memory 2026
               </text>
-              <text x={geo.cardX + 36} y={geo.cardY + 64} className="punchHint">
+              {/* <text x={geo.cardX + 36} y={geo.cardY + 64} className="punchHint">
                 click a slot to write memory for that day
-              </text>
+              </text> */}
 
               {Array.from({ length: geo.cols }).map((_, c) => {
                 const x = geo.gridX + c * geo.colW + geo.colW / 2;
