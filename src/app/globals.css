@@ -456,3 +456,170 @@ a {
   flex-wrap: wrap;
   gap: 10px;
 }
+
+/* inputs (you referenced .input in log) */
+.input {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(60, 35, 110, 0.18);
+  background: rgba(255, 255, 255, 0.85);
+  color: rgba(43, 33, 64, 0.92);
+  outline: none;
+}
+
+.input::placeholder {
+  color: rgba(43, 33, 64, 0.45);
+}
+
+/* notebook layout */
+.notebookHeader {
+  margin-top: 10px;
+}
+
+.notebookTopRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.notebookAdmin {
+  display: flex;
+  justify-content: flex-end;
+  min-width: 160px;
+}
+
+.adminRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.notebookControls {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+@media (min-width: 900px) {
+  .notebookControls {
+    grid-template-columns: 1fr auto;
+    align-items: center;
+  }
+}
+
+.notebookGrid {
+  margin-top: 16px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+@media (min-width: 1000px) {
+  .notebookGrid {
+    grid-template-columns: 1.15fr 0.85fr;
+    align-items: start;
+  }
+}
+
+.notebookPage {
+  min-height: 520px;
+}
+
+.notebookPageTitleRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.entryList {
+  display: grid;
+  gap: 12px;
+}
+
+.entryCard {
+  border: 1px solid rgba(60, 35, 110, 0.14);
+  background: rgba(255, 255, 255, 0.72);
+  border-radius: 16px;
+  box-shadow: 0 4px 14px rgba(35, 20, 70, 0.08);
+  padding: 12px;
+}
+
+.entryMeta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.entryActions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.entryText {
+  color: rgba(43, 33, 64, 0.88);
+  line-height: 1.55;
+  font-size: 14px;
+  white-space: pre-wrap;
+}
+
+.entryTextarea {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(60, 35, 110, 0.18);
+  background: rgba(255, 255, 255, 0.85);
+  color: rgba(43, 33, 64, 0.92);
+  outline: none;
+  resize: vertical;
+}
+
+.notebookTextarea {
+  width: 100%;
+  padding: 12px 12px;
+  border-radius: 16px;
+  border: 1px solid rgba(60, 35, 110, 0.18);
+  background: rgba(255, 255, 255, 0.85);
+  color: rgba(43, 33, 64, 0.92);
+  outline: none;
+  resize: vertical;
+  line-height: 1.55;
+  font-family:
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    Segoe UI,
+    Roboto,
+    Helvetica,
+    Arial;
+}
+
+.notebookNotesActions {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.notesPre {
+  margin: 0;
+  white-space: pre-wrap;
+  line-height: 1.55;
+  color: rgba(43, 33, 64, 0.88);
+  font-family:
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    Segoe UI,
+    Roboto,
+    Helvetica,
+    Arial;
+}

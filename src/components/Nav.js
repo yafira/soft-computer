@@ -12,12 +12,6 @@ export default function Nav() {
         </Link>
 
         <nav className="nav">
-          {/* anchor scroll */}
-          <Link href="/#punch-card" className="kbd">
-            punch card
-          </Link>
-
-          {/* renamed */}
           <Link href="/log" className="kbd">
             log
           </Link>

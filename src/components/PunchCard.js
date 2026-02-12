@@ -31,6 +31,7 @@ function emptyState() {
 
 function loadState() {
   try {
+    if (typeof window === "undefined") return emptyState();
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return emptyState();
     const parsed = JSON.parse(raw);
@@ -57,12 +58,27 @@ export default function PunchCard() {
   const containerRef = useRef(null);
   const didAutoOpenRef = useRef(false);
 
-  const [state, setState] = useState(() => loadState());
   const [active, setActive] = useState(null); // { r, c }
   const [draft, setDraft] = useState("");
   const [hover, setHover] = useState(null); // { r, c, x, y }
   const [lastDeleted, setLastDeleted] = useState(null);
+  const [state, setState] = useState(() => emptyState());
 
+  // load storage after hydration (avoids mismatch + turbopack warning)
+  useEffect(() => {
+    let alive = true;
+
+    queueMicrotask(() => {
+      if (!alive) return;
+      setState(loadState());
+    });
+
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  // live updates (no mounted dependency)
   useEffect(() => {
     const onUpdate = () => setState(loadState());
     window.addEventListener("softcomputer-update", onUpdate);
@@ -228,6 +244,7 @@ export default function PunchCard() {
       window.removeEventListener("keydown", onKey, { capture: true });
   }, [active, lastDeleted, draft]);
 
+  // auto-open on first visit (client-only)
   useEffect(() => {
     if (didAutoOpenRef.current) return;
 
@@ -315,6 +332,7 @@ export default function PunchCard() {
           role="button"
           tabIndex={0}
           aria-label="punch card"
+          suppressHydrationWarning
         >
           <svg
             viewBox={`0 0 ${geo.W} ${geo.H}`}
@@ -499,6 +517,7 @@ export default function PunchCard() {
               ) : null}
             </g>
 
+            {/* outline stroke to sell the cut corner */}
             <path
               d={`
                 M ${geo.cardX + 24} ${geo.cardY}
