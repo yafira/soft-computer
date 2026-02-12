@@ -1,8 +1,7 @@
 "use client";
 
-import Script from "next/script";
-import { useEffect, useRef, useState } from "react";
-import { usePathname, useSearchParams } from "next/navigation";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 
 const STORAGE_KEY = "softcomputer_process_2026";
 const months = [
@@ -22,10 +21,10 @@ const months = [
 
 function emptyState() {
   const punched = Array.from({ length: 12 }, () =>
-    Array.from({ length: 31 }, () => false)
+    Array.from({ length: 31 }, () => false),
   );
   const logs = Array.from({ length: 12 }, () =>
-    Array.from({ length: 31 }, () => "")
+    Array.from({ length: 31 }, () => ""),
   );
   return { punched, logs };
 }
@@ -48,501 +47,512 @@ function saveState(state) {
   } catch {}
 }
 
-export default function PunchCard() {
-  const mountRef = useRef(null);
-  const p5Ref = useRef(null);
+function clamp(n, a, b) {
+  return Math.max(a, Math.min(b, n));
+}
 
-  // prevents reopening the editor repeatedly
+export default function PunchCard() {
+  const searchParams = useSearchParams();
+
+  const containerRef = useRef(null);
   const didAutoOpenRef = useRef(false);
 
-  const [ready, setReady] = useState(() => {
-    if (typeof window === "undefined") return false;
-    return !!window.p5;
-  });
-
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const mParam = searchParams.get("m");
-  const dParam = searchParams.get("d");
+  const [state, setState] = useState(() => loadState());
+  const [active, setActive] = useState(null); // { r, c }
+  const [draft, setDraft] = useState("");
+  const [hover, setHover] = useState(null); // { r, c, x, y }
+  const [lastDeleted, setLastDeleted] = useState(null);
 
   useEffect(() => {
-    if (!ready) return;
-    if (!mountRef.current) return;
-    if (!window.p5) return;
-    if (p5Ref.current) return;
-
-    let state = loadState();
-
-    const sketch = (p) => {
-      const cardMarginX = 40;
-      const cardMarginY = 30;
-
-      const leftMargin = 70;
-      const rightMargin = 25;
-      const topMargin = 70;
-      const bottomMargin = 35;
-
-      const rows = 12;
-      const cols = 31;
-
-      let inputBox;
-      let activeEdit = null;
-      let hover = null;
-
-      // undo buffer for last delete: { r, c, text, punched }
-      let lastDeleted = null;
-
-      // keyboard shortcut handler attached while editor open
-      let windowKeyHandler = null;
-
-      p.reloadFromStorage = () => {
-        state = loadState();
-        p.redraw();
-      };
-
-      // allow React to open a specific slot
-      p.openAt = (m, d) => {
-        if (m == null || d == null) return;
-        if (m < 0 || m > 11) return;
-        if (d < 0 || d > 30) return;
-        openEditor(m, d);
-      };
-
-      p.setup = () => {
-        p.createCanvas(800, 360).parent(mountRef.current);
-        p.noLoop();
-
-        inputBox = p.createInput("");
-        inputBox.size(380);
-        inputBox.hide();
-      };
-
-      p.draw = () => {
-        hover = null;
-
-        const bg = p.color(32, 25, 60);
-        const card = p.color(232, 224, 250);
-        const ink = p.color(70, 55, 120);
-        const border = p.color(145, 130, 185);
-
-        p.background(bg);
-
-        const cardX = cardMarginX;
-        const cardY = cardMarginY;
-        const cardW = p.width - 2 * cardMarginX;
-        const cardH = p.height - 2 * cardMarginY;
-
-        p.noStroke();
-        p.fill(card);
-        p.rect(cardX, cardY, cardW, cardH, 22);
-
-        p.fill(bg);
-        p.triangle(cardX, cardY, cardX + 24, cardY, cardX, cardY + 24);
-
-        p.fill(ink);
-        p.textAlign(p.LEFT, p.CENTER);
-        p.textSize(15);
-        p.text("soft computer — process memory 2026", cardX + 26, cardY + 22);
-
-        p.textSize(10);
-        p.text(
-          "click a slot to write memory for that day",
-          cardX + 26,
-          cardY + 40
-        );
-
-        const gridX = cardX + leftMargin;
-        const gridY = cardY + topMargin;
-        const gridW = cardW - leftMargin - rightMargin;
-        const gridH = cardH - topMargin - bottomMargin - 30;
-
-        const rowH = gridH / rows;
-        const colW = gridW / cols;
-
-        // day numbers
-        p.textAlign(p.CENTER, p.CENTER);
-        p.textSize(8);
-        p.fill(ink);
-        for (let c = 0; c < cols; c++) {
-          const x = gridX + c * colW + colW / 2;
-          p.text(String(c + 1), x, gridY - 10);
-        }
-
-        // faint vertical lines
-        p.stroke(p.red(border), p.green(border), p.blue(border), 120);
-        p.strokeWeight(0.4);
-        for (let c = 0; c < cols; c++) {
-          const x = gridX + c * colW + colW / 2;
-          p.line(x, gridY - 4, x, gridY + gridH + 4);
-        }
-
-        // months + slots
-        p.textAlign(p.RIGHT, p.CENTER);
-        p.textSize(10);
-
-        for (let r = 0; r < rows; r++) {
-          const centerY = gridY + r * rowH + rowH / 2;
-
-          p.noStroke();
-          p.fill(ink);
-          p.text(months[r], gridX - 8, centerY);
-
-          for (let c = 0; c < cols; c++) {
-            const centerX = gridX + c * colW + colW / 2;
-
-            const slotW = colW * 0.25;
-            const slotH = rowH * 0.8;
-            const x = centerX - slotW / 2;
-            const y = centerY - slotH / 2;
-
-            const isHovered =
-              p.mouseX >= x &&
-              p.mouseX <= x + slotW &&
-              p.mouseY >= y &&
-              p.mouseY <= y + slotH;
-
-            if (isHovered && (state.logs?.[r]?.[c] || "").trim().length > 0) {
-              hover = { r, c, x: centerX, y: centerY };
-            }
-
-            p.stroke(border);
-            p.strokeWeight(0.8);
-            p.fill(state.punched[r][c] ? bg : card);
-            p.rect(x, y, slotW, slotH, 2);
-          }
-        }
-
-        // status line (quiet)
-        if (activeEdit) {
-          p.noStroke();
-          p.fill(ink);
-          p.textAlign(p.LEFT, p.CENTER);
-          p.textSize(9);
-          p.text(
-            `editing: ${months[activeEdit.r]} ${activeEdit.c + 1}`,
-            cardX + 26,
-            cardY + cardH - 24
-          );
-
-          p.textAlign(p.RIGHT, p.CENTER);
-          p.textSize(9);
-          const undoHint = lastDeleted ? "  cmd/ctrl+z=undo" : "";
-        }
-
-        // legend
-        const legendX = cardX + cardW - 210;
-        const legendY = cardY + cardH - 24;
-
-        p.textAlign(p.LEFT, p.CENTER);
-        p.textSize(9);
-
-        p.stroke(border);
-        p.strokeWeight(0.8);
-        p.fill(bg);
-        p.rect(legendX, legendY - 6, 8, 16, 2);
-
-        p.noStroke();
-        p.fill(ink);
-        p.text("memory written", legendX + 22, legendY);
-
-        p.stroke(border);
-        p.strokeWeight(0.8);
-        p.fill(card);
-        p.rect(legendX + 120, legendY - 6, 8, 16, 2);
-
-        p.noStroke();
-        p.fill(ink);
-        p.text("empty", legendX + 142, legendY);
-
-        // hover preview
-        if (hover) {
-          const text = (state.logs?.[hover.r]?.[hover.c] || "").trim();
-          if (text) {
-            const shown = text.length > 64 ? text.slice(0, 64) + "…" : text;
-            const pad = 7;
-
-            p.textSize(10);
-            p.textAlign(p.LEFT, p.CENTER);
-
-            const w = p.textWidth(shown) + pad * 2;
-            const h = 20;
-
-            const bx = hover.x + 12;
-            const by = hover.y - h / 2;
-
-            p.noStroke();
-            p.fill(40, 30, 80, 230);
-            p.rect(bx, by, w, h, 8);
-
-            p.fill(232, 224, 250);
-            p.text(shown, bx + pad, hover.y);
-          }
-        }
-      };
-
-      p.mouseMoved = () => p.redraw();
-
-      p.mousePressed = () => {
-        const cardX = cardMarginX;
-        const cardY = cardMarginY;
-        const cardW = p.width - 2 * cardMarginX;
-        const cardH = p.height - 2 * cardMarginY;
-
-        const gridX = cardX + leftMargin;
-        const gridY = cardY + topMargin;
-        const gridW = cardW - leftMargin - rightMargin;
-        const gridH = cardH - topMargin - bottomMargin - 30;
-
-        const rowH = gridH / rows;
-        const colW = gridW / cols;
-
-        for (let r = 0; r < rows; r++) {
-          const centerY = gridY + r * rowH + rowH / 2;
-          const slotH = rowH * 0.8;
-
-          for (let c = 0; c < cols; c++) {
-            const centerX = gridX + c * colW + colW / 2;
-            const slotW = colW * 0.25;
-
-            const x1 = centerX - slotW / 2;
-            const x2 = centerX + slotW / 2;
-            const y1 = centerY - slotH / 2;
-            const y2 = centerY + slotH / 2;
-
-            if (
-              p.mouseX >= x1 &&
-              p.mouseX <= x2 &&
-              p.mouseY >= y1 &&
-              p.mouseY <= y2
-            ) {
-              openEditor(r, c);
-              return;
-            }
-          }
-        }
-      };
-
-      function attachShortcuts() {
-        detachShortcuts();
-
-        windowKeyHandler = (e) => {
-          if (!activeEdit) return;
-
-          if (e.key === "Escape") {
-            e.preventDefault();
-            hideEditor();
-            p.redraw();
-            return;
-          }
-
-          if (e.key === "Enter" && !e.shiftKey) {
-            e.preventDefault();
-            onSaveLog();
-            return;
-          }
-
-          if (e.key === "Backspace" || e.key === "Delete") {
-            e.preventDefault();
-            onDeleteLog();
-            return;
-          }
-
-          const meta = e.metaKey || e.ctrlKey;
-          if (meta && (e.key === "z" || e.key === "Z")) {
-            e.preventDefault();
-            onUndoDelete();
-            return;
-          }
-        };
-
-        window.addEventListener("keydown", windowKeyHandler, { capture: true });
-      }
-
-      function detachShortcuts() {
-        if (windowKeyHandler) {
-          window.removeEventListener("keydown", windowKeyHandler, {
-            capture: true,
-          });
-        }
-        windowKeyHandler = null;
-      }
-
-      function openEditor(r, c) {
-        activeEdit = { r, c };
-        inputBox.value(state.logs[r][c] || "");
-
-        const rect = p.canvas.getBoundingClientRect();
-        const cardX = cardMarginX;
-        const cardY = cardMarginY;
-        const cardH = p.height - 2 * cardMarginY;
-
-        const inputX = cardX + 26;
-        const inputY = cardY + cardH - 40;
-
-        inputBox.position(
-          rect.left + inputX + window.scrollX,
-          rect.top + inputY + window.scrollY
-        );
-        inputBox.show();
-        inputBox.elt.focus();
-
-        attachShortcuts();
-        p.redraw();
-      }
-
-      function onSaveLog() {
-        if (!activeEdit) return;
-
-        const r = activeEdit.r;
-        const c = activeEdit.c;
-
-        const text = inputBox.value().trim();
-        state.logs[r][c] = text;
-        state.punched[r][c] = text.length > 0;
-
-        saveState(state);
-        window.dispatchEvent(new Event("softcomputer-update"));
-
-        hideEditor();
-        p.redraw();
-      }
-
-      function onDeleteLog() {
-        if (!activeEdit) return;
-
-        const r = activeEdit.r;
-        const c = activeEdit.c;
-
-        const prevText = (state.logs[r][c] || "").trim();
-        const prevPunched = !!state.punched[r][c];
-
-        if (prevText.length > 0 || prevPunched) {
-          lastDeleted = { r, c, text: prevText, punched: prevPunched };
-        } else {
-          lastDeleted = null;
-        }
-
-        state.logs[r][c] = "";
-        state.punched[r][c] = false;
-
-        saveState(state);
-        window.dispatchEvent(new Event("softcomputer-update"));
-
-        inputBox.value("");
-        p.redraw();
-      }
-
-      function onUndoDelete() {
-        if (!lastDeleted) return;
-
-        const { r, c, text, punched } = lastDeleted;
-
-        state.logs[r][c] = text;
-        state.punched[r][c] = punched;
-
-        saveState(state);
-        window.dispatchEvent(new Event("softcomputer-update"));
-
-        if (activeEdit && activeEdit.r === r && activeEdit.c === c) {
-          inputBox.value(text);
-        }
-
-        lastDeleted = null;
-        p.redraw();
-      }
-
-      function hideEditor() {
-        activeEdit = null;
-        detachShortcuts();
-        inputBox.hide();
-      }
-    };
-
-    p5Ref.current = new window.p5(sketch);
-
+    const onUpdate = () => setState(loadState());
+    window.addEventListener("softcomputer-update", onUpdate);
+    window.addEventListener("storage", onUpdate);
     return () => {
-      try {
-        p5Ref.current?.remove();
-      } catch {}
-      p5Ref.current = null;
+      window.removeEventListener("softcomputer-update", onUpdate);
+      window.removeEventListener("storage", onUpdate);
     };
-  }, [ready]);
+  }, []);
 
-  // route-aware reload
+  const geo = useMemo(() => {
+    const rows = 12;
+    const cols = 31;
+
+    const W = 1200;
+    const H = 520;
+
+    const cardMarginX = 46;
+    const cardMarginY = 36;
+
+    const leftMargin = 110;
+    const rightMargin = 40;
+    const topMargin = 110;
+    const bottomMargin = 58;
+
+    const cardX = cardMarginX;
+    const cardY = cardMarginY;
+    const cardW = W - 2 * cardMarginX;
+    const cardH = H - 2 * cardMarginY;
+
+    const gridX = cardX + leftMargin;
+    const gridY = cardY + topMargin;
+    const gridW = cardW - leftMargin - rightMargin;
+    const gridH = cardH - topMargin - bottomMargin - 28;
+
+    const rowH = gridH / rows;
+    const colW = gridW / cols;
+
+    const slotW = colW * 0.28;
+    const slotH = rowH * 0.82;
+
+    return {
+      rows,
+      cols,
+      W,
+      H,
+      cardX,
+      cardY,
+      cardW,
+      cardH,
+      gridX,
+      gridY,
+      gridW,
+      gridH,
+      rowH,
+      colW,
+      slotW,
+      slotH,
+    };
+  }, []);
+
+  function openEditor(r, c) {
+    setActive({ r, c });
+    setDraft(state.logs?.[r]?.[c] || "");
+  }
+
+  function closeEditor() {
+    setActive(null);
+    setDraft("");
+  }
+
+  function commitSave() {
+    if (!active) return;
+    const { r, c } = active;
+
+    const next = loadState();
+    const text = draft.trim();
+
+    next.logs[r][c] = text;
+    next.punched[r][c] = text.length > 0;
+
+    saveState(next);
+    setState(next);
+    window.dispatchEvent(new Event("softcomputer-update"));
+
+    closeEditor();
+  }
+
+  function commitDelete() {
+    if (!active) return;
+    const { r, c } = active;
+
+    const next = loadState();
+    const prevText = (next.logs?.[r]?.[c] || "").trim();
+    const prevPunched = !!next.punched?.[r]?.[c];
+
+    setLastDeleted(
+      prevText.length || prevPunched
+        ? { r, c, text: prevText, punched: prevPunched }
+        : null,
+    );
+
+    next.logs[r][c] = "";
+    next.punched[r][c] = false;
+
+    saveState(next);
+    setState(next);
+    window.dispatchEvent(new Event("softcomputer-update"));
+
+    setDraft("");
+  }
+
+  function undoDelete() {
+    if (!lastDeleted) return;
+    const { r, c, text, punched } = lastDeleted;
+
+    const next = loadState();
+    next.logs[r][c] = text;
+    next.punched[r][c] = punched;
+
+    saveState(next);
+    setState(next);
+    window.dispatchEvent(new Event("softcomputer-update"));
+
+    if (active && active.r === r && active.c === c) setDraft(text);
+    setLastDeleted(null);
+  }
+
   useEffect(() => {
-    if (pathname !== "/punch") return;
-    try {
-      p5Ref.current?.reloadFromStorage?.();
-    } catch {}
-  }, [pathname]);
+    if (!active) return;
 
-  // ritual mode: open today if no query, or open deep link if provided
+    const onKey = (e) => {
+      const meta = e.metaKey || e.ctrlKey;
+
+      if (e.key === "Escape") {
+        e.preventDefault();
+        closeEditor();
+        return;
+      }
+
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        commitSave();
+        return;
+      }
+
+      if (e.key === "Backspace" || e.key === "Delete") {
+        if (meta) {
+          e.preventDefault();
+          commitDelete();
+        }
+        return;
+      }
+
+      if (meta && (e.key === "z" || e.key === "Z")) {
+        e.preventDefault();
+        undoDelete();
+      }
+    };
+
+    window.addEventListener("keydown", onKey, { capture: true });
+    return () =>
+      window.removeEventListener("keydown", onKey, { capture: true });
+  }, [active, lastDeleted, draft]);
+
   useEffect(() => {
-    if (pathname !== "/punch") return;
-    if (!ready) return;
-
-    // only auto-open once per visit to /punch
     if (didAutoOpenRef.current) return;
 
-    const tryOpen = () => {
-      if (!p5Ref.current?.openAt) return false;
+    const mParam = searchParams.get("m");
+    const dParam = searchParams.get("d");
 
-      const hasParams = mParam !== null && dParam !== null;
+    let m;
+    let d;
 
-      let m, d;
-
-      if (hasParams) {
-        m = Number(mParam);
-        d = Number(dParam);
-        if (Number.isNaN(m) || Number.isNaN(d)) {
-          // fallback to today if params are junk
-          const today = new Date();
-          m = today.getMonth();
-          d = today.getDate() - 1;
-        }
-      } else {
-        const today = new Date();
-        m = today.getMonth();
-        d = today.getDate() - 1;
+    if (mParam != null && dParam != null) {
+      m = Number(mParam);
+      d = Number(dParam);
+      if (Number.isNaN(m) || Number.isNaN(d)) {
+        m = null;
+        d = null;
       }
+    }
 
-      p5Ref.current.openAt(m, d);
-      return true;
-    };
+    if (m == null || d == null) {
+      const today = new Date();
+      m = today.getMonth();
+      d = today.getDate() - 1;
+    }
+
+    m = clamp(m, 0, 11);
+    d = clamp(d, 0, 30);
 
     const t = setTimeout(() => {
-      const ok = tryOpen();
-      if (ok) didAutoOpenRef.current = true;
-    }, 120);
+      openEditor(m, d);
+      didAutoOpenRef.current = true;
+    }, 140);
 
-    // IMPORTANT: reset when leaving /punch (in cleanup)
-    return () => {
-      clearTimeout(t);
-      didAutoOpenRef.current = false;
-    };
-  }, [pathname, ready, mParam, dParam]);
+    return () => clearTimeout(t);
+  }, [searchParams]);
+
+  function pointToCell(clientX, clientY) {
+    const el = containerRef.current;
+    if (!el) return null;
+
+    const rect = el.getBoundingClientRect();
+    const x = ((clientX - rect.left) / rect.width) * geo.W;
+    const y = ((clientY - rect.top) / rect.height) * geo.H;
+
+    const { gridX, gridY, gridW, gridH, colW, rowH } = geo;
+
+    if (x < gridX || x > gridX + gridW || y < gridY || y > gridY + gridH) {
+      return null;
+    }
+
+    const c = clamp(Math.floor((x - gridX) / colW), 0, 30);
+    const r = clamp(Math.floor((y - gridY) / rowH), 0, 11);
+
+    return { r, c, x, y };
+  }
+
+  function onMove(e) {
+    const hit = pointToCell(e.clientX, e.clientY);
+    if (!hit) {
+      setHover(null);
+      return;
+    }
+    const text = (state.logs?.[hit.r]?.[hit.c] || "").trim();
+    if (!text) {
+      setHover(null);
+      return;
+    }
+    setHover(hit);
+  }
+
+  function onClick(e) {
+    const hit = pointToCell(e.clientX, e.clientY);
+    if (!hit) return;
+    openEditor(hit.r, hit.c);
+  }
 
   return (
-    <div className="panel">
-      <div className="h1" style={{ marginBottom: 6 }}>
-        punch card
+    <div className="punchWrap">
+      <div className="punchStack">
+        <div
+          className="punchCanvas"
+          ref={containerRef}
+          onMouseMove={onMove}
+          onMouseLeave={() => setHover(null)}
+          onClick={onClick}
+          role="button"
+          tabIndex={0}
+          aria-label="punch card"
+        >
+          <svg
+            viewBox={`0 0 ${geo.W} ${geo.H}`}
+            width="100%"
+            height="100%"
+            className="punchSvg"
+            preserveAspectRatio="xMidYMid meet"
+          >
+            <defs>
+              <clipPath id="punchCardClip">
+                <path
+                  d={`
+                    M ${geo.cardX + 24} ${geo.cardY}
+                    H ${geo.cardX + geo.cardW}
+                    V ${geo.cardY + geo.cardH}
+                    H ${geo.cardX}
+                    V ${geo.cardY + 24}
+                    Z
+                  `}
+                />
+              </clipPath>
+            </defs>
+
+            <g clipPath="url(#punchCardClip)">
+              <rect
+                x={geo.cardX}
+                y={geo.cardY}
+                width={geo.cardW}
+                height={geo.cardH}
+                rx="26"
+                className="punchCard"
+              />
+
+              <path
+                d={`M ${geo.cardX} ${geo.cardY} L ${geo.cardX + 34} ${
+                  geo.cardY
+                } L ${geo.cardX} ${geo.cardY + 34} Z`}
+                className="punchNotch"
+              />
+
+              <text
+                x={geo.cardX + 36}
+                y={geo.cardY + 40}
+                className="punchTitle"
+              >
+                soft computer — process memory 2026
+              </text>
+              <text x={geo.cardX + 36} y={geo.cardY + 64} className="punchHint">
+                click a slot to write memory for that day
+              </text>
+
+              {Array.from({ length: geo.cols }).map((_, c) => {
+                const x = geo.gridX + c * geo.colW + geo.colW / 2;
+                return (
+                  <text
+                    key={`day-${c}`}
+                    x={x}
+                    y={geo.gridY - 18}
+                    className="punchDayNum"
+                  >
+                    {c + 1}
+                  </text>
+                );
+              })}
+
+              {Array.from({ length: geo.cols }).map((_, c) => {
+                const x = geo.gridX + c * geo.colW + geo.colW / 2;
+                return (
+                  <line
+                    key={`v-${c}`}
+                    x1={x}
+                    y1={geo.gridY - 8}
+                    x2={x}
+                    y2={geo.gridY + geo.gridH + 8}
+                    className="punchGuide"
+                  />
+                );
+              })}
+
+              {Array.from({ length: geo.rows }).map((_, r) => {
+                const cy = geo.gridY + r * geo.rowH + geo.rowH / 2;
+                return (
+                  <g key={`row-${r}`}>
+                    <text
+                      x={geo.gridX - 12}
+                      y={cy}
+                      className="punchMonth"
+                      textAnchor="end"
+                    >
+                      {months[r]}
+                    </text>
+
+                    {Array.from({ length: geo.cols }).map((__, c) => {
+                      const cx = geo.gridX + c * geo.colW + geo.colW / 2;
+                      const x = cx - geo.slotW / 2;
+                      const y = cy - geo.slotH / 2;
+
+                      const isPunched = !!state.punched?.[r]?.[c];
+
+                      return (
+                        <rect
+                          key={`slot-${r}-${c}`}
+                          x={x}
+                          y={y}
+                          width={geo.slotW}
+                          height={geo.slotH}
+                          rx="3"
+                          className={
+                            isPunched ? "punchSlot punched" : "punchSlot"
+                          }
+                        />
+                      );
+                    })}
+                  </g>
+                );
+              })}
+
+              <g
+                transform={`translate(${geo.cardX + geo.cardW - 290}, ${
+                  geo.cardY + geo.cardH - 44
+                })`}
+              >
+                <rect
+                  x="0"
+                  y="6"
+                  width="12"
+                  height="22"
+                  rx="3"
+                  className="legendSwatch punched"
+                />
+                <text x="20" y="22" className="legendText">
+                  memory written
+                </text>
+                <rect
+                  x="150"
+                  y="6"
+                  width="12"
+                  height="22"
+                  rx="3"
+                  className="legendSwatch"
+                />
+                <text x="170" y="22" className="legendText">
+                  empty
+                </text>
+              </g>
+
+              {hover ? (
+                <g>
+                  {(() => {
+                    const raw = (state.logs?.[hover.r]?.[hover.c] || "").trim();
+                    const shown =
+                      raw.length > 72 ? `${raw.slice(0, 72)}…` : raw;
+
+                    const tx = clamp(
+                      hover.x + 20,
+                      geo.cardX + 22,
+                      geo.cardX + geo.cardW - 420,
+                    );
+                    const ty = clamp(
+                      hover.y - 14,
+                      geo.cardY + 108,
+                      geo.cardY + geo.cardH - 88,
+                    );
+
+                    return (
+                      <>
+                        <rect
+                          x={tx}
+                          y={ty}
+                          width="400"
+                          height="34"
+                          rx="10"
+                          className="tooltip"
+                        />
+                        <text x={tx + 12} y={ty + 22} className="tooltipText">
+                          {shown}
+                        </text>
+                      </>
+                    );
+                  })()}
+                </g>
+              ) : null}
+            </g>
+
+            <path
+              d={`
+                M ${geo.cardX + 24} ${geo.cardY}
+                H ${geo.cardX + geo.cardW}
+                V ${geo.cardY + geo.cardH}
+                H ${geo.cardX}
+                V ${geo.cardY + 24}
+                Z
+              `}
+              className="punchCardCutStroke"
+            />
+          </svg>
+        </div>
+
+        {active ? (
+          <div className="punchEditorBlock">
+            <div className="punchEditorHeader">
+              <div className="chip">
+                {months[active.r]} {active.c + 1}
+              </div>
+              <div className="small subtle">
+                enter = save • esc = close • cmd/ctrl+z = undo delete •
+                cmd/ctrl+backspace = delete
+              </div>
+            </div>
+
+            <textarea
+              className="textarea"
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              placeholder="write a small memory…"
+              rows={3}
+              autoFocus
+            />
+
+            <div className="punchEditorActions">
+              <button className="btn" onClick={commitSave}>
+                save
+              </button>
+              <button className="btn ghost" onClick={closeEditor}>
+                close
+              </button>
+              <button className="btn danger" onClick={commitDelete}>
+                delete
+              </button>
+              {lastDeleted ? (
+                <button className="btn" onClick={undoDelete}>
+                  undo delete
+                </button>
+              ) : null}
+            </div>
+          </div>
+        ) : null}
       </div>
-      <p className="p">
-        click a day → write a log → enter to save. delete/backspace erases.
-        cmd/ctrl+z undoes last erase.
-      </p>
-
-      <Script
-        src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"
-        strategy="afterInteractive"
-        onReady={() => setReady(true)}
-      />
-
-      <div ref={mountRef} />
-
-      <p className="small" style={{ marginTop: 10 }}>
-        storage: <span className="kbd">{STORAGE_KEY}</span>
-      </p>
     </div>
   );
 }

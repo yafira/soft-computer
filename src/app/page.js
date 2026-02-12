@@ -1,43 +1,47 @@
-import Link from "next/link";
+import Image from "next/image";
+import PunchCard from "@/components/PunchCard";
+import TimelinePreview from "@/components/TimelinePreview";
 
 export default function HomePage() {
   return (
-    <section className="panel">
-      <div className="h1">soft computer</div>
-      <p className="p">
-        a minimal log of my thesis process — research, prototypes,
-        conversations, doubts, breakthroughs. each time i show up, i write to
-        memory.
-      </p>
-
-      <div className="grid">
-        <div className="card">
-          <div style={{ fontWeight: 600, marginBottom: 6 }}>punch card</div>
-          <p className="p">
-            click a day → write a tiny log → the slot becomes punched.
-          </p>
-          <Link href="/punch" className="kbd">
-            open punch card →
-          </Link>
+    <main className="wrap">
+      {/* punch card first */}
+      <section id="punch-card" className="panel punchSection">
+        <div className="panelHeader">
+          <div></div>
         </div>
 
-        <div className="card">
-          <div style={{ fontWeight: 600, marginBottom: 6 }}>timeline</div>
-          <p className="p">
-            a chronological list of everything you’ve written so far.
-          </p>
-          <Link href="/log" className="kbd">
-            open timeline →
-          </Link>
+        <PunchCard />
+        <div className="small" style={{ marginTop: 10 }}>
+          storage: <span className="kbd">softcomputer_process_2026</span>
         </div>
-      </div>
+      </section>
 
-      <hr />
+      {/* below: 2 columns */}
+      <section className="twoCol">
+        {/* left: cover image */}
+        <div className="panel">
+          <div className="panelTitleRow">
+            <div className="h2">cover</div>
+            <div className="small subtle">full image, minimal cropping</div>
+          </div>
 
-      <p className="p">
-        currently saves to <span className="kbd">localStorage</span> (so it
-        persists). later we can swap to md files, json, notion, etc.
-      </p>
-    </section>
+          {/* replace with your actual path */}
+          <div className="coverFrame">
+            <Image
+              src="/cover.jpg"
+              alt="soft computer cover"
+              fill
+              priority
+              sizes="(max-width: 860px) 100vw, 50vw"
+              className="coverImg"
+            />
+          </div>
+        </div>
+
+        {/* right: timeline preview */}
+        <TimelinePreview />
+      </section>
+    </main>
   );
 }
