@@ -1,6 +1,6 @@
 {
   "version": 3,
-  "exportedAt": "2026-02-16T03:03:01.621Z",
+  "exportedAt": "2026-02-16T03:13:09.209Z",
   "entries": [
     {
       "id": "2026-02-15",
@@ -8,7 +8,7 @@
       "dayIndex": 14,
       "label": "feb 15",
       "title": "website: spent time defining the relationship between working memory (localStorage) and published memory (json snapshots",
-      "text": "website: spent time defining the relationship between working memory (localStorage) and published memory (json snapshots), which helped clarify how the system distinguishes between drafting and declaration\n\nthe process also highlighted how interface design can shape the reading of a project, not just display it",
+      "text": "website: spent time defining the relationship between working memory (localStorage) and published memory (json snapshots)\n\n... which helped clarify how the system distinguishes between drafting and declaration\n\nthe process also highlighted how interface design can shape the reading of a project, not just display it",
       "dateValue": 1771131600000
     },
     {
@@ -25,8 +25,8 @@
       "monthIndex": 1,
       "dayIndex": 9,
       "label": "feb 10",
-      "title": "- featherboard not working :| ..",
-      "text": "- featherboard not working :| ..",
+      "title": "featherboard still not working..",
+      "text": "featherboard still not working.. ordered a new one.",
       "dateValue": 1770699600000
     },
     {
@@ -35,7 +35,7 @@
       "dayIndex": 8,
       "label": "feb 9",
       "title": "finished my soft keyboard!",
-      "text": "finished my soft keyboard!\n- reflected on how a foam-based keyboard might alter expectations of precision, rhythm, and physical engagement",
+      "text": "finished my soft keyboard!\n\n- reflected on how a foam-based keyboard might alter expectations of precision, rhythm, and physical engagement\n- but featherboard is not working.. it is overheating :|",
       "dateValue": 1770613200000
     },
     {
