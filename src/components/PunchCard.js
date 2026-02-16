@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 
 const STORAGE_KEY = "softcomputer_process_2026";
+
 const months = [
   "jan",
   "feb",
@@ -51,7 +52,38 @@ function clamp(n, a, b) {
   return Math.max(a, Math.min(b, n));
 }
 
-export default function PunchCard({ initialM = null, initialD = null }) {
+function stateFromPublishedEntries(entries) {
+  const next = emptyState();
+
+  for (const e of entries || []) {
+    const label = String(e?.label || "")
+      .toLowerCase()
+      .trim();
+    const parts = label.split(/\s+/);
+    if (parts.length < 2) continue;
+
+    const mName = parts[0];
+    const dNum = Number(parts[1]);
+
+    const m = months.indexOf(mName);
+    const d = Number.isFinite(dNum) ? dNum - 1 : -1;
+
+    if (m < 0 || d < 0 || d > 30) continue;
+
+    const text = String(e?.text || "").trim();
+    next.logs[m][d] = text;
+    next.punched[m][d] = text.length > 0;
+  }
+
+  return next;
+}
+
+export default function PunchCard({
+  readOnly = false,
+  publishedEntries = [],
+  focusM = null,
+  focusD = null,
+}) {
   const containerRef = useRef(null);
   const didAutoOpenRef = useRef(false);
 
@@ -59,12 +91,21 @@ export default function PunchCard({ initialM = null, initialD = null }) {
   const [draft, setDraft] = useState("");
   const [hover, setHover] = useState(null); // { r, c, x, y }
   const [lastDeleted, setLastDeleted] = useState(null);
+
   const [state, setState] = useState(() => emptyState());
 
-  // load storage after hydration
-  useEffect(() => {
-    let alive = true;
+  // derive read-only view state from published snapshot (no setState in effect)
+  const publishedState = useMemo(() => {
+    return stateFromPublishedEntries(publishedEntries);
+  }, [publishedEntries]);
 
+  const viewState = readOnly ? publishedState : state;
+
+  // editable mode: load storage after hydration
+  useEffect(() => {
+    if (readOnly) return;
+
+    let alive = true;
     queueMicrotask(() => {
       if (!alive) return;
       setState(loadState());
@@ -73,10 +114,12 @@ export default function PunchCard({ initialM = null, initialD = null }) {
     return () => {
       alive = false;
     };
-  }, []);
+  }, [readOnly]);
 
-  // live updates
+  // editable mode: listen for updates
   useEffect(() => {
+    if (readOnly) return;
+
     const onUpdate = () => setState(loadState());
     window.addEventListener("softcomputer-update", onUpdate);
     window.addEventListener("storage", onUpdate);
@@ -84,7 +127,7 @@ export default function PunchCard({ initialM = null, initialD = null }) {
       window.removeEventListener("softcomputer-update", onUpdate);
       window.removeEventListener("storage", onUpdate);
     };
-  }, []);
+  }, [readOnly]);
 
   const geo = useMemo(() => {
     const rows = 12;
@@ -137,17 +180,22 @@ export default function PunchCard({ initialM = null, initialD = null }) {
     };
   }, []);
 
-  function openEditor(r, c) {
-    setActive({ r, c });
-    setDraft(state.logs?.[r]?.[c] || "");
-  }
+  const openEditor = useCallback(
+    (r, c) => {
+      if (readOnly) return;
+      setActive({ r, c });
+      setDraft(viewState.logs?.[r]?.[c] || "");
+    },
+    [readOnly, viewState.logs],
+  );
 
-  function closeEditor() {
+  const closeEditor = useCallback(() => {
     setActive(null);
     setDraft("");
-  }
+  }, []);
 
-  function commitSave() {
+  const commitSave = useCallback(() => {
+    if (readOnly) return;
     if (!active) return;
     const { r, c } = active;
 
@@ -162,9 +210,10 @@ export default function PunchCard({ initialM = null, initialD = null }) {
     window.dispatchEvent(new Event("softcomputer-update"));
 
     closeEditor();
-  }
+  }, [readOnly, active, draft, closeEditor]);
 
-  function commitDelete() {
+  const commitDelete = useCallback(() => {
+    if (readOnly) return;
     if (!active) return;
     const { r, c } = active;
 
@@ -186,9 +235,10 @@ export default function PunchCard({ initialM = null, initialD = null }) {
     window.dispatchEvent(new Event("softcomputer-update"));
 
     setDraft("");
-  }
+  }, [readOnly, active]);
 
-  function undoDelete() {
+  const undoDelete = useCallback(() => {
+    if (readOnly) return;
     if (!lastDeleted) return;
     const { r, c, text, punched } = lastDeleted;
 
@@ -202,9 +252,10 @@ export default function PunchCard({ initialM = null, initialD = null }) {
 
     if (active && active.r === r && active.c === c) setDraft(text);
     setLastDeleted(null);
-  }
+  }, [readOnly, lastDeleted, active]);
 
   useEffect(() => {
+    if (readOnly) return;
     if (!active) return;
 
     const onKey = (e) => {
@@ -239,23 +290,33 @@ export default function PunchCard({ initialM = null, initialD = null }) {
     window.addEventListener("keydown", onKey, { capture: true });
     return () =>
       window.removeEventListener("keydown", onKey, { capture: true });
-  }, [active, lastDeleted, draft]);
+  }, [readOnly, active, closeEditor, commitSave, commitDelete, undoDelete]);
 
-  // auto-open on first visit (uses server-provided params, no useSearchParams)
+  // auto-open (editable mode only)
   useEffect(() => {
+    if (readOnly) return;
     if (didAutoOpenRef.current) return;
 
-    let m = initialM;
-    let d = initialD;
+    let m = null;
+    let d = null;
 
-    if (m == null || d == null || Number.isNaN(m) || Number.isNaN(d)) {
+    if (focusM != null && focusD != null) {
+      const mm = Number(focusM);
+      const dd = Number(focusD);
+      if (!Number.isNaN(mm) && !Number.isNaN(dd)) {
+        m = mm;
+        d = dd;
+      }
+    }
+
+    if (m == null || d == null) {
       const today = new Date();
       m = today.getMonth();
       d = today.getDate() - 1;
     }
 
-    m = clamp(Number(m), 0, 11);
-    d = clamp(Number(d), 0, 30);
+    m = clamp(m, 0, 11);
+    d = clamp(d, 0, 30);
 
     const t = setTimeout(() => {
       openEditor(m, d);
@@ -263,7 +324,7 @@ export default function PunchCard({ initialM = null, initialD = null }) {
     }, 140);
 
     return () => clearTimeout(t);
-  }, [initialM, initialD]);
+  }, [readOnly, focusM, focusD, openEditor]);
 
   function pointToCell(clientX, clientY) {
     const el = containerRef.current;
@@ -291,7 +352,7 @@ export default function PunchCard({ initialM = null, initialD = null }) {
       setHover(null);
       return;
     }
-    const text = (state.logs?.[hit.r]?.[hit.c] || "").trim();
+    const text = (viewState.logs?.[hit.r]?.[hit.c] || "").trim();
     if (!text) {
       setHover(null);
       return;
@@ -300,6 +361,7 @@ export default function PunchCard({ initialM = null, initialD = null }) {
   }
 
   function onClick(e) {
+    if (readOnly) return;
     const hit = pointToCell(e.clientX, e.clientY);
     if (!hit) return;
     openEditor(hit.r, hit.c);
@@ -352,9 +414,7 @@ export default function PunchCard({ initialM = null, initialD = null }) {
               />
 
               <path
-                d={`M ${geo.cardX} ${geo.cardY} L ${geo.cardX + 34} ${
-                  geo.cardY
-                } L ${geo.cardX} ${geo.cardY + 34} Z`}
+                d={`M ${geo.cardX} ${geo.cardY} L ${geo.cardX + 34} ${geo.cardY} L ${geo.cardX} ${geo.cardY + 34} Z`}
                 className="punchNotch"
               />
 
@@ -412,7 +472,7 @@ export default function PunchCard({ initialM = null, initialD = null }) {
                       const x = cx - geo.slotW / 2;
                       const y = cy - geo.slotH / 2;
 
-                      const isPunched = !!state.punched?.[r]?.[c];
+                      const isPunched = !!viewState.punched?.[r]?.[c];
 
                       return (
                         <rect
@@ -464,7 +524,9 @@ export default function PunchCard({ initialM = null, initialD = null }) {
               {hover ? (
                 <g>
                   {(() => {
-                    const raw = (state.logs?.[hover.r]?.[hover.c] || "").trim();
+                    const raw = (
+                      viewState.logs?.[hover.r]?.[hover.c] || ""
+                    ).trim();
                     const shown =
                       raw.length > 72 ? `${raw.slice(0, 72)}…` : raw;
 
@@ -513,7 +575,7 @@ export default function PunchCard({ initialM = null, initialD = null }) {
           </svg>
         </div>
 
-        {active ? (
+        {!readOnly && active ? (
           <div className="punchEditorBlock">
             <div className="punchEditorHeader">
               <div className="chip">
@@ -549,6 +611,10 @@ export default function PunchCard({ initialM = null, initialD = null }) {
                   undo delete
                 </button>
               ) : null}
+            </div>
+
+            <div className="small subtle" style={{ marginTop: 10 }}>
+              storage: <span className="chip">{STORAGE_KEY}</span>
             </div>
           </div>
         ) : null}
