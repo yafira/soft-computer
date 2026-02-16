@@ -1,15 +1,17 @@
-import { Suspense } from "react";
-import LogNotebookPage from "@/components/LogNotebookPage";
+import PunchCard from "@/components/PunchCard";
+import ExportMemory from "@/components/ExportMemory";
 
-export const dynamic = "force-dynamic";
+export default function PunchPage({ searchParams }) {
+  const mRaw = searchParams?.m;
+  const dRaw = searchParams?.d;
 
-export default function Page({ searchParams }) {
-  const focus =
-    typeof searchParams?.focus === "string" ? searchParams.focus : null;
+  const initialM = typeof mRaw === "string" ? Number(mRaw) : null;
+  const initialD = typeof dRaw === "string" ? Number(dRaw) : null;
 
   return (
-    <Suspense fallback={null}>
-      <LogNotebookPage initialFocus={focus} />
-    </Suspense>
+    <div className="panel">
+      <PunchCard initialM={initialM} initialD={initialD} />
+      <ExportMemory />
+    </div>
   );
 }

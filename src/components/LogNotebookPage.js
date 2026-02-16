@@ -36,28 +36,34 @@ async function fetchPublishedSnapshot() {
   }
 }
 
-export default function LogNotebookPage({ initialFocus = null }) {
+function readPaperMode() {
+  try {
+    if (typeof window === "undefined") return "grid";
+    const saved = localStorage.getItem(PAPER_MODE_KEY);
+    if (saved === "grid" || saved === "lined" || saved === "dot") return saved;
+    return "grid";
+  } catch {
+    return "grid";
+  }
+}
+
+function writePaperMode(mode) {
+  try {
+    localStorage.setItem(PAPER_MODE_KEY, mode);
+  } catch {}
+}
+
+export default function LogNotebookPage({ focus }) {
   const [entries, setEntries] = useState([]);
   const [query, setQuery] = useState("");
   const [activeId, setActiveId] = useState(null);
 
-  const [paperMode, setPaperMode] = useState("grid");
+  const [paperMode, setPaperMode] = useState(() => readPaperMode());
   const [page, setPage] = useState(0);
 
-  // keep paper mode public + per-user (stored locally)
+  // persist paper mode on change (no effect state updates; only side effect)
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem(PAPER_MODE_KEY);
-      if (saved === "grid" || saved === "lined" || saved === "dot") {
-        setPaperMode(saved);
-      }
-    } catch {}
-  }, []);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem(PAPER_MODE_KEY, paperMode);
-    } catch {}
+    writePaperMode(paperMode);
   }, [paperMode]);
 
   // published snapshot (public)
@@ -91,49 +97,53 @@ export default function LogNotebookPage({ initialFocus = null }) {
     );
   }, [entries, query]);
 
-  // reset to page 0 when searching
-  useEffect(() => {
-    setPage(0);
-  }, [query]);
-
   const totalPages = useMemo(() => {
     return Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   }, [filtered.length]);
 
-  // clamp page if filtering reduces total pages
-  useEffect(() => {
-    setPage((p) => Math.min(p, totalPages - 1));
-  }, [totalPages]);
+  // clamp page at render-time for UI + slicing
+  const safePage = Math.min(page, totalPages - 1);
 
-  // slice current page
   const pagedEntries = useMemo(() => {
-    const start = page * PAGE_SIZE;
+    const start = safePage * PAGE_SIZE;
     return filtered.slice(start, start + PAGE_SIZE);
-  }, [filtered, page]);
+  }, [filtered, safePage]);
 
-  // set initial focus (from server page prop), else default to newest
+  // set active based on focus or default to newest
   useEffect(() => {
-    if (initialFocus) {
-      const idx = filtered.findIndex((e) => e.id === initialFocus);
-      if (idx >= 0) {
-        const targetPage = Math.floor(idx / PAGE_SIZE);
-        setPage(targetPage);
-        setActiveId(initialFocus);
-        return;
+    if (typeof window === "undefined") return;
+    if (!entries.length) return;
+
+    queueMicrotask(() => {
+      if (focus) {
+        const idx = entries.findIndex((e) => e.id === focus);
+        if (idx >= 0) {
+          const targetPage = Math.floor(idx / PAGE_SIZE);
+          setPage((p) => (p === targetPage ? p : targetPage));
+          setActiveId((id) => (id === focus ? id : focus));
+          return;
+        }
       }
-    }
 
-    if (!activeId && filtered.length > 0) {
-      setActiveId(filtered[0].id);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialFocus, filtered]);
+      if (!activeId && filtered.length > 0) {
+        const nextId = filtered[0].id;
+        setActiveId((id) => (id === nextId ? id : nextId));
+      }
+    });
+  }, [entries, filtered, activeId, focus]);
 
-  // if active entry is not on the current page, pick the first entry on that page
+  // if active entry is not on the current page, pick first entry on that page
   useEffect(() => {
     if (!activeId) return;
+    if (pagedEntries.length === 0) return;
+
     const onPage = pagedEntries.some((e) => e.id === activeId);
-    if (!onPage && pagedEntries.length > 0) setActiveId(pagedEntries[0].id);
+    if (onPage) return;
+
+    queueMicrotask(() => {
+      const nextId = pagedEntries[0].id;
+      setActiveId((id) => (id === nextId ? id : nextId));
+    });
   }, [activeId, pagedEntries]);
 
   const activeEntry = useMemo(() => {
@@ -143,8 +153,22 @@ export default function LogNotebookPage({ initialFocus = null }) {
 
   const isDev = process.env.NODE_ENV === "development";
 
-  const canPrev = page > 0;
-  const canNext = page < totalPages - 1;
+  const canPrev = safePage > 0;
+  const canNext = safePage < totalPages - 1;
+
+  function onSearchChange(value) {
+    setQuery(value);
+    // reset page immediately (avoid effect)
+    setPage(0);
+  }
+
+  function goPrev() {
+    setPage((p) => Math.max(0, p - 1));
+  }
+
+  function goNext() {
+    setPage((p) => Math.min(totalPages - 1, p + 1));
+  }
 
   return (
     <main className="wrap">
@@ -172,7 +196,7 @@ export default function LogNotebookPage({ initialFocus = null }) {
             className="input"
             placeholder="search entries..."
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={(e) => onSearchChange(e.target.value)}
           />
           <div className="small subtle" style={{ whiteSpace: "nowrap" }}>
             {filtered.length} entr{filtered.length === 1 ? "y" : "ies"}
@@ -185,7 +209,7 @@ export default function LogNotebookPage({ initialFocus = null }) {
           <div className="panelTitleRow">
             <div className="h2">entries</div>
             <div className="small subtle">
-              page {page + 1} / {totalPages}
+              page {safePage + 1} / {totalPages}
             </div>
           </div>
 
@@ -221,14 +245,14 @@ export default function LogNotebookPage({ initialFocus = null }) {
                 type="button"
                 className="btn ghost"
                 disabled={!canPrev}
-                onClick={() => setPage((p) => Math.max(0, p - 1))}
+                onClick={goPrev}
               >
                 prev
               </button>
 
               <div className="small subtle">
-                showing {page * PAGE_SIZE + 1}–
-                {Math.min((page + 1) * PAGE_SIZE, filtered.length)} of{" "}
+                showing {safePage * PAGE_SIZE + 1}–
+                {Math.min((safePage + 1) * PAGE_SIZE, filtered.length)} of{" "}
                 {filtered.length}
               </div>
 
@@ -236,7 +260,7 @@ export default function LogNotebookPage({ initialFocus = null }) {
                 type="button"
                 className="btn ghost"
                 disabled={!canNext}
-                onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+                onClick={goNext}
               >
                 next
               </button>

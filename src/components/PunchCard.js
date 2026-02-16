@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useSearchParams } from "next/navigation";
 
 const STORAGE_KEY = "softcomputer_process_2026";
 const months = [
@@ -52,9 +51,7 @@ function clamp(n, a, b) {
   return Math.max(a, Math.min(b, n));
 }
 
-export default function PunchCard() {
-  const searchParams = useSearchParams();
-
+export default function PunchCard({ initialM = null, initialD = null }) {
   const containerRef = useRef(null);
   const didAutoOpenRef = useRef(false);
 
@@ -64,7 +61,7 @@ export default function PunchCard() {
   const [lastDeleted, setLastDeleted] = useState(null);
   const [state, setState] = useState(() => emptyState());
 
-  // load storage after hydration (avoids mismatch + turbopack warning)
+  // load storage after hydration
   useEffect(() => {
     let alive = true;
 
@@ -78,7 +75,7 @@ export default function PunchCard() {
     };
   }, []);
 
-  // live updates (no mounted dependency)
+  // live updates
   useEffect(() => {
     const onUpdate = () => setState(loadState());
     window.addEventListener("softcomputer-update", onUpdate);
@@ -244,33 +241,21 @@ export default function PunchCard() {
       window.removeEventListener("keydown", onKey, { capture: true });
   }, [active, lastDeleted, draft]);
 
-  // auto-open on first visit (client-only)
+  // auto-open on first visit (uses server-provided params, no useSearchParams)
   useEffect(() => {
     if (didAutoOpenRef.current) return;
 
-    const mParam = searchParams.get("m");
-    const dParam = searchParams.get("d");
+    let m = initialM;
+    let d = initialD;
 
-    let m;
-    let d;
-
-    if (mParam != null && dParam != null) {
-      m = Number(mParam);
-      d = Number(dParam);
-      if (Number.isNaN(m) || Number.isNaN(d)) {
-        m = null;
-        d = null;
-      }
-    }
-
-    if (m == null || d == null) {
+    if (m == null || d == null || Number.isNaN(m) || Number.isNaN(d)) {
       const today = new Date();
       m = today.getMonth();
       d = today.getDate() - 1;
     }
 
-    m = clamp(m, 0, 11);
-    d = clamp(d, 0, 30);
+    m = clamp(Number(m), 0, 11);
+    d = clamp(Number(d), 0, 30);
 
     const t = setTimeout(() => {
       openEditor(m, d);
@@ -278,7 +263,7 @@ export default function PunchCard() {
     }, 140);
 
     return () => clearTimeout(t);
-  }, [searchParams]);
+  }, [initialM, initialD]);
 
   function pointToCell(clientX, clientY) {
     const el = containerRef.current;
@@ -380,9 +365,6 @@ export default function PunchCard() {
               >
                 soft computer — process memory 2026
               </text>
-              {/* <text x={geo.cardX + 36} y={geo.cardY + 64} className="punchHint">
-                click a slot to write memory for that day
-              </text> */}
 
               {Array.from({ length: geo.cols }).map((_, c) => {
                 const x = geo.gridX + c * geo.colW + geo.colW / 2;
@@ -517,7 +499,6 @@ export default function PunchCard() {
               ) : null}
             </g>
 
-            {/* outline stroke to sell the cut corner */}
             <path
               d={`
                 M ${geo.cardX + 24} ${geo.cardY}
