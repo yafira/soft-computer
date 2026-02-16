@@ -40,17 +40,20 @@ export default function LogNotebookPage() {
 
   const [paperMode, setPaperMode] = useState("grid");
 
-  // load saved paper mode
+  // keep paper mode public + per-user (stored locally)
   useEffect(() => {
-    const saved = localStorage.getItem(PAPER_MODE_KEY);
-    if (saved === "grid" || saved === "lined" || saved === "dot") {
-      setPaperMode(saved);
-    }
+    try {
+      const saved = localStorage.getItem(PAPER_MODE_KEY);
+      if (saved === "grid" || saved === "lined" || saved === "dot") {
+        setPaperMode(saved);
+      }
+    } catch {}
   }, []);
 
-  // persist paper mode
   useEffect(() => {
-    localStorage.setItem(PAPER_MODE_KEY, paperMode);
+    try {
+      localStorage.setItem(PAPER_MODE_KEY, paperMode);
+    } catch {}
   }, [paperMode]);
 
   // published snapshot (public)
@@ -93,6 +96,8 @@ export default function LogNotebookPage() {
     return filtered.find((e) => e.id === activeId) || null;
   }, [filtered, activeId]);
 
+  const isDev = process.env.NODE_ENV === "development";
+
   return (
     <main className="wrap">
       <section className="panel">
@@ -106,9 +111,12 @@ export default function LogNotebookPage() {
             </p>
           </div>
 
-          <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-            <PublishLogsButton />
-          </div>
+          {/* only show publish control to you locally (dev) */}
+          {isDev ? (
+            <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+              <PublishLogsButton />
+            </div>
+          ) : null}
         </div>
 
         <div className="logTopBar">
@@ -163,6 +171,7 @@ export default function LogNotebookPage() {
           <div className="panelTitleRow">
             <div className="h2">notes</div>
 
+            {/* paper mode toggles are PUBLIC (reader preference) */}
             <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
               <button
                 type="button"
