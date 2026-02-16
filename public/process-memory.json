@@ -1,0 +1,150 @@
+{
+  "version": 3,
+  "exportedAt": "2026-02-16T03:03:01.621Z",
+  "entries": [
+    {
+      "id": "2026-02-15",
+      "monthIndex": 1,
+      "dayIndex": 14,
+      "label": "feb 15",
+      "title": "website: spent time defining the relationship between working memory (localStorage) and published memory (json snapshots",
+      "text": "website: spent time defining the relationship between working memory (localStorage) and published memory (json snapshots), which helped clarify how the system distinguishes between drafting and declaration\n\nthe process also highlighted how interface design can shape the reading of a project, not just display it",
+      "dateValue": 1771131600000
+    },
+    {
+      "id": "2026-02-11",
+      "monthIndex": 1,
+      "dayIndex": 10,
+      "label": "feb 11",
+      "title": "user play testing day 01",
+      "text": "user play testing day 01\n\n- when comparing the two sketches, several people felt the computer was more legible as a “computer” when the mouse and keyboard were separate objects\n\n- one version of the design was perceived as more novelty-like, while the other felt more practical or believable\n\n- the separation of components seemed to reinforce familiar expectations of what a computer should look like\n\n- participants responded positively to the soft keyboard\n\n- some suggested making the keys more plush or dimensional\n\n- others felt additional plushness was unnecessary and that the existing softness was already effective\n\n- multiple users expressed interest in holding a plush mouse\n\n- the tactile, hand-held quality of the mouse was particularly appealing\n\n- some participants assumed the soft computer was intended to be a fully functional computer\n\n- this contrasted with my intention of exploring an alternative interface and speculative form of computing\n\n- the body shape triggered nostalgic associations, especially with early macintosh computers\n\n- nostalgia appeared to influence how users categorized and interpreted the object\n\n- participants were intrigued by the idea of a flexible e-ink display\n\n- the display itself generated curiosity independent of the object’s form\n\n- a few people expressed an impulse to hug the computer, reinforcing its perceived softness and character\n\n- one suggestion involved adding an accelerometer so shaking the device could remove or disrupt displayed text\n\n- the idea of shaking introduced structural concerns, particularly if a thermal printer were integrated\n\n- a printer would require stability that may conflict with soft, gestural interactions",
+      "dateValue": 1770786000000
+    },
+    {
+      "id": "2026-02-10",
+      "monthIndex": 1,
+      "dayIndex": 9,
+      "label": "feb 10",
+      "title": "- featherboard not working :| ..",
+      "text": "- featherboard not working :| ..",
+      "dateValue": 1770699600000
+    },
+    {
+      "id": "2026-02-09",
+      "monthIndex": 1,
+      "dayIndex": 8,
+      "label": "feb 9",
+      "title": "finished my soft keyboard!",
+      "text": "finished my soft keyboard!\n- reflected on how a foam-based keyboard might alter expectations of precision, rhythm, and physical engagement",
+      "dateValue": 1770613200000
+    },
+    {
+      "id": "2026-02-08",
+      "monthIndex": 1,
+      "dayIndex": 7,
+      "label": "feb 8",
+      "title": "returning to an earlier sketch",
+      "text": "returning to an earlier sketch\n\n- while developing the first prototype, i returned to an earlier sketch i had nearly abandoned\n\n- although i deeply value nostalgia and early computing references, the more modular design began to feel conceptually unresolved during physical prototyping\n\n- working with materials and touch interactions revealed a tension between familiar computer forms and the embodied experience of the object\n\n- i noticed my hand gravitating toward a single continuous surface rather than moving between separated components\n\n- this observation redirected my thinking toward a unified soft body with interaction embedded directly into the computer itself\n\n- the shift was not a rejection of nostalgia but a reconsideration of peripheral logic and interaction structure\n\n- prototype 1 intentionally isolates interaction through an externalized soft keyboard to study tactile behavior and symbolic mapping\n\n- the keyboard explores minimal symbolic input rather than full typing, emphasizing marks, rhythm, and visual accumulation on the e-ink display\n\n- fabrication foregrounded soft circuitry, layering, and conductive textiles as structural elements rather than conventional hardware\n\n- integration was paused after a microcontroller failure and overheating event, reinforcing the material fragility of the system\n\n- the prototype clarified how softness operates as both a material condition and an interaction philosophy\n\n- accessibility emerged as an important dimension, with soft inputs reducing precision and behavioral demands\n\n- prototype 1 functions as an investigation into how computation, touch, and meaning shift within soft systems",
+      "dateValue": 1770526800000
+    },
+    {
+      "id": "2026-02-04",
+      "monthIndex": 1,
+      "dayIndex": 3,
+      "label": "feb 4",
+      "title": "began exploring the idea of a soft keyboard constructed from craft foam",
+      "text": "began exploring the idea of a soft keyboard constructed from craft foam\n\n- extending the same logic and fabrication approach used for the soft buttons\n\n- considered forming the keyboard as one continuous piece rather than discrete buttons, emphasizing a unified soft surface\n\nexperimented conceptually with conductive fabric as the sensing layer, imagining how softness, flexibility, and pressure could shape typing interactions",
+      "dateValue": 1770181200000
+    },
+    {
+      "id": "2026-01-28",
+      "monthIndex": 0,
+      "dayIndex": 27,
+      "label": "jan 28",
+      "title": "post-break updates /",
+      "text": "post-break updates / \n\n- my advisor sarah noted that the work carries an element of nostalgia, even though it is not explicitly framed that way\n\n- she connected this to how computers once behaved — slower, more legible, and more materially present\n\n- she suggested the project may sit between past and future, referencing older modes of computing while also imagining a time when computers no longer exist in their current form\n\n- this framing clarified that nostalgia here is not only about memory, but about questioning dominant trajectories of computing and what has been optimized away\n\n- while nostalgia is not a stated goal, it continues to surface through material choices, interaction pacing, and the object’s quiet presence\n\n-------------------------\n\n- meghna recommended the chapter “what is a computer?” from artificial intelligence by richard urwin. this was suggested in relation to my effort to redefine what a computer can be outside of productivity, speed, and command-based interaction. i plan to read this alongside my existing references to further ground the project’s conceptual framing.",
+      "dateValue": 1769576400000
+    },
+    {
+      "id": "2026-01-19",
+      "monthIndex": 0,
+      "dayIndex": 18,
+      "label": "jan 19",
+      "title": "started testing the feather thinkink board with the adafruit e-ink display",
+      "text": "started testing the feather thinkink board with the adafruit e-ink display\n- wanted to validate basic functionality and screen behavior within the soft computer context\n- focused on understanding refresh rates, contrast, and legibility, particularly how e-ink qualities reinforce the project’s slower interaction philosophy",
+      "dateValue": 1768798800000
+    },
+    {
+      "id": "2026-01-17",
+      "monthIndex": 0,
+      "dayIndex": 16,
+      "label": "jan 17",
+      "title": "made soft buttons!",
+      "text": "made soft buttons! \n\n- using craft foam to study their tactile response, compression, and overall feel as input elements\n- observed how the material softness changes the perception of interaction compared to rigid switches, especially in terms of feedback and resistance\n- tested them with a arduino nano iot 33 + they all worked!",
+      "dateValue": 1768626000000
+    },
+    {
+      "id": "2026-01-15",
+      "monthIndex": 0,
+      "dayIndex": 14,
+      "label": "jan 15",
+      "title": "re-illustrated the soft computer, iterations of sketches",
+      "text": "re-illustrated the soft computer, iterations of sketches\n\nrevisited the visual direction and developed a new illustration centered on a retro plush computer form\n\nleaned further into softness, roundness, and a companion-like presence rather than a traditional device aesthetic\n\nreflected on how early computing imagery continues to shape my visual instincts and emotional framing of the project\n\nthis iteration felt like refining the personality of the object, not just its appearance",
+      "dateValue": 1768453200000
+    },
+    {
+      "id": "2026-01-13",
+      "monthIndex": 0,
+      "dayIndex": 12,
+      "label": "jan 13",
+      "title": "conversation with aaron — systems + os direction",
+      "text": "conversation with aaron — systems + os direction\n\ntopics discussed:\n\nprogramming languages and alternative computing paradigms\n\ncustom operating systems and what it would mean to build one for a soft computer\n\nhacking a kindle as a possible platform\n\nplan 9 (bell labs) — its aesthetic and philosophy as inspiration for soft, modular, non-commercial computing\n\npython as a “goat” language: accessible, expressive, flexible, and well suited for experimental systems\n\nideas that emerged:\n\nstart with a small prototype os rather than attempting a full system\n\nbuild a tiny set of programs designed specifically for the soft computer\n\nexample programs:\n\na sewing utility\n\na soft sensor interface\n\ntools that feel domestic, tactile, or ritualistic rather than productivity-driven\n\nframing:\n\nthink of the soft computer os not as a general-purpose machine, but as a small garden of special tools designed for soft, embodied interaction.",
+      "dateValue": 1768280400000
+    },
+    {
+      "id": "2026-01-12",
+      "monthIndex": 0,
+      "dayIndex": 11,
+      "label": "jan 12",
+      "title": "met with kari to discuss the evolving direction of the soft computer",
+      "text": "met with kari to discuss the evolving direction of the soft computer\n\n- talked through the relationship between nostalgia and invention, and how early computing references can coexist with building something that does not simply replicate the past\n\n- discussed the importance of defining what the computer is doing as an experience rather than focusing only on form or aesthetics\n\n- a major point of the conversation was heat and ventilation, which surfaced as a practical concern i had not seriously considered. how the computer will dissipate heat, especially within soft or textile-based enclosures, became an unexpectedly important design question\n\n- spent additional time unpacking fabrication concerns, including feasibility, prototyping strategies, and how to keep technical decisions from overtaking the conceptual core\n\n- clarified questions of scope, particularly how the system might evolve through iterations rather than as a single fully resolved object\n\n- left the meeting with a clearer sense of direction and a reminder that refinement is not reduction but sharpening",
+      "dateValue": 1768194000000
+    },
+    {
+      "id": "2026-01-11",
+      "monthIndex": 0,
+      "dayIndex": 10,
+      "label": "jan 11",
+      "title": "started building website: thesoft.computer",
+      "text": "started building website: thesoft.computer",
+      "dateValue": 1768107600000
+    },
+    {
+      "id": "2026-01-10",
+      "monthIndex": 0,
+      "dayIndex": 9,
+      "label": "jan 10",
+      "title": "began building the website for the soft computer using next.js, treating the website itself as an extension of the proje",
+      "text": "began building the website for the soft computer using next.js, treating the website itself as an extension of the project rather than simple documentation\n\nthought carefully about how the structure and interaction style of the site should reflect the philosophy of the work, particularly slowness, clarity, and a sense of intentional navigation",
+      "dateValue": 1768021200000
+    },
+    {
+      "id": "2026-01-06",
+      "monthIndex": 0,
+      "dayIndex": 5,
+      "label": "jan 6",
+      "title": "booked office hours with kari love",
+      "text": "booked office hours with kari love",
+      "dateValue": 1767675600000
+    },
+    {
+      "id": "2026-01-01",
+      "monthIndex": 0,
+      "dayIndex": 0,
+      "label": "jan 1",
+      "title": "started working on thesoft.computer website",
+      "text": "started working on thesoft.computer website\n    \nbegan setting up the public-facing log for the thesis project!",
+      "dateValue": 1767243600000
+    }
+  ]
+}
