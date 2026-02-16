@@ -2,74 +2,6 @@
 
 import { useEffect, useMemo, useState } from "react";
 
-const STORAGE_KEY = "softcomputer_process_2026";
-const months = [
-  "jan",
-  "feb",
-  "mar",
-  "apr",
-  "may",
-  "jun",
-  "jul",
-  "aug",
-  "sep",
-  "oct",
-  "nov",
-  "dec",
-];
-
-function emptyState() {
-  const punched = Array.from({ length: 12 }, () =>
-    Array.from({ length: 31 }, () => false),
-  );
-  const logs = Array.from({ length: 12 }, () =>
-    Array.from({ length: 31 }, () => ""),
-  );
-  return { punched, logs };
-}
-
-function loadState() {
-  try {
-    if (typeof window === "undefined") return emptyState();
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return emptyState();
-    const parsed = JSON.parse(raw);
-    if (!parsed?.punched || !parsed?.logs) return emptyState();
-    return parsed;
-  } catch {
-    return emptyState();
-  }
-}
-
-function daysInMonth(monthIndex, year = 2026) {
-  return new Date(year, monthIndex + 1, 0).getDate();
-}
-
-function buildEntries(state) {
-  const entries = [];
-  for (let m = 0; m < 12; m++) {
-    const max = daysInMonth(m, 2026);
-    for (let d = 0; d < max; d++) {
-      const text = (state.logs?.[m]?.[d] || "").trim();
-      if (!text) continue;
-
-      entries.push({
-        id: `2026-${String(m + 1).padStart(2, "0")}-${String(d + 1).padStart(
-          2,
-          "0",
-        )}`,
-        monthIndex: m,
-        dayIndex: d,
-        label: `${months[m]} ${d + 1}`,
-        text,
-        dateValue: new Date(2026, m, d + 1).getTime(),
-      });
-    }
-  }
-  entries.sort((a, b) => b.dateValue - a.dateValue);
-  return entries;
-}
-
 // title-only preview: first non-empty line, prefers first sentence, no ellipsis
 function previewText(raw, maxChars = 120) {
   const t = (raw || "").trim();
@@ -85,21 +17,42 @@ function previewText(raw, maxChars = 120) {
   return out.slice(0, maxChars).trim();
 }
 
+async function fetchPublishedSnapshot() {
+  try {
+    const res = await fetch("/process-memory.json", { cache: "no-store" });
+    if (!res.ok) return { entries: [] };
+    const data = await res.json();
+    const entries = Array.isArray(data?.entries) ? data.entries : [];
+    return { entries };
+  } catch {
+    return { entries: [] };
+  }
+}
+
 export default function TimelinePreview() {
-  const [state, setState] = useState(() => loadState());
+  const [entries, setEntries] = useState([]);
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    const onUpdate = () => setState(loadState());
-    window.addEventListener("softcomputer-update", onUpdate);
-    window.addEventListener("storage", onUpdate);
+    let alive = true;
+
+    (async () => {
+      const snap = await fetchPublishedSnapshot();
+      if (!alive) return;
+      setEntries(snap.entries || []);
+      setLoaded(true);
+    })();
+
     return () => {
-      window.removeEventListener("softcomputer-update", onUpdate);
-      window.removeEventListener("storage", onUpdate);
+      alive = false;
     };
   }, []);
 
   // limit to latest 5
-  const recent = useMemo(() => buildEntries(state).slice(0, 5), [state]);
+  const recent = useMemo(() => {
+    // your published json already exports sorted newest-first
+    return (entries || []).slice(0, 5);
+  }, [entries]);
 
   return (
     <div className="panel">
@@ -108,16 +61,16 @@ export default function TimelinePreview() {
       </div>
 
       <div className="miniList">
-        {recent.length === 0 ? (
-          <div className="emptyState">
-            no entries yet. punch the card above ✿
-          </div>
+        {!loaded ? (
+          <div className="emptyState">loading…</div>
+        ) : recent.length === 0 ? (
+          <div className="emptyState">no published entries yet.</div>
         ) : (
           recent.map((e) => (
             <a
               key={e.id}
               className="miniRow"
-              href={`/log?focus=${e.id}`}
+              href={`/log?focus=${encodeURIComponent(e.id)}`}
               title="open in log"
             >
               <div className="miniLeft">

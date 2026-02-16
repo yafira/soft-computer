@@ -2,76 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
-
-const STORAGE_KEY = "softcomputer_process_2026";
-
-const months = [
-  "jan",
-  "feb",
-  "mar",
-  "apr",
-  "may",
-  "jun",
-  "jul",
-  "aug",
-  "sep",
-  "oct",
-  "nov",
-  "dec",
-];
-
-function emptyState() {
-  const punched = Array.from({ length: 12 }, () =>
-    Array.from({ length: 31 }, () => false),
-  );
-  const logs = Array.from({ length: 12 }, () =>
-    Array.from({ length: 31 }, () => ""),
-  );
-  return { punched, logs };
-}
-
-function loadState() {
-  try {
-    if (typeof window === "undefined") return emptyState();
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return emptyState();
-    const parsed = JSON.parse(raw);
-    if (!parsed?.punched || !parsed?.logs) return emptyState();
-    return parsed;
-  } catch {
-    return emptyState();
-  }
-}
-
-function daysInMonth(monthIndex, year = 2026) {
-  return new Date(year, monthIndex + 1, 0).getDate();
-}
-
-function buildEntries(state) {
-  const entries = [];
-  for (let m = 0; m < 12; m++) {
-    const max = daysInMonth(m, 2026);
-    for (let d = 0; d < max; d++) {
-      const text = (state.logs?.[m]?.[d] || "").trim();
-      if (!text) continue;
-
-      const id = `2026-${String(m + 1).padStart(2, "0")}-${String(
-        d + 1,
-      ).padStart(2, "0")}`;
-
-      entries.push({
-        id,
-        monthIndex: m,
-        dayIndex: d,
-        label: `${months[m]} ${d + 1}`,
-        text,
-        dateValue: new Date(2026, m, d + 1).getTime(),
-      });
-    }
-  }
-  entries.sort((a, b) => b.dateValue - a.dateValue);
-  return entries;
-}
+import PublishLogsButton from "@/components/PublishLogsButton";
 
 function previewText(raw, maxChars = 120) {
   const t = (raw || "").trim();
@@ -87,67 +18,63 @@ function previewText(raw, maxChars = 120) {
   return out.slice(0, maxChars).trim();
 }
 
+async function fetchPublishedSnapshot() {
+  try {
+    const res = await fetch("/process-memory.json", { cache: "no-store" });
+    if (!res.ok) return { entries: [] };
+    const data = await res.json();
+    return { entries: Array.isArray(data?.entries) ? data.entries : [] };
+  } catch {
+    return { entries: [] };
+  }
+}
+
 export default function LogNotebookPage() {
   const searchParams = useSearchParams();
 
-  const [state, setState] = useState(() => emptyState());
+  const [entries, setEntries] = useState([]);
   const [query, setQuery] = useState("");
   const [activeId, setActiveId] = useState(null);
 
-  // load after hydration (prevents hydration mismatch)
+  // published snapshot (public)
   useEffect(() => {
     let alive = true;
 
-    queueMicrotask(() => {
+    (async () => {
+      const snap = await fetchPublishedSnapshot();
       if (!alive) return;
-      setState(loadState());
-    });
+      setEntries(snap.entries || []);
+    })();
 
     return () => {
       alive = false;
     };
   }, []);
 
-  // listen for updates from punch card saves/deletes
-  useEffect(() => {
-    const onUpdate = () => setState(loadState());
-    window.addEventListener("softcomputer-update", onUpdate);
-    window.addEventListener("storage", onUpdate);
-    return () => {
-      window.removeEventListener("softcomputer-update", onUpdate);
-      window.removeEventListener("storage", onUpdate);
-    };
-  }, []);
-
-  const entries = useMemo(() => {
-    const all = buildEntries(state);
+  const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return all;
-    return all.filter(
+    if (!q) return entries;
+    return entries.filter(
       (e) =>
-        e.text.toLowerCase().includes(q) || e.label.toLowerCase().includes(q),
+        (e.text || "").toLowerCase().includes(q) ||
+        (e.label || "").toLowerCase().includes(q),
     );
-  }, [state, query]);
+  }, [entries, query]);
 
-  // set active entry on first load:
-  // 1) focus param, else 2) newest entry
   useEffect(() => {
     const focus = searchParams.get("focus");
-    if (focus && typeof focus === "string") {
+    if (focus) {
       setActiveId(focus);
       return;
     }
-
-    if (!activeId && entries.length > 0) {
-      setActiveId(entries[0].id);
-    }
+    if (!activeId && filtered.length > 0) setActiveId(filtered[0].id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams, entries]);
+  }, [searchParams, filtered]);
 
   const activeEntry = useMemo(() => {
     if (!activeId) return null;
-    return entries.find((e) => e.id === activeId) || null;
-  }, [entries, activeId]);
+    return filtered.find((e) => e.id === activeId) || null;
+  }, [filtered, activeId]);
 
   return (
     <main className="wrap">
@@ -158,8 +85,13 @@ export default function LogNotebookPage() {
               log
             </div>
             <p className="p subtle" style={{ margin: 0 }}>
-              notebook view of punched entries.
+              published notebook snapshot.
             </p>
+          </div>
+
+          {/* optional: keep this button for you while you’re publishing */}
+          <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+            <PublishLogsButton />
           </div>
         </div>
 
@@ -171,23 +103,23 @@ export default function LogNotebookPage() {
             onChange={(e) => setQuery(e.target.value)}
           />
           <div className="small subtle" style={{ whiteSpace: "nowrap" }}>
-            {entries.length} entr{entries.length === 1 ? "y" : "ies"}
+            {filtered.length} entr{filtered.length === 1 ? "y" : "ies"}
           </div>
         </div>
       </section>
 
       <section className="logGrid">
-        {/* left: entries list (title + preview) */}
+        {/* left: entries list */}
         <div className="panel logCol">
           <div className="panelTitleRow">
             <div className="h2">entries</div>
           </div>
 
           <div className="entryList">
-            {entries.length === 0 ? (
-              <div className="emptyState">no entries yet. punch the card ✿</div>
+            {filtered.length === 0 ? (
+              <div className="emptyState">no published entries yet.</div>
             ) : (
-              entries.map((e) => {
+              filtered.map((e) => {
                 const isActive = e.id === activeId;
                 const prev = previewText(e.text);
 
@@ -202,7 +134,6 @@ export default function LogNotebookPage() {
                     <div className="entryRowTop">
                       <div className="chip">{e.label}</div>
                     </div>
-
                     <div className="entryPreview">{prev}</div>
                   </button>
                 );
@@ -211,7 +142,7 @@ export default function LogNotebookPage() {
           </div>
         </div>
 
-        {/* right: notes (full log text) */}
+        {/* right: notes */}
         <div className="panel logCol">
           <div className="panelTitleRow">
             <div className="h2">notes</div>
