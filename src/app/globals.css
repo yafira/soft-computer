@@ -1,6 +1,9 @@
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Kalam:wght@400&display=swap");
+
 :root {
   --bg: #fbfaff;
-  --bg2: #f6f1ff;
+  --bg2: #f4f1ff;
 
   --panel: rgba(255, 255, 255, 0.78);
   --ink: #2b2140;
@@ -701,7 +704,8 @@ a {
   border-radius: 18px;
   padding: 16px;
   min-height: 420px;
-
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 15px;
   background-color: rgba(255, 255, 255, 0.82);
 
   /* subtle eng notebook grid */
@@ -724,14 +728,15 @@ a {
 
 .noteBody {
   white-space: pre-wrap;
-  color: rgba(35, 26, 64, 0.92);
-  line-height: 1.6;
+  line-height: 1.75;
   font-size: 15px;
+  font-family: "IBM Plex Mono", monospace;
 }
 
 .noteHeader .h2 {
+  font-family: "Kalam", cursive;
   font-size: 18px;
-  letter-spacing: -0.01em;
+  letter-spacing: 0.3px;
   color: rgba(35, 26, 64, 0.92);
 }
 
