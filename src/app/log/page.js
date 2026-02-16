@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import PublishLogsButton from "@/components/PublishLogsButton";
 
 const PAPER_MODE_KEY = "softcomputer-paper-mode";
+const PAGE_SIZE = 9;
 
 function previewText(raw, maxChars = 120) {
   const t = (raw || "").trim();
@@ -39,6 +40,7 @@ export default function LogNotebookPage() {
   const [activeId, setActiveId] = useState(null);
 
   const [paperMode, setPaperMode] = useState("grid");
+  const [page, setPage] = useState(0);
 
   // keep paper mode public + per-user (stored locally)
   useEffect(() => {
@@ -81,6 +83,21 @@ export default function LogNotebookPage() {
     );
   }, [entries, query]);
 
+  // reset to page 0 when searching
+  useEffect(() => {
+    setPage(0);
+  }, [query]);
+
+  // slice current page
+  const pagedEntries = useMemo(() => {
+    const start = page * PAGE_SIZE;
+    return filtered.slice(start, start + PAGE_SIZE);
+  }, [filtered, page]);
+
+  const totalPages = useMemo(() => {
+    return Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  }, [filtered.length]);
+
   useEffect(() => {
     const focus = searchParams.get("focus");
     if (focus) {
@@ -91,12 +108,22 @@ export default function LogNotebookPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams, filtered]);
 
+  // if active entry is not on the current page, pick the first entry on that page
+  useEffect(() => {
+    if (!activeId) return;
+    const onPage = pagedEntries.some((e) => e.id === activeId);
+    if (!onPage && pagedEntries.length > 0) setActiveId(pagedEntries[0].id);
+  }, [activeId, pagedEntries]);
+
   const activeEntry = useMemo(() => {
     if (!activeId) return null;
     return filtered.find((e) => e.id === activeId) || null;
   }, [filtered, activeId]);
 
   const isDev = process.env.NODE_ENV === "development";
+
+  const canPrev = page > 0;
+  const canNext = page < totalPages - 1;
 
   return (
     <main className="wrap">
@@ -137,13 +164,16 @@ export default function LogNotebookPage() {
         <div className="panel logCol">
           <div className="panelTitleRow">
             <div className="h2">entries</div>
+            <div className="small subtle">
+              page {page + 1} / {totalPages}
+            </div>
           </div>
 
           <div className="entryList">
             {filtered.length === 0 ? (
               <div className="emptyState">no published entries yet.</div>
             ) : (
-              filtered.map((e) => {
+              pagedEntries.map((e) => {
                 const isActive = e.id === activeId;
                 const prev = previewText(e.text);
 
@@ -164,6 +194,35 @@ export default function LogNotebookPage() {
               })
             )}
           </div>
+
+          {/* pagination */}
+          {filtered.length > PAGE_SIZE ? (
+            <div className="logPagination">
+              <button
+                type="button"
+                className="btn ghost"
+                disabled={!canPrev}
+                onClick={() => setPage((p) => Math.max(0, p - 1))}
+              >
+                prev
+              </button>
+
+              <div className="small subtle">
+                showing {page * PAGE_SIZE + 1}–
+                {Math.min((page + 1) * PAGE_SIZE, filtered.length)} of{" "}
+                {filtered.length}
+              </div>
+
+              <button
+                type="button"
+                className="btn ghost"
+                disabled={!canNext}
+                onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+              >
+                next
+              </button>
+            </div>
+          ) : null}
         </div>
 
         {/* right: notes */}

@@ -803,7 +803,6 @@ a {
 }
 
 /* notebook paper modes */
-
 .notePaper.is-grid {
   background-color: rgba(255, 255, 255, 0.82);
   background-image:
@@ -887,6 +886,14 @@ a {
 .conceptCaption {
   margin-top: 10px;
   display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.logPagination {
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
   justify-content: space-between;
   gap: 10px;
 }
