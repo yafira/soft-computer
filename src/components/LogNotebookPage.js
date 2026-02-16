@@ -1,7 +1,12 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import PublishLogsButton from "@/components/PublishLogsButton";
+import dynamic from "next/dynamic";
+
+const PublishLogsButton = dynamic(
+  () => import("@/components/PublishLogsButton"),
+  { ssr: false },
+);
 
 const PAPER_MODE_KEY = "softcomputer-paper-mode";
 const PAGE_SIZE = 9;
@@ -154,6 +159,7 @@ export default function LogNotebookPage({ initialFocus = null }) {
             </p>
           </div>
 
+          {/* only show publish control to you locally (dev) */}
           {isDev ? (
             <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
               <PublishLogsButton />
