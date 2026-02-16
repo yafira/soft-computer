@@ -8,9 +8,14 @@ const ADMIN_FLAG_KEY = "softcomputer_admin_enabled";
 const ADMIN_TOKEN_KEY = "softcomputer_admin_token";
 
 async function fetchImages() {
-  const res = await fetch("/api/concept-images", { cache: "no-store" });
-  const data = await res.json();
-  return Array.isArray(data?.images) ? data.images : [];
+  try {
+    const res = await fetch("/api/concept-images", { cache: "no-store" });
+    const data = await res.json();
+    return Array.isArray(data?.images) ? data.images : [];
+  } catch (err) {
+    console.error("failed to load images", err);
+    return [];
+  }
 }
 
 export default function ConceptGallery() {
@@ -24,7 +29,7 @@ export default function ConceptGallery() {
     fetchImages().then(setImages);
   }, []);
 
-  // load local admin toggle/token
+  /* load admin state from localStorage */
   useEffect(() => {
     try {
       const flag = localStorage.getItem(ADMIN_FLAG_KEY) === "true";
@@ -37,6 +42,7 @@ export default function ConceptGallery() {
   function saveAdmin(flag, token) {
     setAdminEnabled(flag);
     setAdminToken(token);
+
     try {
       localStorage.setItem(ADMIN_FLAG_KEY, String(flag));
       localStorage.setItem(ADMIN_TOKEN_KEY, token || "");
@@ -51,32 +57,65 @@ export default function ConceptGallery() {
 
   async function onPickFile(file) {
     if (!file) return;
+
     setBusy(true);
+
     try {
-      // 1) upload to vercel blob (client uploads)
-      const blob = await upload(`concept/${file.name}`, file, {
+      /* 1) upload file to vercel blob */
+      const blob = await upload(`concept/${Date.now()}-${file.name}`, file, {
         access: "public",
         handleUploadUrl: "/api/blob",
       });
 
-      // 2) store metadata in kv (protected)
+      /* 2) persist metadata */
       const res = await fetch("/api/concept-images", {
         method: "POST",
         headers: {
           "content-type": "application/json",
           "x-admin-token": adminToken,
         },
-        body: JSON.stringify({ url: blob.url, caption }),
+        body: JSON.stringify({
+          url: blob.url,
+          caption,
+        }),
       });
 
-      if (!res.ok) throw new Error("save failed");
+      let json = null;
+      let text = "";
 
+      try {
+        json = await res.json();
+      } catch {
+        text = await res.text();
+      }
+
+      if (!res.ok) {
+        const details = {
+          status: res.status,
+          statusText: res.statusText,
+          json,
+          text,
+        };
+
+        console.error(
+          "concept save failed:\n" + JSON.stringify(details, null, 2),
+        );
+
+        alert(
+          `save failed (${res.status})\n` +
+            (json?.error || text || "check env vars / admin token"),
+        );
+
+        return;
+      }
+
+      /* success → refresh gallery */
       setCaption("");
       const next = await fetchImages();
       setImages(next);
     } catch (err) {
-      console.error(err);
-      alert("upload failed. check console + ADMIN token.");
+      console.error("upload pipeline failed", err);
+      alert("upload failed. check console.");
     } finally {
       setBusy(false);
     }
@@ -84,7 +123,9 @@ export default function ConceptGallery() {
 
   async function removeImage(id) {
     if (!confirm("delete this image?")) return;
+
     setBusy(true);
+
     try {
       const res = await fetch("/api/concept-images", {
         method: "DELETE",
@@ -94,12 +135,19 @@ export default function ConceptGallery() {
         },
         body: JSON.stringify({ id }),
       });
-      if (!res.ok) throw new Error("delete failed");
+
+      if (!res.ok) {
+        const text = await res.text();
+        console.error("delete failed:", text);
+        alert("delete failed");
+        return;
+      }
+
       const next = await fetchImages();
       setImages(next);
     } catch (err) {
-      console.error(err);
-      alert("delete failed.");
+      console.error("delete pipeline failed", err);
+      alert("delete failed");
     } finally {
       setBusy(false);
     }
@@ -107,7 +155,7 @@ export default function ConceptGallery() {
 
   return (
     <div style={{ display: "grid", gap: 12 }}>
-      {/* admin-only controls (local toggle) */}
+      {/* admin controls */}
       <div
         style={{
           display: "flex",
@@ -120,8 +168,6 @@ export default function ConceptGallery() {
           type="button"
           className="btn ghost"
           onClick={() => saveAdmin(!adminEnabled, adminToken)}
-          aria-pressed={adminEnabled}
-          title="toggle uploader (local only)"
         >
           {adminEnabled ? "uploader: on" : "uploader: off"}
         </button>
@@ -130,32 +176,26 @@ export default function ConceptGallery() {
           <>
             <input
               className="input"
-              style={{ maxWidth: 280 }}
-              placeholder="admin token (stored locally)"
+              style={{ maxWidth: 260 }}
+              placeholder="admin token"
               value={adminToken}
               onChange={(e) => saveAdmin(true, e.target.value)}
             />
 
             <input
               className="input"
-              style={{ maxWidth: 280 }}
-              placeholder="caption (optional)"
+              style={{ maxWidth: 260 }}
+              placeholder="caption"
               value={caption}
               onChange={(e) => setCaption(e.target.value)}
             />
 
-            <label
-              className="btn"
-              style={{
-                cursor: busy ? "not-allowed" : "pointer",
-                opacity: busy ? 0.6 : 1,
-              }}
-            >
+            <label className="btn">
               {busy ? "uploading..." : "add image"}
               <input
                 type="file"
                 accept="image/*"
-                style={{ display: "none" }}
+                hidden
                 disabled={busy}
                 onChange={(e) => onPickFile(e.target.files?.[0])}
               />
@@ -164,7 +204,7 @@ export default function ConceptGallery() {
         ) : null}
       </div>
 
-      {/* public gallery */}
+      {/* gallery */}
       {sorted.length === 0 ? (
         <div className="emptyState">no concept images yet.</div>
       ) : (
@@ -176,7 +216,7 @@ export default function ConceptGallery() {
                   src={img.url}
                   alt={img.caption || "concept image"}
                   fill
-                  sizes="(max-width: 860px) 100vw, 50vw"
+                  sizes="(max-width: 900px) 100vw, 33vw"
                 />
               </div>
 
@@ -188,8 +228,8 @@ export default function ConceptGallery() {
                 <button
                   type="button"
                   className="btn danger"
-                  onClick={() => removeImage(img.id)}
                   disabled={busy}
+                  onClick={() => removeImage(img.id)}
                 >
                   delete
                 </button>
