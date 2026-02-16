@@ -1,98 +1,200 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { upload } from "@vercel/blob/client";
+
+const ADMIN_FLAG_KEY = "softcomputer_admin_enabled";
+const ADMIN_TOKEN_KEY = "softcomputer_admin_token";
+
+async function fetchImages() {
+  const res = await fetch("/api/concept-images", { cache: "no-store" });
+  const data = await res.json();
+  return Array.isArray(data?.images) ? data.images : [];
+}
 
 export default function ConceptGallery() {
   const [images, setImages] = useState([]);
   const [busy, setBusy] = useState(false);
-  const fileRef = useRef(null);
-
-  const isDev = process.env.NODE_ENV === "development";
-
-  async function refresh() {
-    try {
-      const res = await fetch("/api/concept/images", { cache: "no-store" });
-      const data = await res.json();
-      setImages(Array.isArray(data?.images) ? data.images : []);
-    } catch {
-      setImages([]);
-    }
-  }
+  const [caption, setCaption] = useState("");
+  const [adminEnabled, setAdminEnabled] = useState(false);
+  const [adminToken, setAdminToken] = useState("");
 
   useEffect(() => {
-    refresh();
+    fetchImages().then(setImages);
   }, []);
 
-  async function onPickFile(e) {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  // load local admin toggle/token
+  useEffect(() => {
+    try {
+      const flag = localStorage.getItem(ADMIN_FLAG_KEY) === "true";
+      const token = localStorage.getItem(ADMIN_TOKEN_KEY) || "";
+      setAdminEnabled(flag);
+      setAdminToken(token);
+    } catch {}
+  }, []);
 
+  function saveAdmin(flag, token) {
+    setAdminEnabled(flag);
+    setAdminToken(token);
+    try {
+      localStorage.setItem(ADMIN_FLAG_KEY, String(flag));
+      localStorage.setItem(ADMIN_TOKEN_KEY, token || "");
+    } catch {}
+  }
+
+  const sorted = useMemo(() => {
+    return [...images].sort(
+      (a, b) => (b?.createdAt || 0) - (a?.createdAt || 0),
+    );
+  }, [images]);
+
+  async function onPickFile(file) {
+    if (!file) return;
     setBusy(true);
     try {
-      // uses vercel blob client upload flow :contentReference[oaicite:2]{index=2}
-      await upload(file.name, file, {
+      // 1) upload to vercel blob (client uploads)
+      const blob = await upload(`concept/${file.name}`, file, {
         access: "public",
-        handleUploadUrl: "/api/concept/upload",
+        handleUploadUrl: "/api/blob",
       });
 
-      await refresh();
+      // 2) store metadata in kv (protected)
+      const res = await fetch("/api/concept-images", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-admin-token": adminToken,
+        },
+        body: JSON.stringify({ url: blob.url, caption }),
+      });
+
+      if (!res.ok) throw new Error("save failed");
+
+      setCaption("");
+      const next = await fetchImages();
+      setImages(next);
+    } catch (err) {
+      console.error(err);
+      alert("upload failed. check console + ADMIN token.");
     } finally {
       setBusy(false);
-      if (fileRef.current) fileRef.current.value = "";
     }
   }
 
-  const hasImages = images.length > 0;
+  async function removeImage(id) {
+    if (!confirm("delete this image?")) return;
+    setBusy(true);
+    try {
+      const res = await fetch("/api/concept-images", {
+        method: "DELETE",
+        headers: {
+          "content-type": "application/json",
+          "x-admin-token": adminToken,
+        },
+        body: JSON.stringify({ id }),
+      });
+      if (!res.ok) throw new Error("delete failed");
+      const next = await fetchImages();
+      setImages(next);
+    } catch (err) {
+      console.error(err);
+      alert("delete failed.");
+    } finally {
+      setBusy(false);
+    }
+  }
 
   return (
-    <div>
-      <div className="panelTitleRow">
-        <div className="h2">the soft computer concept</div>
+    <div style={{ display: "grid", gap: 12 }}>
+      {/* admin-only controls (local toggle) */}
+      <div
+        style={{
+          display: "flex",
+          gap: 10,
+          alignItems: "center",
+          flexWrap: "wrap",
+        }}
+      >
+        <button
+          type="button"
+          className="btn ghost"
+          onClick={() => saveAdmin(!adminEnabled, adminToken)}
+          aria-pressed={adminEnabled}
+          title="toggle uploader (local only)"
+        >
+          {adminEnabled ? "uploader: on" : "uploader: off"}
+        </button>
 
-        {/* dev-only uploader (private to you) */}
-        {isDev ? (
-          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+        {adminEnabled ? (
+          <>
             <input
-              ref={fileRef}
-              type="file"
-              accept="image/*"
-              onChange={onPickFile}
-              style={{ display: "none" }}
+              className="input"
+              style={{ maxWidth: 280 }}
+              placeholder="admin token (stored locally)"
+              value={adminToken}
+              onChange={(e) => saveAdmin(true, e.target.value)}
             />
-            <button
-              type="button"
+
+            <input
+              className="input"
+              style={{ maxWidth: 280 }}
+              placeholder="caption (optional)"
+              value={caption}
+              onChange={(e) => setCaption(e.target.value)}
+            />
+
+            <label
               className="btn"
-              onClick={() => fileRef.current?.click()}
-              disabled={busy}
-              title="upload a concept image"
+              style={{
+                cursor: busy ? "not-allowed" : "pointer",
+                opacity: busy ? 0.6 : 1,
+              }}
             >
-              {busy ? "uploading…" : "add image"}
-            </button>
-          </div>
+              {busy ? "uploading..." : "add image"}
+              <input
+                type="file"
+                accept="image/*"
+                style={{ display: "none" }}
+                disabled={busy}
+                onChange={(e) => onPickFile(e.target.files?.[0])}
+              />
+            </label>
+          </>
         ) : null}
       </div>
 
-      {!hasImages ? (
-        <div
-          className="coverFrame"
-          style={{ display: "grid", placeItems: "center" }}
-        >
-          <div className="small subtle">no concept images yet.</div>
-        </div>
+      {/* public gallery */}
+      {sorted.length === 0 ? (
+        <div className="emptyState">no concept images yet.</div>
       ) : (
         <div className="conceptGrid">
-          {images.map((img) => (
-            <div key={img.url} className="conceptTile">
-              <Image
-                src={img.url}
-                alt="soft computer concept image"
-                fill
-                sizes="(max-width: 860px) 100vw, 50vw"
-                className="coverImg"
-              />
-            </div>
+          {sorted.map((img) => (
+            <figure key={img.id} className="conceptCard">
+              <div className="conceptImg">
+                <Image
+                  src={img.url}
+                  alt={img.caption || "concept image"}
+                  fill
+                  sizes="(max-width: 860px) 100vw, 50vw"
+                />
+              </div>
+
+              {img.caption ? (
+                <figcaption className="small subtle">{img.caption}</figcaption>
+              ) : null}
+
+              {adminEnabled ? (
+                <button
+                  type="button"
+                  className="btn danger"
+                  onClick={() => removeImage(img.id)}
+                  disabled={busy}
+                >
+                  delete
+                </button>
+              ) : null}
+            </figure>
           ))}
         </div>
       )}

@@ -1,12 +1,6 @@
-import Image from "next/image";
-import dynamic from "next/dynamic";
-
-const PunchCard = dynamic(() => import("@/components/PunchCard"), {
-  ssr: false,
-});
-const TimelinePreview = dynamic(() => import("@/components/TimelinePreview"), {
-  ssr: false,
-});
+import PunchCard from "@/components/PunchCard";
+import TimelinePreview from "@/components/TimelinePreview";
+import ConceptGallery from "@/components/ConceptGallery";
 
 export default function HomePage() {
   return (
@@ -17,7 +11,6 @@ export default function HomePage() {
         </div>
 
         <PunchCard />
-
         <div className="small" style={{ marginTop: 10 }}>
           storage: <span className="kbd">softcomputer_process_2026</span>
         </div>
@@ -30,16 +23,7 @@ export default function HomePage() {
             <div className="small subtle"></div>
           </div>
 
-          <div className="coverFrame">
-            <Image
-              src="/sc.png"
-              alt="soft computer cover"
-              fill
-              priority
-              sizes="(max-width: 860px) 100vw, 50vw"
-              className="coverImg"
-            />
-          </div>
+          <ConceptGallery />
         </div>
 
         <TimelinePreview />
