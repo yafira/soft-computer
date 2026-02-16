@@ -4,6 +4,8 @@ import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import PublishLogsButton from "@/components/PublishLogsButton";
 
+const PAPER_MODE_KEY = "softcomputer-paper-mode";
+
 function previewText(raw, maxChars = 120) {
   const t = (raw || "").trim();
   if (!t) return "";
@@ -35,6 +37,21 @@ export default function LogNotebookPage() {
   const [entries, setEntries] = useState([]);
   const [query, setQuery] = useState("");
   const [activeId, setActiveId] = useState(null);
+
+  const [paperMode, setPaperMode] = useState("grid");
+
+  // load saved paper mode
+  useEffect(() => {
+    const saved = localStorage.getItem(PAPER_MODE_KEY);
+    if (saved === "grid" || saved === "lined" || saved === "dot") {
+      setPaperMode(saved);
+    }
+  }, []);
+
+  // persist paper mode
+  useEffect(() => {
+    localStorage.setItem(PAPER_MODE_KEY, paperMode);
+  }, [paperMode]);
 
   // published snapshot (public)
   useEffect(() => {
@@ -89,7 +106,6 @@ export default function LogNotebookPage() {
             </p>
           </div>
 
-          {/* optional: keep this button for you while you’re publishing */}
           <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
             <PublishLogsButton />
           </div>
@@ -146,11 +162,40 @@ export default function LogNotebookPage() {
         <div className="panel logCol">
           <div className="panelTitleRow">
             <div className="h2">notes</div>
-            <div className="small subtle">read-only</div>
+
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+              <button
+                type="button"
+                className="kbd"
+                onClick={() => setPaperMode("grid")}
+                aria-pressed={paperMode === "grid"}
+                title="grid paper"
+              >
+                grid
+              </button>
+              <button
+                type="button"
+                className="kbd"
+                onClick={() => setPaperMode("lined")}
+                aria-pressed={paperMode === "lined"}
+                title="lined paper"
+              >
+                lined
+              </button>
+              <button
+                type="button"
+                className="kbd"
+                onClick={() => setPaperMode("dot")}
+                aria-pressed={paperMode === "dot"}
+                title="dot grid paper"
+              >
+                dot
+              </button>
+            </div>
           </div>
 
           {activeEntry ? (
-            <article className="notePaper">
+            <article className={`notePaper is-${paperMode}`}>
               <div className="noteHeader">
                 <div className="h2" style={{ margin: 0 }}>
                   {activeEntry.label}
@@ -160,7 +205,7 @@ export default function LogNotebookPage() {
               <div className="noteBody">{activeEntry.text}</div>
             </article>
           ) : (
-            <div className="notePaper emptyState">
+            <div className={`notePaper is-${paperMode} emptyState`}>
               select an entry to read it.
             </div>
           )}

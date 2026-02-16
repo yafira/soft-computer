@@ -218,7 +218,7 @@ a {
 .miniRow {
   display: grid;
   grid-template-columns: 88px 1fr;
-  align-items: flex-start; /* nicer when title wraps */
+  align-items: flex-start;
   gap: 12px;
   padding: 12px;
   border-radius: 16px;
@@ -349,7 +349,7 @@ a {
   height: 100%;
 }
 
-/* keep punch card styling how it was before (lavender) */
+/* punchcard */
 .punchCard {
   fill: #e9defa;
 }
@@ -423,7 +423,7 @@ a {
   fill: rgba(233, 222, 250, 0.98);
 }
 
-/* new: outline of the clipped corner */
+/* outline of the clipped corner */
 .punchCardCutStroke {
   fill: none;
   stroke: rgba(60, 35, 110, 0.22);
@@ -698,10 +698,20 @@ a {
 .notePaper {
   margin-top: 12px;
   border: 1px dashed rgba(145, 130, 185, 0.45);
-  background: rgba(255, 255, 255, 0.65);
   border-radius: 18px;
-  padding: 14px;
+  padding: 16px;
   min-height: 420px;
+
+  background-color: rgba(255, 255, 255, 0.82);
+
+  /* subtle eng notebook grid */
+  background-image:
+    linear-gradient(rgba(90, 70, 140, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(90, 70, 140, 0.08) 1px, transparent 1px);
+
+  background-size: 26px 26px;
+
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35);
 }
 
 .noteHeader {
@@ -731,4 +741,34 @@ a {
 
 .entryRowOnly .entryRowTop {
   margin-bottom: 0;
+}
+
+/* notebook paper modes */
+
+.notePaper.is-grid {
+  background-color: rgba(255, 255, 255, 0.82);
+  background-image:
+    linear-gradient(rgba(90, 70, 140, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(90, 70, 140, 0.08) 1px, transparent 1px);
+  background-size: 26px 26px;
+}
+
+.notePaper.is-lined {
+  background-color: rgba(255, 255, 255, 0.88);
+  background-image: linear-gradient(
+    to bottom,
+    transparent 0px,
+    transparent 23px,
+    rgba(90, 70, 140, 0.12) 24px
+  );
+  background-size: 100% 26px;
+}
+
+.notePaper.is-dot {
+  background-color: rgba(255, 255, 255, 0.88);
+  background-image: radial-gradient(
+    rgba(90, 70, 140, 0.18) 1.2px,
+    transparent 1.2px
+  );
+  background-size: 22px 22px;
 }
