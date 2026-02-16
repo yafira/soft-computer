@@ -24,6 +24,7 @@ export default function ConceptGallery() {
   const [caption, setCaption] = useState("");
   const [adminEnabled, setAdminEnabled] = useState(false);
   const [adminToken, setAdminToken] = useState("");
+  const [index, setIndex] = useState(0);
 
   useEffect(() => {
     fetchImages().then(setImages);
@@ -54,6 +55,28 @@ export default function ConceptGallery() {
       (a, b) => (b?.createdAt || 0) - (a?.createdAt || 0),
     );
   }, [images]);
+
+  /* keep index valid when list changes */
+  useEffect(() => {
+    if (sorted.length === 0) {
+      setIndex(0);
+      return;
+    }
+    setIndex((i) => Math.min(i, sorted.length - 1));
+  }, [sorted.length]);
+
+  const current = sorted.length > 0 ? sorted[index] : null;
+  const hasMany = sorted.length > 1;
+
+  function goPrev() {
+    if (!hasMany) return;
+    setIndex((i) => (i - 1 + sorted.length) % sorted.length);
+  }
+
+  function goNext() {
+    if (!hasMany) return;
+    setIndex((i) => (i + 1) % sorted.length);
+  }
 
   async function onPickFile(file) {
     if (!file) return;
@@ -109,10 +132,11 @@ export default function ConceptGallery() {
         return;
       }
 
-      /* success → refresh gallery */
+      /* success → refresh gallery and jump to newest (index 0 after sort) */
       setCaption("");
       const next = await fetchImages();
       setImages(next);
+      setIndex(0);
     } catch (err) {
       console.error("upload pipeline failed", err);
       alert("upload failed. check console.");
@@ -145,6 +169,10 @@ export default function ConceptGallery() {
 
       const next = await fetchImages();
       setImages(next);
+
+      /* if we deleted the last item, clamp index */
+      // (the sorted-length effect will also clamp, but this keeps it snappy)
+      setIndex((i) => Math.max(0, i - (i >= next.length ? 1 : 0)));
     } catch (err) {
       console.error("delete pipeline failed", err);
       alert("delete failed");
@@ -190,7 +218,13 @@ export default function ConceptGallery() {
               onChange={(e) => setCaption(e.target.value)}
             />
 
-            <label className="btn">
+            <label
+              className="btn"
+              style={{
+                cursor: busy ? "not-allowed" : "pointer",
+                opacity: busy ? 0.6 : 1,
+              }}
+            >
               {busy ? "uploading..." : "add image"}
               <input
                 type="file"
@@ -204,24 +238,66 @@ export default function ConceptGallery() {
         ) : null}
       </div>
 
-      {/* gallery */}
-      {sorted.length === 0 ? (
-        <div className="emptyState">no concept images yet.</div>
-      ) : (
-        <div className="conceptGrid">
-          {sorted.map((img) => (
-            <figure key={img.id} className="conceptCard">
-              <div className="conceptImg">
-                <Image
-                  src={img.url}
-                  alt={img.caption || "concept image"}
-                  fill
-                  sizes="(max-width: 900px) 100vw, 33vw"
-                />
-              </div>
+      {/* single-image gallery */}
+      {current ? (
+        <figure className="conceptCard" style={{ margin: 0 }}>
+          <div className="conceptImg">
+            <Image
+              src={current.url}
+              alt={current.caption || "concept image"}
+              fill
+              sizes="(max-width: 900px) 100vw, 50vw"
+              priority
+            />
+          </div>
 
-              {img.caption ? (
-                <figcaption className="small subtle">{img.caption}</figcaption>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: hasMany ? "space-between" : "flex-end",
+              gap: 10,
+              marginTop: 10,
+              flexWrap: "wrap",
+            }}
+          >
+            {hasMany ? (
+              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                <button
+                  type="button"
+                  className="btn ghost"
+                  onClick={goPrev}
+                  disabled={busy}
+                  aria-label="previous image"
+                  title="previous"
+                >
+                  ←
+                </button>
+
+                <div className="small subtle" style={{ whiteSpace: "nowrap" }}>
+                  {index + 1} / {sorted.length}
+                </div>
+
+                <button
+                  type="button"
+                  className="btn ghost"
+                  onClick={goNext}
+                  disabled={busy}
+                  aria-label="next image"
+                  title="next"
+                >
+                  →
+                </button>
+              </div>
+            ) : (
+              <div />
+            )}
+
+            <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+              {current.caption ? (
+                <figcaption className="small subtle">
+                  {current.caption}
+                </figcaption>
               ) : null}
 
               {adminEnabled ? (
@@ -229,14 +305,16 @@ export default function ConceptGallery() {
                   type="button"
                   className="btn danger"
                   disabled={busy}
-                  onClick={() => removeImage(img.id)}
+                  onClick={() => removeImage(current.id)}
                 >
                   delete
                 </button>
               ) : null}
-            </figure>
-          ))}
-        </div>
+            </div>
+          </div>
+        </figure>
+      ) : (
+        <div className="emptyState">no concept images yet.</div>
       )}
     </div>
   );
