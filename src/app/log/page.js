@@ -1,17 +1,8 @@
-import PunchCard from "@/components/PunchCard";
-import ExportMemory from "@/components/ExportMemory";
+import LogNotebookPage from "@/components/LogNotebookPage";
 
-export default function PunchPage({ searchParams }) {
-  const mRaw = searchParams?.m;
-  const dRaw = searchParams?.d;
+export default function LogPage({ searchParams }) {
+  const focusRaw = searchParams?.focus;
+  const focus = typeof focusRaw === "string" ? focusRaw : null;
 
-  const initialM = typeof mRaw === "string" ? Number(mRaw) : null;
-  const initialD = typeof dRaw === "string" ? Number(dRaw) : null;
-
-  return (
-    <div className="panel">
-      <PunchCard initialM={initialM} initialD={initialD} />
-      <ExportMemory />
-    </div>
-  );
+  return <LogNotebookPage focus={focus} />;
 }

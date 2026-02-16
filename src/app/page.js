@@ -2,7 +2,24 @@ import PunchCard from "@/components/PunchCard";
 import TimelinePreview from "@/components/TimelinePreview";
 import ConceptGallery from "@/components/ConceptGallery";
 
-export default function HomePage() {
+async function fetchPublishedEntries() {
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_SITE_URL || ""}/process-memory.json`,
+      { cache: "no-store" },
+    );
+    if (!res.ok) return [];
+    const data = await res.json();
+    return Array.isArray(data?.entries) ? data.entries : [];
+  } catch {
+    return [];
+  }
+}
+
+export default async function HomePage() {
+  const isDev = process.env.NODE_ENV === "development";
+  const entries = isDev ? [] : await fetchPublishedEntries();
+
   return (
     <main className="wrap">
       <section id="punch-card" className="panel punchSection">
@@ -10,10 +27,13 @@ export default function HomePage() {
           <div></div>
         </div>
 
-        <PunchCard />
-        <div className="small" style={{ marginTop: 10 }}>
-          storage: <span className="kbd">softcomputer_process_2026</span>
-        </div>
+        <PunchCard readOnly={!isDev} publishedEntries={entries} />
+
+        {isDev ? (
+          <div className="small" style={{ marginTop: 10 }}>
+            storage: <span className="kbd">softcomputer_process_2026</span>
+          </div>
+        ) : null}
       </section>
 
       <section className="twoCol">
