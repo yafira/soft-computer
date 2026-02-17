@@ -51,7 +51,7 @@ export default function TimelinePreview() {
   // limit to latest 5
   const recent = useMemo(() => {
     // your published json already exports sorted newest-first
-    return (entries || []).slice(0, 9);
+    return (entries || []).slice(0, 8);
   }, [entries]);
 
   return (

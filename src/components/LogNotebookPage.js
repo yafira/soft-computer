@@ -9,7 +9,7 @@ const PublishLogsButton = dynamic(
 );
 
 const PAPER_MODE_KEY = "softcomputer-paper-mode";
-const PAGE_SIZE = 9;
+const PAGE_SIZE = 8;
 
 function previewText(raw, maxChars = 120) {
   const t = (raw || "").trim();
