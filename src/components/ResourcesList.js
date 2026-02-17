@@ -4,16 +4,32 @@ import { useEffect, useMemo, useState } from "react";
 
 function pickGroupName(r) {
   const cols = Array.isArray(r?.collections) ? r.collections : [];
-  // use the most specific label (often the subcollection) if present
-  // if your api returns multiple, the first is usually fine
-  return (cols[0] || "uncategorized").toLowerCase();
+  return String(cols[0] || "uncategorized").trim();
 }
 
 function sortGroupNames(a, b) {
-  // keep "uncategorized" last
-  if (a === "uncategorized" && b !== "uncategorized") return 1;
-  if (b === "uncategorized" && a !== "uncategorized") return -1;
-  return a.localeCompare(b);
+  const aa = String(a || "").toLowerCase();
+  const bb = String(b || "").toLowerCase();
+
+  if (aa === "uncategorized" && bb !== "uncategorized") return 1;
+  if (bb === "uncategorized" && aa !== "uncategorized") return -1;
+
+  return aa.localeCompare(bb);
+}
+
+function prettyLabel(s) {
+  const raw = String(s || "").trim();
+  if (!raw) return "uncategorized";
+
+  return raw
+    .split(" / ")
+    .map((part) =>
+      part
+        .split(/\s+/)
+        .map((w) => (w ? w[0].toUpperCase() + w.slice(1) : w))
+        .join(" "),
+    )
+    .join(" / ");
 }
 
 export default function ResourcesList() {
@@ -58,24 +74,22 @@ export default function ResourcesList() {
     const q = query.trim().toLowerCase();
     const list = Array.isArray(resources) ? resources : [];
 
-    // filter first
     const filtered = !q
       ? list
       : list.filter((r) => {
           const title = String(r?.title || "").toLowerCase();
-          const group = pickGroupName(r);
+          const group = pickGroupName(r).toLowerCase();
           return title.includes(q) || group.includes(q);
         });
 
-    // group
     const map = new Map();
+
     for (const r of filtered) {
       const group = pickGroupName(r);
       if (!map.has(group)) map.set(group, []);
       map.get(group).push(r);
     }
 
-    // sort titles inside group
     for (const [k, arr] of map.entries()) {
       arr.sort((a, b) =>
         String(a?.title || "").localeCompare(String(b?.title || "")),
@@ -83,7 +97,6 @@ export default function ResourcesList() {
       map.set(k, arr);
     }
 
-    // return sorted groups
     const keys = Array.from(map.keys()).sort(sortGroupNames);
     return keys.map((k) => ({ name: k, items: map.get(k) || [] }));
   }, [resources, query]);
@@ -106,14 +119,13 @@ export default function ResourcesList() {
   }
 
   return (
-    <div style={{ display: "grid", gap: 14 }}>
-      <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+    <div className="resourcesWrap">
+      <div className="resourcesTopBar">
         <input
           className="input"
           placeholder="search resources…"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          style={{ maxWidth: 420 }}
         />
         <div className="small subtle">
           {totalCount} item{totalCount === 1 ? "" : "s"}
@@ -121,46 +133,31 @@ export default function ResourcesList() {
       </div>
 
       {totalCount === 0 ? (
-        <div className="emptyState">
-          no items found in this zotero collection.
-        </div>
+        <div className="emptyState">no items found.</div>
       ) : (
-        <div style={{ display: "grid", gap: 16 }}>
+        <div className="resourcesGroups">
           {grouped.map((g) => (
-            <section key={g.name} style={{ display: "grid", gap: 10 }}>
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  gap: 10,
-                  alignItems: "baseline",
-                }}
-              >
-                <div className="h2" style={{ margin: 0, fontSize: 16 }}>
-                  {g.name}
-                </div>
-                <div className="small subtle">{g.items.length}</div>
+            <section key={g.name} className="resourcesGroup">
+              <div className="resourcesGroupHeader">
+                <div className="resourcesGroupTitle">{prettyLabel(g.name)}</div>
+                <div className="resourcesGroupCount">{g.items.length}</div>
               </div>
 
-              <div style={{ display: "grid", gap: 8 }}>
+              <div className="resourcesItems">
                 {g.items.map((r) => (
-                  <div
-                    key={r.key}
-                    className="cardRow"
-                    style={{ padding: "10px 12px" }}
-                  >
+                  <div key={r.key} className="resourcesItem">
                     {r.url ? (
                       <a
-                        className="link"
+                        className="resourcesLink"
                         href={r.url}
                         target="_blank"
                         rel="noreferrer"
-                        style={{ fontWeight: 600 }}
+                        title={r.title}
                       >
                         {r.title}
                       </a>
                     ) : (
-                      <div style={{ fontWeight: 600 }}>{r.title}</div>
+                      <span className="resourcesTitle">{r.title}</span>
                     )}
                   </div>
                 ))}
