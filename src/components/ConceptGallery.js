@@ -308,7 +308,6 @@ export default function ConceptGallery() {
                 </figcaption>
               ) : null}
 
-              {/* delete button should also be dev-only */}
               {canAdmin && adminEnabled ? (
                 <button
                   type="button"
