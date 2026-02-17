@@ -159,7 +159,7 @@ export async function GET() {
         tags: safeArray(d.tags)
           .map((t) => t?.tag)
           .filter(Boolean),
-        collections: colNames, // ✅ add this
+        collections: colNames,
       });
     }
 

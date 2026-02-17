@@ -23,6 +23,9 @@ export default function Nav() {
         </Link>
 
         <nav style={{ display: "flex", gap: 14, alignItems: "center" }}>
+          <Link href="/about" className="kbd">
+            about
+          </Link>
           <Link href="/resources" className="kbd">
             resources
           </Link>

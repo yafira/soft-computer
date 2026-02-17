@@ -994,3 +994,174 @@ a {
   text-decoration: underline;
   text-underline-offset: 3px;
 }
+
+/* about page */
+
+.aboutGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+@media (min-width: 960px) {
+  .aboutGrid {
+    grid-template-columns: 1fr 320px;
+    gap: 18px;
+    align-items: start;
+  }
+}
+
+.aboutMain .h2 {
+  margin: 18px 0 8px;
+  font-size: 16px;
+  letter-spacing: -0.01em;
+}
+
+.aboutCallouts {
+  display: grid;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.aboutCallout {
+  border: 1px dashed rgba(120, 90, 180, 0.28);
+  background: rgba(255, 255, 255, 0.55);
+  border-radius: 14px;
+  padding: 12px 12px;
+}
+
+.aboutLabel {
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  text-transform: lowercase;
+  opacity: 0.75;
+  margin-bottom: 8px;
+}
+
+.aboutList {
+  margin: 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 6px;
+}
+
+.aboutTwoCol {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+@media (min-width: 760px) {
+  .aboutTwoCol {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.aboutThreeCol {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+@media (min-width: 860px) {
+  .aboutThreeCol {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+}
+
+.aboutCard {
+  border: 1px solid rgba(120, 90, 180, 0.16);
+  background: rgba(255, 255, 255, 0.55);
+  border-radius: 14px;
+  padding: 12px 12px;
+}
+
+.aboutAside .aboutMeta {
+  border: 1px solid rgba(120, 90, 180, 0.18);
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 16px;
+  padding: 12px 12px;
+}
+
+.aboutMetaTitle {
+  font-size: 12px;
+  opacity: 0.75;
+  margin-bottom: 10px;
+}
+
+.aboutMetaRow {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 10px;
+  padding: 6px 0;
+  border-top: 1px solid rgba(120, 90, 180, 0.1);
+}
+
+.aboutMetaRow:first-of-type {
+  border-top: none;
+  padding-top: 0;
+}
+
+.aboutMetaKey {
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+.aboutMetaVal {
+  font-size: 13px;
+}
+
+.aboutChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.knownsUnknowns {
+  display: grid;
+  gap: 18px;
+  margin-top: 28px;
+}
+
+.kuBlock {
+  padding: 14px 16px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 14px;
+  background: var(--panel-soft);
+}
+
+.kuTitle {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: lowercase;
+}
+
+.kuSubtitle {
+  font-size: 12px;
+  opacity: 0.6;
+  margin-top: 2px;
+  margin-bottom: 10px;
+}
+
+.kuMiniTitle {
+  font-size: 12px;
+  font-weight: 600;
+  margin-top: 10px;
+  margin-bottom: 6px;
+  opacity: 0.75;
+}
+
+.kuBlock ul {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.kuBlock li {
+  font-size: 13px;
+  line-height: 1.45;
+  opacity: 0.85;
+  margin-bottom: 4px;
+}
