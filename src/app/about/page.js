@@ -322,20 +322,30 @@ export default function AboutPage() {
               <div className="aboutMetaTitle">keywords</div>
               <div className="aboutChips">
                 {[
+                  "textile interfaces",
+                  "embedded electronics",
+                  "physical computing",
                   "e-textiles",
-                  "capacitive sensing",
-                  "thermal printing",
-                  "soft circuits",
-                  "soft os",
-                  "feminist hci",
                   "calm technology",
+                  "slow technology",
+                  "tangible interaction",
+                  "pressure sensing",
+                  "soft circuits",
                   "embodied interaction",
-                  "critical making",
-                  "speculative design",
+                  "capacitive sensing",
+                  "poetic computation",
                   "material memory",
+                  "thermal printing",
+                  "receipt artifacts",
+                  "soft os",
                   "anti-optimization",
+                  "critical making",
+                  "speculative hardware",
+                  "feminist hci",
                   "computational text",
-                  "lightweight ml",
+                  "small ml",
+                  "interpretable systems",
+                  "craft as logic",
                 ].map((k) => (
                   <span key={k} className="chip">
                     {k}
