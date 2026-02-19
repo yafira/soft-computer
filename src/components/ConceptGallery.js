@@ -20,7 +20,7 @@ async function fetchImages() {
 
 export default function ConceptGallery() {
   const isDev = process.env.NODE_ENV === "development";
-  const canAdmin = isDev; // only allow upload/delete controls locally
+  const canAdmin = true;
 
   const [images, setImages] = useState([]);
   const [busy, setBusy] = useState(false);
