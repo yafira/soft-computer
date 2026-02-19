@@ -6,8 +6,7 @@ const ADMIN_TOKEN = process.env.ADMIN_LOG_TOKEN || "";
 
 function isAuthorized(req) {
   if (!ADMIN_TOKEN) return false;
-  const got = (req.headers.get("x-admin-token") || "").trim();
-  return got === ADMIN_TOKEN.trim();
+  return (req.headers.get("x-admin-token") || "").trim() === ADMIN_TOKEN.trim();
 }
 
 export async function GET() {
@@ -27,23 +26,29 @@ export async function POST(req) {
   }
   try {
     const body = await req.json().catch(() => ({}));
-    const { id, label, text } = body;
+    const { id, label, text, imageUrl } = body;
+
     if (!label?.trim() || !text?.trim()) {
       return NextResponse.json(
         { error: "label and text required" },
         { status: 400 },
       );
     }
+
     const raw = await redis.get(KEY);
     const existing = Array.isArray(raw) ? raw : [];
 
-    // upsert — replace if same id exists, otherwise prepend
     const entry = {
       id: id || globalThis.crypto.randomUUID(),
       label: label.trim(),
       text: text.trim(),
+      imageUrl:
+        typeof imageUrl === "string" && imageUrl.trim()
+          ? imageUrl.trim()
+          : null,
       createdAt: Date.now(),
     };
+
     const filtered = existing.filter((e) => e.id !== entry.id);
     await redis.set(KEY, [entry, ...filtered]);
 

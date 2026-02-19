@@ -1,53 +1,54 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
-import Image from "next/image";
+import ConceptGallery from "@/components/ConceptGallery";
 
 const PunchCard = dynamic(() => import("@/components/PunchCard"), {
   ssr: false,
 });
-
 const TimelinePreview = dynamic(() => import("@/components/TimelinePreview"), {
   ssr: false,
 });
 
 export default function HomeClient() {
+  const [entries, setEntries] = useState([]);
+
+  useEffect(() => {
+    fetch("/api/logs", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((d) => setEntries(d.entries ?? []));
+
+    const onPub = () =>
+      fetch("/api/logs", { cache: "no-store" })
+        .then((r) => r.json())
+        .then((d) => setEntries(d.entries ?? []));
+
+    window.addEventListener("softcomputer-logs-published", onPub);
+    return () =>
+      window.removeEventListener("softcomputer-logs-published", onPub);
+  }, []);
+
   return (
     <main className="wrap">
-      {/* punch card first */}
       <section id="punch-card" className="panel punchSection">
         <div className="panelHeader">
           <div></div>
         </div>
-
-        <PunchCard />
+        <PunchCard readOnly={true} publishedEntries={entries} />
         <div className="small" style={{ marginTop: 10 }}>
-          storage: <span className="kbd">softcomputer_process_2026</span>
+          storage: <span className="kbd">redis + vercel blob</span>
         </div>
       </section>
 
-      {/* below: 2 columns */}
       <section className="twoCol">
-        {/* left: cover image */}
         <div className="panel">
           <div className="panelTitleRow">
             <div className="h2">the soft computer concept</div>
             <div className="small subtle"></div>
           </div>
-
-          <div className="coverFrame">
-            <Image
-              src="/sc.png"
-              alt="soft computer cover"
-              fill
-              priority
-              sizes="(max-width: 860px) 100vw, 50vw"
-              className="coverImg"
-            />
-          </div>
+          <ConceptGallery />
         </div>
-
-        {/* right: timeline preview */}
         <TimelinePreview />
       </section>
     </main>

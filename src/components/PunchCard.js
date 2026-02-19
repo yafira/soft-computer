@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { upload } from "@vercel/blob/client";
 
 const ADMIN_TOKEN = process.env.NEXT_PUBLIC_ADMIN_LOG_TOKEN || "";
 
@@ -33,15 +34,11 @@ function stateFromPublishedEntries(entries) {
       .trim();
     const parts = label.split(/\s+/);
     if (parts.length < 2) continue;
-
     const mName = parts[0];
     const dNum = Number(parts[1]);
-
     const m = months.indexOf(mName);
     const d = Number.isFinite(dNum) ? dNum - 1 : -1;
-
     if (m < 0 || d < 0 || d > 30) continue;
-
     const text = String(e?.text || "").trim();
     logs[m][d] = text;
     punched[m][d] = text.length > 0;
@@ -65,14 +62,13 @@ export default function PunchCard({
 
   const [active, setActive] = useState(null);
   const [draft, setDraft] = useState("");
+  const [imageUrl, setImageUrl] = useState("");
+  const [uploading, setUploading] = useState(false);
   const [hover, setHover] = useState(null);
   const [lastDeleted, setLastDeleted] = useState(null);
   const [saving, setSaving] = useState(false);
-
-  // live entries from Redis
   const [redisEntries, setRedisEntries] = useState(publishedEntries);
 
-  // load from Redis on mount and after publish
   useEffect(() => {
     async function loadFromRedis() {
       try {
@@ -91,7 +87,6 @@ export default function PunchCard({
       window.removeEventListener("softcomputer-logs-published", onPub);
   }, []);
 
-  // sync when prop changes
   useEffect(() => {
     setRedisEntries(publishedEntries);
   }, [publishedEntries]);
@@ -147,16 +142,41 @@ export default function PunchCard({
   const openEditor = useCallback(
     (r, c) => {
       if (readOnly) return;
+      const label = `${months[r]} ${c + 1}`;
+      const existing = redisEntries.find(
+        (e) =>
+          String(e?.label || "")
+            .toLowerCase()
+            .trim() === label.toLowerCase(),
+      );
       setActive({ r, c });
       setDraft(viewState.logs?.[r]?.[c] || "");
+      setImageUrl(existing?.imageUrl || "");
     },
-    [readOnly, viewState.logs],
+    [readOnly, viewState.logs, redisEntries],
   );
 
   const closeEditor = useCallback(() => {
     setActive(null);
     setDraft("");
+    setImageUrl("");
   }, []);
+
+  async function onImagePick(file) {
+    if (!file) return;
+    setUploading(true);
+    try {
+      const blob = await upload(`logs/${Date.now()}-${file.name}`, file, {
+        access: "public",
+        handleUploadUrl: "/api/blob",
+      });
+      setImageUrl(blob.url);
+    } catch (e) {
+      console.error("image upload failed", e);
+    } finally {
+      setUploading(false);
+    }
+  }
 
   const commitSave = useCallback(async () => {
     if (readOnly) return;
@@ -177,14 +197,12 @@ export default function PunchCard({
           "Content-Type": "application/json",
           "x-admin-token": ADMIN_TOKEN,
         },
-        body: JSON.stringify({ id, label, text }),
+        body: JSON.stringify({ id, label, text, imageUrl: imageUrl || null }),
       });
 
-      // refresh punch card immediately
       const res = await fetch("/api/logs", { cache: "no-store" });
       const data = await res.json();
       setRedisEntries(Array.isArray(data?.entries) ? data.entries : []);
-
       window.dispatchEvent(new Event("softcomputer-logs-published"));
     } catch (e) {
       console.error("save failed", e);
@@ -193,14 +211,13 @@ export default function PunchCard({
     }
 
     closeEditor();
-  }, [readOnly, active, draft, closeEditor]);
+  }, [readOnly, active, draft, imageUrl, closeEditor]);
 
   const commitDelete = useCallback(async () => {
     if (readOnly) return;
     if (!active) return;
     const { r, c } = active;
     const id = `2026-${String(r + 1).padStart(2, "0")}-${String(c + 1).padStart(2, "0")}`;
-
     const prevText = (viewState.logs?.[r]?.[c] || "").trim();
     setLastDeleted(prevText ? { r, c, text: prevText } : null);
 
@@ -218,7 +235,6 @@ export default function PunchCard({
       const res = await fetch("/api/logs", { cache: "no-store" });
       const data = await res.json();
       setRedisEntries(Array.isArray(data?.entries) ? data.entries : []);
-
       window.dispatchEvent(new Event("softcomputer-logs-published"));
     } catch (e) {
       console.error("delete failed", e);
@@ -227,13 +243,13 @@ export default function PunchCard({
     }
 
     setDraft("");
+    setImageUrl("");
   }, [readOnly, active, viewState.logs]);
 
   const undoDelete = useCallback(async () => {
     if (readOnly) return;
     if (!lastDeleted) return;
     const { r, c, text } = lastDeleted;
-
     const label = `${months[r]} ${c + 1}`;
     const id = `2026-${String(r + 1).padStart(2, "0")}-${String(c + 1).padStart(2, "0")}`;
 
@@ -251,7 +267,6 @@ export default function PunchCard({
       const res = await fetch("/api/logs", { cache: "no-store" });
       const data = await res.json();
       setRedisEntries(Array.isArray(data?.entries) ? data.entries : []);
-
       window.dispatchEvent(new Event("softcomputer-logs-published"));
     } catch (e) {
       console.error("undo failed", e);
@@ -295,7 +310,6 @@ export default function PunchCard({
       window.removeEventListener("keydown", onKey, { capture: true });
   }, [readOnly, active, closeEditor, commitSave, commitDelete, undoDelete]);
 
-  // auto-open today
   useEffect(() => {
     if (readOnly) return;
     if (didAutoOpenRef.current) return;
@@ -556,7 +570,7 @@ export default function PunchCard({
                 {months[active.r]} {active.c + 1}
               </div>
               <div className="small subtle">
-                enter = save • esc = close • cmd/ctrl+z = undo delete •
+                enter = save • esc = close • cmd/ctrl+z = undo •
                 cmd/ctrl+backspace = delete
               </div>
             </div>
@@ -570,8 +584,76 @@ export default function PunchCard({
               autoFocus
             />
 
+            {/* image upload */}
+            <div
+              style={{
+                display: "flex",
+                gap: 10,
+                alignItems: "center",
+                marginTop: 8,
+              }}
+            >
+              <label
+                className="btn ghost"
+                style={{
+                  cursor: uploading ? "not-allowed" : "pointer",
+                  opacity: uploading ? 0.6 : 1,
+                }}
+              >
+                {uploading
+                  ? "uploading…"
+                  : imageUrl
+                    ? "image attached ✓"
+                    : "attach image"}
+                <input
+                  type="file"
+                  accept="image/*"
+                  hidden
+                  disabled={uploading}
+                  onChange={(e) => onImagePick(e.target.files?.[0])}
+                />
+              </label>
+              {imageUrl && (
+                <button
+                  className="btn ghost"
+                  type="button"
+                  onClick={() => setImageUrl("")}
+                >
+                  remove image
+                </button>
+              )}
+            </div>
+
+            {/* image preview */}
+            {imageUrl && (
+              <div
+                style={{
+                  marginTop: 10,
+                  borderRadius: 12,
+                  overflow: "hidden",
+                  border: "1px solid rgba(60,35,110,0.14)",
+                }}
+              >
+                <img
+                  src={imageUrl}
+                  alt="attached"
+                  style={{
+                    width: "100%",
+                    maxHeight: 200,
+                    objectFit: "contain",
+                    display: "block",
+                    background: "#fff",
+                  }}
+                />
+              </div>
+            )}
+
             <div className="punchEditorActions">
-              <button className="btn" onClick={commitSave} disabled={saving}>
+              <button
+                className="btn"
+                onClick={commitSave}
+                disabled={saving || uploading}
+              >
                 {saving ? "saving…" : "save"}
               </button>
               <button
@@ -596,7 +678,7 @@ export default function PunchCard({
             </div>
 
             <div className="small subtle" style={{ marginTop: 10 }}>
-              storage: <span className="chip">redis</span>
+              storage: <span className="chip">redis + vercel blob</span>
             </div>
           </div>
         ) : null}

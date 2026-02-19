@@ -14,13 +14,10 @@ const PAGE_SIZE = 8;
 function previewText(raw, maxChars = 120) {
   const t = (raw || "").trim();
   if (!t) return "";
-
   const firstLine = t.split("\n").find((line) => line.trim().length > 0) || "";
   const line = firstLine.trim();
-
   const sentenceMatch = line.match(/^(.+?[.!?])(\s|$)/);
   const sentence = sentenceMatch ? sentenceMatch[1].trim() : "";
-
   const out = sentence || line;
   return out.slice(0, maxChars).trim();
 }
@@ -28,7 +25,6 @@ function previewText(raw, maxChars = 120) {
 async function fetchLiveLogs() {
   try {
     const res = await fetch("/api/logs", { cache: "no-store" });
-
     if (!res.ok) {
       const t = await res.text();
       return {
@@ -36,7 +32,6 @@ async function fetchLiveLogs() {
         error: `api failed (${res.status}): ${t.slice(0, 200)}`,
       };
     }
-
     const data = await res.json();
     return {
       entries: Array.isArray(data?.entries) ? data.entries : [],
@@ -75,7 +70,6 @@ export default function LogNotebookPage({ focus }) {
   const [paperMode, setPaperMode] = useState(() => readPaperMode());
   const [page, setPage] = useState(0);
 
-  // strict-mode guard (dev)
   const didInitRef = useRef(false);
 
   useEffect(() => {
@@ -84,27 +78,22 @@ export default function LogNotebookPage({ focus }) {
 
   const load = useCallback(async () => {
     setLoaded(false);
-
     const snap = await fetchLiveLogs();
     const list = Array.isArray(snap.entries) ? snap.entries : [];
-
     const sorted = [...list].sort(
       (a, b) => (Number(b?.createdAt) || 0) - (Number(a?.createdAt) || 0),
     );
-
     setEntries(sorted);
     setError(snap.error || "");
     setLoaded(true);
   }, []);
 
-  // initial load
   useEffect(() => {
     if (didInitRef.current) return;
     didInitRef.current = true;
-    load();
+    queueMicrotask(() => load());
   }, [load]);
 
-  // refresh when you publish
   useEffect(() => {
     const onPub = () => load();
     window.addEventListener("softcomputer-logs-published", onPub);
@@ -115,7 +104,6 @@ export default function LogNotebookPage({ focus }) {
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return entries;
-
     return entries.filter((e) => {
       const text = String(e?.text || "").toLowerCase();
       const label = String(e?.label || "").toLowerCase();
@@ -134,7 +122,6 @@ export default function LogNotebookPage({ focus }) {
     return filtered.slice(start, start + PAGE_SIZE);
   }, [filtered, safePage]);
 
-  // set active based on focus or default to newest
   useEffect(() => {
     if (!entries.length) return;
 
@@ -156,14 +143,11 @@ export default function LogNotebookPage({ focus }) {
     });
   }, [entries, filtered, activeId, focus]);
 
-  // if active entry is not on the current page, pick first entry on that page
   useEffect(() => {
     if (!activeId) return;
     if (pagedEntries.length === 0) return;
-
     const onPage = pagedEntries.some((e) => e?.id === activeId);
     if (onPage) return;
-
     queueMicrotask(() => {
       const nextId = pagedEntries[0]?.id;
       if (nextId) setActiveId((id) => (id === nextId ? id : nextId));
@@ -176,7 +160,6 @@ export default function LogNotebookPage({ focus }) {
   }, [filtered, activeId]);
 
   const isDev = process.env.NODE_ENV === "development";
-
   const canPrev = safePage > 0;
   const canNext = safePage < totalPages - 1;
 
@@ -271,6 +254,7 @@ export default function LogNotebookPage({ focus }) {
                   >
                     <div className="entryRowTop">
                       <div className="chip">{e.label}</div>
+                      {e.imageUrl && <span className="small subtle">📎</span>}
                     </div>
                     <div className="entryPreview">{prev}</div>
                   </button>
@@ -289,13 +273,11 @@ export default function LogNotebookPage({ focus }) {
               >
                 prev
               </button>
-
               <div className="small subtle">
                 showing {safePage * PAGE_SIZE + 1}–
                 {Math.min((safePage + 1) * PAGE_SIZE, filtered.length)} of{" "}
                 {filtered.length}
               </div>
-
               <button
                 type="button"
                 className="btn ghost"
@@ -311,7 +293,6 @@ export default function LogNotebookPage({ focus }) {
         <div className="panel logCol">
           <div className="panelTitleRow">
             <div className="h2">notes</div>
-
             <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
               <button
                 type="button"
@@ -350,6 +331,31 @@ export default function LogNotebookPage({ focus }) {
                   {activeEntry.label}
                 </div>
               </div>
+
+              {/* image if present */}
+              {activeEntry.imageUrl && (
+                <div
+                  style={{
+                    marginBottom: 14,
+                    borderRadius: 12,
+                    overflow: "hidden",
+                    border: "1px solid rgba(60,35,110,0.14)",
+                    background: "#fff",
+                  }}
+                >
+                  <img
+                    src={activeEntry.imageUrl}
+                    alt=""
+                    style={{
+                      width: "100%",
+                      display: "block",
+                      objectFit: "contain",
+                      maxHeight: 340,
+                    }}
+                  />
+                </div>
+              )}
+
               <div className="noteBody">{activeEntry.text}</div>
             </article>
           ) : (
