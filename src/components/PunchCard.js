@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, useCallback } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-const STORAGE_KEY = "softcomputer_process_2026";
+const ADMIN_TOKEN = process.env.NEXT_PUBLIC_ADMIN_LOG_TOKEN || "";
 
 const months = [
   "jan",
@@ -19,41 +19,13 @@ const months = [
   "dec",
 ];
 
-function emptyState() {
+function stateFromPublishedEntries(entries) {
   const punched = Array.from({ length: 12 }, () =>
     Array.from({ length: 31 }, () => false),
   );
   const logs = Array.from({ length: 12 }, () =>
     Array.from({ length: 31 }, () => ""),
   );
-  return { punched, logs };
-}
-
-function loadState() {
-  try {
-    if (typeof window === "undefined") return emptyState();
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return emptyState();
-    const parsed = JSON.parse(raw);
-    if (!parsed?.punched || !parsed?.logs) return emptyState();
-    return parsed;
-  } catch {
-    return emptyState();
-  }
-}
-
-function saveState(state) {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  } catch {}
-}
-
-function clamp(n, a, b) {
-  return Math.max(a, Math.min(b, n));
-}
-
-function stateFromPublishedEntries(entries) {
-  const next = emptyState();
 
   for (const e of entries || []) {
     const label = String(e?.label || "")
@@ -71,11 +43,15 @@ function stateFromPublishedEntries(entries) {
     if (m < 0 || d < 0 || d > 30) continue;
 
     const text = String(e?.text || "").trim();
-    next.logs[m][d] = text;
-    next.punched[m][d] = text.length > 0;
+    logs[m][d] = text;
+    punched[m][d] = text.length > 0;
   }
 
-  return next;
+  return { punched, logs };
+}
+
+function clamp(n, a, b) {
+  return Math.max(a, Math.min(b, n));
 }
 
 export default function PunchCard({
@@ -87,76 +63,64 @@ export default function PunchCard({
   const containerRef = useRef(null);
   const didAutoOpenRef = useRef(false);
 
-  const [active, setActive] = useState(null); // { r, c }
+  const [active, setActive] = useState(null);
   const [draft, setDraft] = useState("");
-  const [hover, setHover] = useState(null); // { r, c, x, y }
+  const [hover, setHover] = useState(null);
   const [lastDeleted, setLastDeleted] = useState(null);
+  const [saving, setSaving] = useState(false);
 
-  const [state, setState] = useState(() => emptyState());
+  // live entries from Redis
+  const [redisEntries, setRedisEntries] = useState(publishedEntries);
 
-  // derive read-only view state from published snapshot (no setState in effect)
-  const publishedState = useMemo(() => {
-    return stateFromPublishedEntries(publishedEntries);
+  // load from Redis on mount and after publish
+  useEffect(() => {
+    async function loadFromRedis() {
+      try {
+        const res = await fetch("/api/logs", { cache: "no-store" });
+        const data = await res.json();
+        const entries = Array.isArray(data?.entries) ? data.entries : [];
+        setRedisEntries(entries);
+      } catch {}
+    }
+
+    loadFromRedis();
+
+    const onPub = () => loadFromRedis();
+    window.addEventListener("softcomputer-logs-published", onPub);
+    return () =>
+      window.removeEventListener("softcomputer-logs-published", onPub);
+  }, []);
+
+  // sync when prop changes
+  useEffect(() => {
+    setRedisEntries(publishedEntries);
   }, [publishedEntries]);
 
-  const viewState = readOnly ? publishedState : state;
-
-  // editable mode: load storage after hydration
-  useEffect(() => {
-    if (readOnly) return;
-
-    let alive = true;
-    queueMicrotask(() => {
-      if (!alive) return;
-      setState(loadState());
-    });
-
-    return () => {
-      alive = false;
-    };
-  }, [readOnly]);
-
-  // editable mode: listen for updates
-  useEffect(() => {
-    if (readOnly) return;
-
-    const onUpdate = () => setState(loadState());
-    window.addEventListener("softcomputer-update", onUpdate);
-    window.addEventListener("storage", onUpdate);
-    return () => {
-      window.removeEventListener("softcomputer-update", onUpdate);
-      window.removeEventListener("storage", onUpdate);
-    };
-  }, [readOnly]);
+  const viewState = useMemo(() => {
+    return stateFromPublishedEntries(redisEntries);
+  }, [redisEntries]);
 
   const geo = useMemo(() => {
     const rows = 12;
     const cols = 31;
-
     const W = 1200;
     const H = 520;
-
     const cardMarginX = 46;
     const cardMarginY = 36;
-
     const leftMargin = 110;
     const rightMargin = 40;
     const topMargin = 110;
     const bottomMargin = 58;
-
     const cardX = cardMarginX;
     const cardY = cardMarginY;
     const cardW = W - 2 * cardMarginX;
     const cardH = H - 2 * cardMarginY;
-
     const gridX = cardX + leftMargin;
     const gridY = cardY + topMargin;
     const gridW = cardW - leftMargin - rightMargin;
     const gridH = cardH - topMargin - bottomMargin - 28;
-
     const rowH = gridH / rows;
     const colW = gridW / cols;
-
     const slotW = colW * 0.28;
     const slotH = rowH * 0.82;
 
@@ -194,61 +158,106 @@ export default function PunchCard({
     setDraft("");
   }, []);
 
-  const commitSave = useCallback(() => {
+  const commitSave = useCallback(async () => {
     if (readOnly) return;
     if (!active) return;
     const { r, c } = active;
-
-    const next = loadState();
     const text = draft.trim();
+    if (!text) return;
 
-    next.logs[r][c] = text;
-    next.punched[r][c] = text.length > 0;
+    setSaving(true);
 
-    saveState(next);
-    setState(next);
-    window.dispatchEvent(new Event("softcomputer-update"));
+    const label = `${months[r]} ${c + 1}`;
+    const id = `2026-${String(r + 1).padStart(2, "0")}-${String(c + 1).padStart(2, "0")}`;
+
+    try {
+      await fetch("/api/logs", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-admin-token": ADMIN_TOKEN,
+        },
+        body: JSON.stringify({ id, label, text }),
+      });
+
+      // refresh punch card immediately
+      const res = await fetch("/api/logs", { cache: "no-store" });
+      const data = await res.json();
+      setRedisEntries(Array.isArray(data?.entries) ? data.entries : []);
+
+      window.dispatchEvent(new Event("softcomputer-logs-published"));
+    } catch (e) {
+      console.error("save failed", e);
+    } finally {
+      setSaving(false);
+    }
 
     closeEditor();
   }, [readOnly, active, draft, closeEditor]);
 
-  const commitDelete = useCallback(() => {
+  const commitDelete = useCallback(async () => {
     if (readOnly) return;
     if (!active) return;
     const { r, c } = active;
+    const id = `2026-${String(r + 1).padStart(2, "0")}-${String(c + 1).padStart(2, "0")}`;
 
-    const next = loadState();
-    const prevText = (next.logs?.[r]?.[c] || "").trim();
-    const prevPunched = !!next.punched?.[r]?.[c];
+    const prevText = (viewState.logs?.[r]?.[c] || "").trim();
+    setLastDeleted(prevText ? { r, c, text: prevText } : null);
 
-    setLastDeleted(
-      prevText.length || prevPunched
-        ? { r, c, text: prevText, punched: prevPunched }
-        : null,
-    );
+    setSaving(true);
+    try {
+      await fetch("/api/logs", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          "x-admin-token": ADMIN_TOKEN,
+        },
+        body: JSON.stringify({ id }),
+      });
 
-    next.logs[r][c] = "";
-    next.punched[r][c] = false;
+      const res = await fetch("/api/logs", { cache: "no-store" });
+      const data = await res.json();
+      setRedisEntries(Array.isArray(data?.entries) ? data.entries : []);
 
-    saveState(next);
-    setState(next);
-    window.dispatchEvent(new Event("softcomputer-update"));
+      window.dispatchEvent(new Event("softcomputer-logs-published"));
+    } catch (e) {
+      console.error("delete failed", e);
+    } finally {
+      setSaving(false);
+    }
 
     setDraft("");
-  }, [readOnly, active]);
+  }, [readOnly, active, viewState.logs]);
 
-  const undoDelete = useCallback(() => {
+  const undoDelete = useCallback(async () => {
     if (readOnly) return;
     if (!lastDeleted) return;
-    const { r, c, text, punched } = lastDeleted;
+    const { r, c, text } = lastDeleted;
 
-    const next = loadState();
-    next.logs[r][c] = text;
-    next.punched[r][c] = punched;
+    const label = `${months[r]} ${c + 1}`;
+    const id = `2026-${String(r + 1).padStart(2, "0")}-${String(c + 1).padStart(2, "0")}`;
 
-    saveState(next);
-    setState(next);
-    window.dispatchEvent(new Event("softcomputer-update"));
+    setSaving(true);
+    try {
+      await fetch("/api/logs", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-admin-token": ADMIN_TOKEN,
+        },
+        body: JSON.stringify({ id, label, text }),
+      });
+
+      const res = await fetch("/api/logs", { cache: "no-store" });
+      const data = await res.json();
+      setRedisEntries(Array.isArray(data?.entries) ? data.entries : []);
+
+      window.dispatchEvent(new Event("softcomputer-logs-published"));
+    } catch (e) {
+      console.error("undo failed", e);
+    } finally {
+      setSaving(false);
+    }
 
     if (active && active.r === r && active.c === c) setDraft(text);
     setLastDeleted(null);
@@ -260,27 +269,21 @@ export default function PunchCard({
 
     const onKey = (e) => {
       const meta = e.metaKey || e.ctrlKey;
-
       if (e.key === "Escape") {
         e.preventDefault();
         closeEditor();
         return;
       }
-
       if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
         commitSave();
         return;
       }
-
-      if (e.key === "Backspace" || e.key === "Delete") {
-        if (meta) {
-          e.preventDefault();
-          commitDelete();
-        }
+      if ((e.key === "Backspace" || e.key === "Delete") && meta) {
+        e.preventDefault();
+        commitDelete();
         return;
       }
-
       if (meta && (e.key === "z" || e.key === "Z")) {
         e.preventDefault();
         undoDelete();
@@ -292,7 +295,7 @@ export default function PunchCard({
       window.removeEventListener("keydown", onKey, { capture: true });
   }, [readOnly, active, closeEditor, commitSave, commitDelete, undoDelete]);
 
-  // auto-open (editable mode only)
+  // auto-open today
   useEffect(() => {
     if (readOnly) return;
     if (didAutoOpenRef.current) return;
@@ -329,20 +332,14 @@ export default function PunchCard({
   function pointToCell(clientX, clientY) {
     const el = containerRef.current;
     if (!el) return null;
-
     const rect = el.getBoundingClientRect();
     const x = ((clientX - rect.left) / rect.width) * geo.W;
     const y = ((clientY - rect.top) / rect.height) * geo.H;
-
     const { gridX, gridY, gridW, gridH, colW, rowH } = geo;
-
-    if (x < gridX || x > gridX + gridW || y < gridY || y > gridY + gridH) {
+    if (x < gridX || x > gridX + gridW || y < gridY || y > gridY + gridH)
       return null;
-    }
-
     const c = clamp(Math.floor((x - gridX) / colW), 0, 30);
     const r = clamp(Math.floor((y - gridY) / rowH), 0, 11);
-
     return { r, c, x, y };
   }
 
@@ -391,14 +388,7 @@ export default function PunchCard({
             <defs>
               <clipPath id="punchCardClip">
                 <path
-                  d={`
-                    M ${geo.cardX + 24} ${geo.cardY}
-                    H ${geo.cardX + geo.cardW}
-                    V ${geo.cardY + geo.cardH}
-                    H ${geo.cardX}
-                    V ${geo.cardY + 24}
-                    Z
-                  `}
+                  d={`M ${geo.cardX + 24} ${geo.cardY} H ${geo.cardX + geo.cardW} V ${geo.cardY + geo.cardH} H ${geo.cardX} V ${geo.cardY + 24} Z`}
                 />
               </clipPath>
             </defs>
@@ -412,12 +402,10 @@ export default function PunchCard({
                 rx="26"
                 className="punchCard"
               />
-
               <path
                 d={`M ${geo.cardX} ${geo.cardY} L ${geo.cardX + 34} ${geo.cardY} L ${geo.cardX} ${geo.cardY + 34} Z`}
                 className="punchNotch"
               />
-
               <text
                 x={geo.cardX + 36}
                 y={geo.cardY + 40}
@@ -466,14 +454,11 @@ export default function PunchCard({
                     >
                       {months[r]}
                     </text>
-
                     {Array.from({ length: geo.cols }).map((__, c) => {
                       const cx = geo.gridX + c * geo.colW + geo.colW / 2;
                       const x = cx - geo.slotW / 2;
                       const y = cy - geo.slotH / 2;
-
                       const isPunched = !!viewState.punched?.[r]?.[c];
-
                       return (
                         <rect
                           key={`slot-${r}-${c}`}
@@ -493,9 +478,7 @@ export default function PunchCard({
               })}
 
               <g
-                transform={`translate(${geo.cardX + geo.cardW - 290}, ${
-                  geo.cardY + geo.cardH - 44
-                })`}
+                transform={`translate(${geo.cardX + geo.cardW - 290}, ${geo.cardY + geo.cardH - 44})`}
               >
                 <rect
                   x="0"
@@ -529,7 +512,6 @@ export default function PunchCard({
                     ).trim();
                     const shown =
                       raw.length > 72 ? `${raw.slice(0, 72)}…` : raw;
-
                     const tx = clamp(
                       hover.x + 20,
                       geo.cardX + 22,
@@ -540,7 +522,6 @@ export default function PunchCard({
                       geo.cardY + 108,
                       geo.cardY + geo.cardH - 88,
                     );
-
                     return (
                       <>
                         <rect
@@ -562,14 +543,7 @@ export default function PunchCard({
             </g>
 
             <path
-              d={`
-                M ${geo.cardX + 24} ${geo.cardY}
-                H ${geo.cardX + geo.cardW}
-                V ${geo.cardY + geo.cardH}
-                H ${geo.cardX}
-                V ${geo.cardY + 24}
-                Z
-              `}
+              d={`M ${geo.cardX + 24} ${geo.cardY} H ${geo.cardX + geo.cardW} V ${geo.cardY + geo.cardH} H ${geo.cardX} V ${geo.cardY + 24} Z`}
               className="punchCardCutStroke"
             />
           </svg>
@@ -597,24 +571,32 @@ export default function PunchCard({
             />
 
             <div className="punchEditorActions">
-              <button className="btn" onClick={commitSave}>
-                save
+              <button className="btn" onClick={commitSave} disabled={saving}>
+                {saving ? "saving…" : "save"}
               </button>
-              <button className="btn ghost" onClick={closeEditor}>
+              <button
+                className="btn ghost"
+                onClick={closeEditor}
+                disabled={saving}
+              >
                 close
               </button>
-              <button className="btn danger" onClick={commitDelete}>
+              <button
+                className="btn danger"
+                onClick={commitDelete}
+                disabled={saving}
+              >
                 delete
               </button>
               {lastDeleted ? (
-                <button className="btn" onClick={undoDelete}>
+                <button className="btn" onClick={undoDelete} disabled={saving}>
                   undo delete
                 </button>
               ) : null}
             </div>
 
             <div className="small subtle" style={{ marginTop: 10 }}>
-              storage: <span className="chip">{STORAGE_KEY}</span>
+              storage: <span className="chip">redis</span>
             </div>
           </div>
         ) : null}

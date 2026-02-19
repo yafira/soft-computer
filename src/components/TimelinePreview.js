@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from "react";
 
-// title-only preview: first non-empty line, prefers first sentence, no ellipsis
 function previewText(raw, maxChars = 120) {
   const t = (raw || "").trim();
   if (!t) return "";
@@ -17,13 +16,12 @@ function previewText(raw, maxChars = 120) {
   return out.slice(0, maxChars).trim();
 }
 
-async function fetchPublishedSnapshot() {
+async function fetchLiveLogs() {
   try {
-    const res = await fetch("/process-memory.json", { cache: "no-store" });
+    const res = await fetch("/api/logs", { cache: "no-store" });
     if (!res.ok) return { entries: [] };
     const data = await res.json();
-    const entries = Array.isArray(data?.entries) ? data.entries : [];
-    return { entries };
+    return { entries: Array.isArray(data?.entries) ? data.entries : [] };
   } catch {
     return { entries: [] };
   }
@@ -33,14 +31,24 @@ export default function TimelinePreview() {
   const [entries, setEntries] = useState([]);
   const [loaded, setLoaded] = useState(false);
 
+  async function load() {
+    const snap = await fetchLiveLogs();
+    const list = Array.isArray(snap.entries) ? snap.entries : [];
+
+    const sorted = [...list].sort(
+      (a, b) => (Number(b?.createdAt) || 0) - (Number(a?.createdAt) || 0),
+    );
+
+    setEntries(sorted);
+    setLoaded(true);
+  }
+
   useEffect(() => {
     let alive = true;
 
     (async () => {
-      const snap = await fetchPublishedSnapshot();
+      await load();
       if (!alive) return;
-      setEntries(snap.entries || []);
-      setLoaded(true);
     })();
 
     return () => {
@@ -48,9 +56,15 @@ export default function TimelinePreview() {
     };
   }, []);
 
-  // limit to latest 5
+  // refresh after publish
+  useEffect(() => {
+    const onPub = () => load();
+    window.addEventListener("softcomputer-logs-published", onPub);
+    return () =>
+      window.removeEventListener("softcomputer-logs-published", onPub);
+  }, []);
+
   const recent = useMemo(() => {
-    // your published json already exports sorted newest-first
     return (entries || []).slice(0, 8);
   }, [entries]);
 
@@ -64,7 +78,7 @@ export default function TimelinePreview() {
         {!loaded ? (
           <div className="emptyState">loading…</div>
         ) : recent.length === 0 ? (
-          <div className="emptyState">no published entries yet.</div>
+          <div className="emptyState">no entries yet.</div>
         ) : (
           recent.map((e) => (
             <a

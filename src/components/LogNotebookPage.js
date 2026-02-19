@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 
 const PublishLogsButton = dynamic(
@@ -25,14 +25,25 @@ function previewText(raw, maxChars = 120) {
   return out.slice(0, maxChars).trim();
 }
 
-async function fetchPublishedSnapshot() {
+async function fetchLiveLogs() {
   try {
-    const res = await fetch("/process-memory.json", { cache: "no-store" });
-    if (!res.ok) return { entries: [] };
+    const res = await fetch("/api/logs", { cache: "no-store" });
+
+    if (!res.ok) {
+      const t = await res.text();
+      return {
+        entries: [],
+        error: `api failed (${res.status}): ${t.slice(0, 200)}`,
+      };
+    }
+
     const data = await res.json();
-    return { entries: Array.isArray(data?.entries) ? data.entries : [] };
-  } catch {
-    return { entries: [] };
+    return {
+      entries: Array.isArray(data?.entries) ? data.entries : [],
+      error: "",
+    };
+  } catch (e) {
+    return { entries: [], error: String(e?.message || e) };
   }
 }
 
@@ -55,53 +66,67 @@ function writePaperMode(mode) {
 
 export default function LogNotebookPage({ focus }) {
   const [entries, setEntries] = useState([]);
+  const [loaded, setLoaded] = useState(false);
+  const [error, setError] = useState("");
+
   const [query, setQuery] = useState("");
   const [activeId, setActiveId] = useState(null);
 
   const [paperMode, setPaperMode] = useState(() => readPaperMode());
   const [page, setPage] = useState(0);
 
-  // persist paper mode on change (no effect state updates; only side effect)
+  // strict-mode guard (dev)
+  const didInitRef = useRef(false);
+
   useEffect(() => {
     writePaperMode(paperMode);
   }, [paperMode]);
 
-  // published snapshot (public)
-  useEffect(() => {
-    let alive = true;
+  const load = useCallback(async () => {
+    setLoaded(false);
 
-    (async () => {
-      const snap = await fetchPublishedSnapshot();
-      if (!alive) return;
+    const snap = await fetchLiveLogs();
+    const list = Array.isArray(snap.entries) ? snap.entries : [];
 
-      const list = Array.isArray(snap.entries) ? snap.entries : [];
-      const sorted = [...list].sort(
-        (a, b) => (b?.createdAt || 0) - (a?.createdAt || 0),
-      );
+    const sorted = [...list].sort(
+      (a, b) => (Number(b?.createdAt) || 0) - (Number(a?.createdAt) || 0),
+    );
 
-      setEntries(sorted);
-    })();
-
-    return () => {
-      alive = false;
-    };
+    setEntries(sorted);
+    setError(snap.error || "");
+    setLoaded(true);
   }, []);
+
+  // initial load
+  useEffect(() => {
+    if (didInitRef.current) return;
+    didInitRef.current = true;
+    load();
+  }, [load]);
+
+  // refresh when you publish
+  useEffect(() => {
+    const onPub = () => load();
+    window.addEventListener("softcomputer-logs-published", onPub);
+    return () =>
+      window.removeEventListener("softcomputer-logs-published", onPub);
+  }, [load]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return entries;
-    return entries.filter(
-      (e) =>
-        (e.text || "").toLowerCase().includes(q) ||
-        (e.label || "").toLowerCase().includes(q),
-    );
+
+    return entries.filter((e) => {
+      const text = String(e?.text || "").toLowerCase();
+      const label = String(e?.label || "").toLowerCase();
+      return text.includes(q) || label.includes(q);
+    });
   }, [entries, query]);
 
   const totalPages = useMemo(() => {
     return Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   }, [filtered.length]);
 
-  // clamp page at render-time for UI + slicing
   const safePage = Math.min(page, totalPages - 1);
 
   const pagedEntries = useMemo(() => {
@@ -111,12 +136,11 @@ export default function LogNotebookPage({ focus }) {
 
   // set active based on focus or default to newest
   useEffect(() => {
-    if (typeof window === "undefined") return;
     if (!entries.length) return;
 
     queueMicrotask(() => {
       if (focus) {
-        const idx = entries.findIndex((e) => e.id === focus);
+        const idx = entries.findIndex((e) => e?.id === focus);
         if (idx >= 0) {
           const targetPage = Math.floor(idx / PAGE_SIZE);
           setPage((p) => (p === targetPage ? p : targetPage));
@@ -126,8 +150,8 @@ export default function LogNotebookPage({ focus }) {
       }
 
       if (!activeId && filtered.length > 0) {
-        const nextId = filtered[0].id;
-        setActiveId((id) => (id === nextId ? id : nextId));
+        const nextId = filtered[0]?.id;
+        if (nextId) setActiveId((id) => (id === nextId ? id : nextId));
       }
     });
   }, [entries, filtered, activeId, focus]);
@@ -137,18 +161,18 @@ export default function LogNotebookPage({ focus }) {
     if (!activeId) return;
     if (pagedEntries.length === 0) return;
 
-    const onPage = pagedEntries.some((e) => e.id === activeId);
+    const onPage = pagedEntries.some((e) => e?.id === activeId);
     if (onPage) return;
 
     queueMicrotask(() => {
-      const nextId = pagedEntries[0].id;
-      setActiveId((id) => (id === nextId ? id : nextId));
+      const nextId = pagedEntries[0]?.id;
+      if (nextId) setActiveId((id) => (id === nextId ? id : nextId));
     });
   }, [activeId, pagedEntries]);
 
   const activeEntry = useMemo(() => {
     if (!activeId) return null;
-    return filtered.find((e) => e.id === activeId) || null;
+    return filtered.find((e) => e?.id === activeId) || null;
   }, [filtered, activeId]);
 
   const isDev = process.env.NODE_ENV === "development";
@@ -158,7 +182,6 @@ export default function LogNotebookPage({ focus }) {
 
   function onSearchChange(value) {
     setQuery(value);
-    // reset page immediately (avoid effect)
     setPage(0);
   }
 
@@ -179,11 +202,10 @@ export default function LogNotebookPage({ focus }) {
               log
             </div>
             <p className="p subtle" style={{ margin: 0 }}>
-              published notebook snapshot.
+              notebook entries
             </p>
           </div>
 
-          {/* only show publish control to you locally (dev) */}
           {isDev ? (
             <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
               <PublishLogsButton />
@@ -202,6 +224,20 @@ export default function LogNotebookPage({ focus }) {
             {filtered.length} entr{filtered.length === 1 ? "y" : "ies"}
           </div>
         </div>
+
+        {error ? (
+          <div className="small" style={{ marginTop: 10, opacity: 0.9 }}>
+            <div style={{ marginBottom: 6 }}>failed to load entries.</div>
+            <div className="small" style={{ opacity: 0.85 }}>
+              {error}
+            </div>
+            <div style={{ marginTop: 10 }}>
+              <button className="btn ghost" type="button" onClick={load}>
+                retry
+              </button>
+            </div>
+          </div>
+        ) : null}
       </section>
 
       <section className="logGrid">
@@ -214,12 +250,16 @@ export default function LogNotebookPage({ focus }) {
           </div>
 
           <div className="entryList">
-            {filtered.length === 0 ? (
-              <div className="emptyState">no published entries yet.</div>
+            {!loaded ? (
+              <div className="emptyState">loading…</div>
+            ) : error ? (
+              <div className="emptyState">no entries loaded.</div>
+            ) : filtered.length === 0 ? (
+              <div className="emptyState">no entries yet.</div>
             ) : (
               pagedEntries.map((e) => {
-                const isActiveRow = e.id === activeId;
-                const prev = previewText(e.text);
+                const isActiveRow = e?.id === activeId;
+                const prev = previewText(e?.text);
 
                 return (
                   <button
@@ -310,7 +350,6 @@ export default function LogNotebookPage({ focus }) {
                   {activeEntry.label}
                 </div>
               </div>
-
               <div className="noteBody">{activeEntry.text}</div>
             </article>
           ) : (

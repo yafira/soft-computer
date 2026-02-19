@@ -1,8 +1,13 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 
 const STORAGE_KEY = "softcomputer_process_2026";
+
+// IMPORTANT:
+// - this must match your Vercel env var name: ADMIN_LOG_TOKEN
+// - and MUST be exposed to the browser with NEXT_PUBLIC_
+const CLIENT_ADMIN_TOKEN = process.env.NEXT_PUBLIC_ADMIN_LOG_TOKEN || "";
 
 const months = [
   "jan",
@@ -45,17 +50,13 @@ function daysInMonth(monthIndex, year = 2026) {
   return new Date(year, monthIndex + 1, 0).getDate();
 }
 
-// SAME RULE YOU’VE BEEN USING (now becomes canonical)
 function previewText(raw, maxChars = 120) {
   const t = (raw || "").trim();
   if (!t) return "";
-
   const firstLine = t.split("\n").find((line) => line.trim().length > 0) || "";
   const line = firstLine.trim();
-
   const sentenceMatch = line.match(/^(.+?[.!?])(\s|$)/);
   const sentence = sentenceMatch ? sentenceMatch[1].trim() : "";
-
   const out = sentence || line;
   return out.slice(0, maxChars).trim();
 }
@@ -70,60 +71,61 @@ function buildEntries(state) {
       const text = (state.logs?.[m]?.[d] || "").trim();
       if (!text) continue;
 
-      const id = `2026-${String(m + 1).padStart(2, "0")}-${String(
-        d + 1,
-      ).padStart(2, "0")}`;
+      const id = `2026-${String(m + 1).padStart(2, "0")}-${String(d + 1).padStart(2, "0")}`;
 
       entries.push({
         id,
         monthIndex: m,
         dayIndex: d,
         label: `${months[m]} ${d + 1}`,
-        title: previewText(text), // ✅ NEW STABLE FIELD
+        title: previewText(text),
         text,
-        dateValue: new Date(2026, m, d + 1).getTime(),
+        createdAt: new Date(2026, m, d + 1).getTime(),
       });
     }
   }
 
-  entries.sort((a, b) => b.dateValue - a.dateValue);
+  entries.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
   return entries;
 }
 
-function download(filename, text) {
-  const blob = new Blob([text], {
-    type: "application/json;charset=utf-8",
-  });
-
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-
-  a.href = url;
-  a.download = filename;
-
-  document.body.appendChild(a);
-  a.click();
-
-  a.remove();
-  URL.revokeObjectURL(url);
-}
-
 export default function PublishLogsButton() {
-  const onPublish = useCallback(() => {
-    const state = loadState();
+  const [status, setStatus] = useState("");
 
-    const payload = {
-      version: 3,
-      exportedAt: new Date().toISOString(),
-      entries: buildEntries(state),
-    };
+  const onPublish = useCallback(async () => {
+    try {
+      setStatus("publishing...");
 
-    download("process-memory.json", JSON.stringify(payload, null, 2));
+      const state = loadState();
+      const entries = buildEntries(state);
+
+      const res = await fetch("/api/logs/publish", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-admin-token": CLIENT_ADMIN_TOKEN,
+        },
+        body: JSON.stringify({ entries }),
+      });
+
+      if (!res.ok) {
+        const t = await res.text();
+        throw new Error(t.slice(0, 200));
+      }
+
+      setStatus("published ✿");
+      window.dispatchEvent(new Event("softcomputer-logs-published"));
+    } catch (e) {
+      setStatus(`failed: ${String(e?.message || e)}`);
+    }
   }, []);
 
   return (
-    <button className="btn" onClick={onPublish}>
-      publish snapshot
-    </button>
+    <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+      <button className="btn" onClick={onPublish} type="button">
+        publish snapshot
+      </button>
+      {status ? <span className="small subtle">{status}</span> : null}
+    </div>
   );
 }
