@@ -6,26 +6,10 @@ const redis = new Redis({
   token: "AVVsAAIncDIyMjZhNTA0OTk2ZTM0MjIxOTkwM2JlOTlkYTdjY2Q2ZXAyMjE4Njg",
 });
 
-const months = [
-  "jan",
-  "feb",
-  "mar",
-  "apr",
-  "may",
-  "jun",
-  "jul",
-  "aug",
-  "sep",
-  "oct",
-  "nov",
-  "dec",
-];
+const months = ["jan","feb","mar","apr","may","jun","jul","aug","sep","oct","nov","dec"];
 
 function labelToTimestamp(label) {
-  const parts = String(label || "")
-    .toLowerCase()
-    .trim()
-    .split(/\s+/);
+  const parts = String(label || "").toLowerCase().trim().split(/\s+/);
   if (parts.length < 2) return Date.now();
   const m = months.indexOf(parts[0]);
   const d = parseInt(parts[1]);

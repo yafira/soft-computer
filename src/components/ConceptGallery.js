@@ -18,9 +18,9 @@ async function fetchImages() {
   }
 }
 
-export default function ConceptGallery() {
+export default function ConceptGallery({ admin = false }) {
   const isDev = process.env.NODE_ENV === "development";
-  const canAdmin = true;
+  const canAdmin = admin;
 
   const [images, setImages] = useState([]);
   const [busy, setBusy] = useState(false);
@@ -32,6 +32,13 @@ export default function ConceptGallery() {
   useEffect(() => {
     fetchImages().then(setImages);
   }, []);
+
+  // force uploader off if not admin
+  useEffect(() => {
+    if (!canAdmin) {
+      setAdminEnabled(false);
+    }
+  }, [canAdmin]);
 
   // load admin state from localStorage (only matters when canAdmin=true)
   useEffect(() => {
@@ -61,7 +68,6 @@ export default function ConceptGallery() {
     );
   }, [images]);
 
-  // keep index valid when list changes
   useEffect(() => {
     if (sorted.length === 0) {
       setIndex(0);
@@ -90,23 +96,18 @@ export default function ConceptGallery() {
     setBusy(true);
 
     try {
-      // 1) upload file to vercel blob
       const blob = await upload(`concept/${Date.now()}-${file.name}`, file, {
         access: "public",
         handleUploadUrl: "/api/blob",
       });
 
-      // 2) persist metadata
       const res = await fetch("/api/concept-images", {
         method: "POST",
         headers: {
           "content-type": "application/json",
           "x-admin-token": adminToken,
         },
-        body: JSON.stringify({
-          url: blob.url,
-          caption,
-        }),
+        body: JSON.stringify({ url: blob.url, caption }),
       });
 
       let json = null;
@@ -119,26 +120,18 @@ export default function ConceptGallery() {
       }
 
       if (!res.ok) {
-        const details = {
+        console.error("concept save failed:", {
           status: res.status,
-          statusText: res.statusText,
           json,
           text,
-        };
-
-        console.error(
-          "concept save failed:\n" + JSON.stringify(details, null, 2),
-        );
-
+        });
         alert(
           `save failed (${res.status})\n` +
             (json?.error || text || "check env vars / admin token"),
         );
-
         return;
       }
 
-      // success → refresh gallery and jump to newest (index 0 after sort)
       setCaption("");
       const next = await fetchImages();
       setImages(next);
@@ -176,8 +169,6 @@ export default function ConceptGallery() {
 
       const next = await fetchImages();
       setImages(next);
-
-      // if we deleted the last item, clamp index
       setIndex((i) => Math.max(0, i - (i >= next.length ? 1 : 0)));
     } catch (err) {
       console.error("delete pipeline failed", err);
@@ -189,7 +180,6 @@ export default function ConceptGallery() {
 
   return (
     <div style={{ display: "grid", gap: 12 }}>
-      {/* admin controls (dev only) */}
       {canAdmin ? (
         <div
           style={{
@@ -246,7 +236,6 @@ export default function ConceptGallery() {
         </div>
       ) : null}
 
-      {/* single-image gallery */}
       {current ? (
         <figure className="conceptCard" style={{ margin: 0 }}>
           <div className="conceptImg">
@@ -277,22 +266,18 @@ export default function ConceptGallery() {
                   onClick={goPrev}
                   disabled={busy}
                   aria-label="previous image"
-                  title="previous"
                 >
                   ←
                 </button>
-
                 <div className="small subtle" style={{ whiteSpace: "nowrap" }}>
                   {index + 1} / {sorted.length}
                 </div>
-
                 <button
                   type="button"
                   className="btn ghost"
                   onClick={goNext}
                   disabled={busy}
                   aria-label="next image"
-                  title="next"
                 >
                   →
                 </button>

@@ -20,7 +20,7 @@ export default async function AdminPage() {
         <PunchCard readOnly={false} publishedEntries={entries} />
       </section>
       <section className="panel">
-        <ConceptGallery />
+        <ConceptGallery admin={true} />
       </section>
     </main>
   );
