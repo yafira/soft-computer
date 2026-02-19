@@ -6,7 +6,8 @@ const ADMIN_TOKEN = process.env.ADMIN_LOG_TOKEN || "";
 
 function isAuthorized(req) {
   if (!ADMIN_TOKEN) return false;
-  return req.headers.get("x-admin-token") === ADMIN_TOKEN;
+  const got = (req.headers.get("x-admin-token") || "").trim();
+  return got === ADMIN_TOKEN.trim();
 }
 
 function cleanEntry(e) {
