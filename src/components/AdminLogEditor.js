@@ -222,7 +222,7 @@ export default function AdminLogEditor() {
                   <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                     <span className="chip">{e.label}</span>
                     <span className="small subtle">
-                      {new Date(e.createdAt).toLocaleString()}
+                      {new Date(e.createdAt).toLocaleDateString()}
                     </span>
                   </div>
 
