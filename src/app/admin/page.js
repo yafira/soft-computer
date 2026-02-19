@@ -1,18 +1,23 @@
-import AdminLogEditor from "@/components/AdminLogEditor";
-import ConceptGallery from "@/components/ConceptGallery";
 import PunchCard from "@/components/PunchCard";
+import ConceptGallery from "@/components/ConceptGallery";
+import { redis } from "@/lib/redis";
 
-export default function AdminPage() {
+async function getEntries() {
+  try {
+    const raw = await redis.get("softcomputer:logs");
+    return Array.isArray(raw) ? raw : [];
+  } catch {
+    return [];
+  }
+}
+
+export default async function AdminPage() {
+  const entries = await getEntries();
+
   return (
     <main className="wrap">
       <section className="panel">
-        <div className="h2" style={{ marginBottom: 8 }}>
-          punch card
-        </div>
-        <PunchCard readOnly={false} />
-      </section>
-      <section className="panel">
-        <AdminLogEditor />
+        <PunchCard readOnly={false} publishedEntries={entries} />
       </section>
       <section className="panel">
         <ConceptGallery />
