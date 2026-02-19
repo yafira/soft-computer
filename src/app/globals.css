@@ -226,9 +226,9 @@ a {
 .conceptCard {
   margin: 0;
   display: grid;
-  justify-items: center; /* centers the square card inside the panel */
+  justify-items: center;
   gap: 10px;
-  padding: 0; /* remove inner padding so it feels cleaner */
+  padding: 0;
   background: transparent;
   border: none;
   box-shadow: none;
@@ -241,8 +241,8 @@ a {
 
 .conceptImg {
   position: relative;
-  width: min(520px, 100%); /* nice featured size */
-  aspect-ratio: 1 / 1; /* makes it a square */
+  width: min(520px, 100%);
+  aspect-ratio: 1 / 1;
   border-radius: 18px;
   overflow: hidden;
   border: 1px solid rgba(60, 35, 110, 0.14);
@@ -297,7 +297,7 @@ a {
 .miniText {
   display: -webkit-box;
   -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2; /* at most 2 lines */
+  -webkit-line-clamp: 2;
   overflow: hidden;
 }
 
@@ -406,7 +406,6 @@ a {
   height: 100%;
 }
 
-/* punchcard */
 .punchCard {
   fill: #e4defa;
 }
@@ -480,14 +479,12 @@ a {
   fill: rgba(233, 222, 250, 0.98);
 }
 
-/* outline of the clipped corner */
 .punchCardCutStroke {
   fill: none;
   stroke: rgba(60, 35, 110, 0.22);
   stroke-width: 1.2;
 }
 
-/* editor below the card */
 .punchEditorBlock {
   background: rgba(255, 255, 255, 0.92);
   border: 1px solid rgba(60, 35, 110, 0.18);
@@ -511,7 +508,6 @@ a {
   gap: 10px;
 }
 
-/* inputs (you referenced .input in log) */
 .input {
   width: 100%;
   padding: 10px 12px;
@@ -761,14 +757,10 @@ a {
   font-family: "IBM Plex Mono", monospace;
   font-size: 15px;
   background-color: rgba(255, 255, 255, 0.82);
-
-  /* subtle eng notebook grid */
   background-image:
     linear-gradient(rgba(90, 70, 140, 0.08) 1px, transparent 1px),
     linear-gradient(90deg, rgba(90, 70, 140, 0.08) 1px, transparent 1px);
-
   background-size: 26px 26px;
-
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35);
 }
 
@@ -850,27 +842,6 @@ a {
   background: rgba(255, 255, 255, 0.85);
   color: rgba(43, 33, 64, 0.92);
   overflow-x: auto;
-}
-
-.conceptGrid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 14px;
-  margin-top: 12px;
-}
-
-@media (min-width: 900px) {
-  .conceptGrid {
-    grid-template-columns: 1fr 1fr;
-  }
-}
-
-.conceptCard {
-  border: 1px solid rgba(60, 35, 110, 0.14);
-  background: rgba(255, 255, 255, 0.72);
-  border-radius: 16px;
-  box-shadow: 0 4px 14px rgba(35, 20, 70, 0.08);
-  padding: 12px;
 }
 
 .conceptImgFrame {
@@ -995,26 +966,46 @@ a {
   text-underline-offset: 3px;
 }
 
-/* about page */
+/* ── about page ── */
 
 .aboutGrid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 16px;
+  gap: 24px;
+  margin-top: 24px;
 }
 
 @media (min-width: 960px) {
   .aboutGrid {
-    grid-template-columns: 1fr 320px;
-    gap: 18px;
+    grid-template-columns: 1fr 300px;
+    gap: 24px;
     align-items: start;
   }
 }
 
+@media (min-width: 960px) {
+  .aboutAside {
+    position: sticky;
+    top: 80px;
+  }
+}
+
 .aboutMain .h2 {
-  margin: 18px 0 8px;
-  font-size: 16px;
-  letter-spacing: -0.01em;
+  margin: 28px 0 10px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: lowercase;
+  opacity: 0.55;
+  border-bottom: 1px dashed rgba(60, 35, 110, 0.15);
+  padding-bottom: 6px;
+  font-family: "IBM Plex Mono", monospace;
+}
+
+.aboutMain .p {
+  font-size: 14px;
+  line-height: 1.75;
+  color: rgba(43, 33, 64, 0.82);
 }
 
 .aboutCallouts {
@@ -1025,24 +1016,40 @@ a {
 
 .aboutCallout {
   border: 1px dashed rgba(120, 90, 180, 0.28);
-  background: rgba(255, 255, 255, 0.55);
+  background: rgba(233, 222, 250, 0.18);
   border-radius: 14px;
-  padding: 12px 12px;
+  padding: 14px 16px;
+  transition:
+    background 200ms ease,
+    border-color 200ms ease;
+}
+
+.aboutCallout:hover {
+  background: rgba(233, 222, 250, 0.32);
+  border-color: rgba(120, 90, 180, 0.38);
 }
 
 .aboutLabel {
-  font-size: 12px;
-  letter-spacing: 0.02em;
+  font-size: 11px;
+  letter-spacing: 0.08em;
   text-transform: lowercase;
-  opacity: 0.75;
-  margin-bottom: 8px;
+  opacity: 0.6;
+  margin-bottom: 10px;
+  font-weight: 600;
+  font-family: "IBM Plex Mono", monospace;
 }
 
 .aboutList {
   margin: 0;
-  padding-left: 18px;
+  padding-left: 16px;
   display: grid;
-  gap: 6px;
+  gap: 7px;
+}
+
+.aboutList li {
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: rgba(43, 33, 64, 0.82);
 }
 
 .aboutTwoCol {
@@ -1075,28 +1082,47 @@ a {
   border: 1px solid rgba(120, 90, 180, 0.16);
   background: rgba(255, 255, 255, 0.55);
   border-radius: 14px;
-  padding: 12px 12px;
+  padding: 14px;
+  transition:
+    transform 150ms ease,
+    box-shadow 150ms ease,
+    border-color 150ms ease;
+}
+
+.aboutCard:hover {
+  transform: translateY(-2px);
+  border-color: rgba(120, 90, 180, 0.28);
+  box-shadow: 0 10px 24px rgba(35, 20, 70, 0.1);
+}
+
+.aboutCard .p {
+  margin: 6px 0 0;
 }
 
 .aboutAside .aboutMeta {
-  border: 1px solid rgba(120, 90, 180, 0.18);
+  border: 1px solid rgba(120, 90, 180, 0.16);
   background: rgba(255, 255, 255, 0.6);
   border-radius: 16px;
-  padding: 12px 12px;
+  padding: 14px;
 }
 
 .aboutMetaTitle {
-  font-size: 12px;
-  opacity: 0.75;
-  margin-bottom: 10px;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: lowercase;
+  opacity: 0.55;
+  font-weight: 600;
+  margin-bottom: 12px;
+  font-family: "IBM Plex Mono", monospace;
 }
 
 .aboutMetaRow {
   display: grid;
-  grid-template-columns: 120px 1fr;
-  gap: 10px;
-  padding: 6px 0;
+  grid-template-columns: 100px 1fr;
+  gap: 8px;
+  padding: 8px 0;
   border-top: 1px solid rgba(120, 90, 180, 0.1);
+  align-items: baseline;
 }
 
 .aboutMetaRow:first-of-type {
@@ -1105,63 +1131,146 @@ a {
 }
 
 .aboutMetaKey {
-  font-size: 12px;
-  opacity: 0.7;
+  font-size: 11px;
+  opacity: 0.55;
+  letter-spacing: 0.04em;
+  font-family: "IBM Plex Mono", monospace;
 }
 
 .aboutMetaVal {
   font-size: 13px;
+  line-height: 1.4;
+  color: rgba(43, 33, 64, 0.9);
 }
 
+/* chips with micro interaction */
 .aboutChips {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 6px;
+  margin-top: 4px;
 }
 
+.aboutChips .chip {
+  transition:
+    transform 140ms ease,
+    background 140ms ease,
+    border-color 140ms ease;
+  cursor: default;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 11px;
+}
+
+.aboutChips .chip:hover {
+  transform: translateY(-2px) scale(1.04);
+  background: rgba(180, 155, 230, 0.45);
+  border-color: rgba(120, 90, 180, 0.38);
+}
+
+/* knowns / unknowns */
 .knownsUnknowns {
   display: grid;
-  gap: 18px;
-  margin-top: 28px;
+  gap: 12px;
+  margin-top: 24px;
 }
 
 .kuBlock {
-  padding: 14px 16px;
-  border: 1px solid var(--border-subtle);
-  border-radius: 14px;
-  background: var(--panel-soft);
+  padding: 16px;
+  border: 1px solid rgba(120, 90, 180, 0.16);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.55);
+  transition:
+    transform 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.kuBlock:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgba(35, 20, 70, 0.1);
 }
 
 .kuTitle {
-  font-size: 14px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
   text-transform: lowercase;
+  color: rgba(43, 33, 64, 0.9);
+  font-family: "IBM Plex Mono", monospace;
 }
 
 .kuSubtitle {
-  font-size: 12px;
-  opacity: 0.6;
+  font-size: 11px;
+  opacity: 0.55;
   margin-top: 2px;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
+  letter-spacing: 0.02em;
+  font-family: "IBM Plex Mono", monospace;
 }
 
 .kuMiniTitle {
-  font-size: 12px;
-  font-weight: 600;
-  margin-top: 10px;
-  margin-bottom: 6px;
-  opacity: 0.75;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: lowercase;
+  margin-top: 14px;
+  margin-bottom: 8px;
+  opacity: 0.6;
+  font-family: "IBM Plex Mono", monospace;
 }
 
 .kuBlock ul {
   margin: 0;
-  padding-left: 18px;
+  padding-left: 16px;
+  display: grid;
+  gap: 6px;
 }
 
 .kuBlock li {
   font-size: 13px;
-  line-height: 1.45;
-  opacity: 0.85;
-  margin-bottom: 4px;
+  line-height: 1.55;
+  opacity: 0.82;
+}
+
+/* card row (used in admin log editor) */
+.cardRow {
+  border: 1px solid rgba(60, 35, 110, 0.14);
+  background: rgba(255, 255, 255, 0.72);
+  border-radius: 16px;
+  box-shadow: 0 4px 14px rgba(35, 20, 70, 0.08);
+  padding: 12px;
+}
+
+.linkRow {
+  display: block;
+  transition:
+    transform 120ms ease,
+    box-shadow 120ms ease,
+    border-color 120ms ease;
+}
+
+.linkRow:hover {
+  transform: translateY(-1px);
+  border-color: rgba(60, 35, 110, 0.22);
+  box-shadow: 0 10px 22px rgba(35, 20, 70, 0.1);
+}
+
+.logText {
+  margin-top: 8px;
+  font-size: 13px;
+  line-height: 1.55;
+  color: rgba(43, 33, 64, 0.82);
+}
+
+.miniLeft {
+  display: flex;
+  align-items: center;
+}
+
+.miniRight {
+  overflow: hidden;
+}
+
+.punchSection {
+  display: grid;
+  gap: 0;
 }
