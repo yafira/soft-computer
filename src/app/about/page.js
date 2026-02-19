@@ -357,11 +357,46 @@ export default function AboutPage() {
             <div className="aboutMeta" style={{ marginTop: 12 }}>
               <div className="aboutMetaTitle">lineage</div>
               <ul className="aboutList small">
-                <li>jacquard loom and punch cards</li>
-                <li>ada lovelace and woven metaphors</li>
-                <li>eniac wiring labor</li>
-                <li>apollo rope core memory</li>
-                <li>e-textile pioneers and open diy lineages</li>
+                <li>jacquard loom — punched cards as pattern logic, 1804</li>
+                <li>
+                  ada lovelace — computation described through weaving
+                  metaphors, 1843
+                </li>
+                <li>
+                  eniac programmers — six women who wired and programmed the
+                  first computer, 1945
+                </li>
+                <li>
+                  apollo rope core memory — woven by hand at raytheon,
+                  predominantly by women, 1960s
+                </li>
+                <li>
+                  lillian schwartz — early computational art and
+                  textile-adjacent aesthetics, 1960s–70s
+                </li>
+                <li>
+                  hannah perner-wilson — e-textile lab and open soft circuit
+                  research
+                </li>
+                <li>
+                  leah buechley — lilypad arduino and wearable computing for
+                  makers
+                </li>
+                <li>
+                  irene posch — embroidered computers and craft as computation
+                </li>
+                <li>XS labs — reactive garments and soft interaction design</li>
+                <li>calm technology — weiser and brown, 1996</li>
+                <li>
+                  tangible bits — ishii and ullmer, embodied interaction, 1997
+                </li>
+                <li>
+                  feminist hci — bardzell, 2010 — values, plurality, embodiment
+                </li>
+                <li>
+                  repair culture and slow tech — jackson, broken world thinking,
+                  2014
+                </li>
               </ul>
             </div>
           </aside>
