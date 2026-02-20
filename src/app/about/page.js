@@ -313,7 +313,8 @@ export default function AboutPage() {
               <div className="aboutMetaRow">
                 <div className="aboutMetaKey">medium</div>
                 <div className="aboutMetaVal">
-                  textile interface, physical computing, installation
+                  textile interface, physical computing, computational text,
+                  installation
                 </div>
               </div>
             </div>
@@ -325,6 +326,7 @@ export default function AboutPage() {
                   "textile interfaces",
                   "embedded electronics",
                   "physical computing",
+                  "electronic text",
                   "e-textiles",
                   "calm technology",
                   "slow technology",
@@ -337,7 +339,9 @@ export default function AboutPage() {
                   "material memory",
                   "thermal printing",
                   "receipt artifacts",
+                  "web os",
                   "soft os",
+                  "soft interfaces",
                   "anti-optimization",
                   "critical making",
                   "speculative hardware",
