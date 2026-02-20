@@ -4,6 +4,31 @@ import { redis } from "@/lib/redis";
 const KEY = "softcomputer:logs";
 const ADMIN_TOKEN = process.env.ADMIN_LOG_TOKEN || "";
 
+const months = [
+  "jan",
+  "feb",
+  "mar",
+  "apr",
+  "may",
+  "jun",
+  "jul",
+  "aug",
+  "sep",
+  "oct",
+  "nov",
+  "dec",
+];
+
+function parseLabel(label) {
+  const parts = String(label || "")
+    .toLowerCase()
+    .trim()
+    .split(/\s+/);
+  const m = months.indexOf(parts[0]);
+  const d = parseInt(parts[1]) || 0;
+  return m * 31 + d;
+}
+
 function isAuthorized(req) {
   if (!ADMIN_TOKEN) return false;
   return (req.headers.get("x-admin-token") || "").trim() === ADMIN_TOKEN.trim();
@@ -50,7 +75,12 @@ export async function POST(req) {
     };
 
     const filtered = existing.filter((e) => e.id !== entry.id);
-    await redis.set(KEY, [entry, ...filtered]);
+    const all = [entry, ...filtered];
+    const sorted = all.sort(
+      (a, b) => parseLabel(b.label) - parseLabel(a.label),
+    );
+
+    await redis.set(KEY, sorted);
 
     return NextResponse.json({ ok: true });
   } catch (err) {

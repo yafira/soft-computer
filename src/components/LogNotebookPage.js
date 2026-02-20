@@ -8,6 +8,31 @@ const PublishLogsButton = dynamic(
   { ssr: false },
 );
 
+const months = [
+  "jan",
+  "feb",
+  "mar",
+  "apr",
+  "may",
+  "jun",
+  "jul",
+  "aug",
+  "sep",
+  "oct",
+  "nov",
+  "dec",
+];
+
+function parseLabel(label) {
+  const parts = String(label || "")
+    .toLowerCase()
+    .trim()
+    .split(/\s+/);
+  const m = months.indexOf(parts[0]);
+  const d = parseInt(parts[1]) || 0;
+  return m * 31 + d;
+}
+
 const PAPER_MODE_KEY = "softcomputer-paper-mode";
 const PAGE_SIZE = 8;
 
@@ -81,7 +106,7 @@ export default function LogNotebookPage({ focus }) {
     const snap = await fetchLiveLogs();
     const list = Array.isArray(snap.entries) ? snap.entries : [];
     const sorted = [...list].sort(
-      (a, b) => (Number(b?.createdAt) || 0) - (Number(a?.createdAt) || 0),
+      (a, b) => parseLabel(b.label) - parseLabel(a.label),
     );
     setEntries(sorted);
     setError(snap.error || "");
@@ -332,7 +357,6 @@ export default function LogNotebookPage({ focus }) {
                 </div>
               </div>
 
-              {/* image if present */}
               {activeEntry.imageUrl && (
                 <div
                   style={{

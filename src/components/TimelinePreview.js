@@ -2,16 +2,38 @@
 
 import { useEffect, useMemo, useState } from "react";
 
+const months = [
+  "jan",
+  "feb",
+  "mar",
+  "apr",
+  "may",
+  "jun",
+  "jul",
+  "aug",
+  "sep",
+  "oct",
+  "nov",
+  "dec",
+];
+
+function parseLabel(label) {
+  const parts = String(label || "")
+    .toLowerCase()
+    .trim()
+    .split(/\s+/);
+  const m = months.indexOf(parts[0]);
+  const d = parseInt(parts[1]) || 0;
+  return m * 31 + d;
+}
+
 function previewText(raw, maxChars = 120) {
   const t = (raw || "").trim();
   if (!t) return "";
-
   const firstLine = t.split("\n").find((line) => line.trim().length > 0) || "";
   const line = firstLine.trim();
-
   const sentenceMatch = line.match(/^(.+?[.!?])(\s|$)/);
   const sentence = sentenceMatch ? sentenceMatch[1].trim() : "";
-
   const out = sentence || line;
   return out.slice(0, maxChars).trim();
 }
@@ -34,29 +56,24 @@ export default function TimelinePreview() {
   async function load() {
     const snap = await fetchLiveLogs();
     const list = Array.isArray(snap.entries) ? snap.entries : [];
-
     const sorted = [...list].sort(
-      (a, b) => (Number(b?.createdAt) || 0) - (Number(a?.createdAt) || 0),
+      (a, b) => parseLabel(b.label) - parseLabel(a.label),
     );
-
     setEntries(sorted);
     setLoaded(true);
   }
 
   useEffect(() => {
     let alive = true;
-
     (async () => {
       await load();
       if (!alive) return;
     })();
-
     return () => {
       alive = false;
     };
   }, []);
 
-  // refresh after publish
   useEffect(() => {
     const onPub = () => load();
     window.addEventListener("softcomputer-logs-published", onPub);
@@ -73,7 +90,6 @@ export default function TimelinePreview() {
       <div className="panelTitleRow">
         <div className="h2">recent log</div>
       </div>
-
       <div className="miniList">
         {!loaded ? (
           <div className="emptyState">loading…</div>
@@ -90,7 +106,6 @@ export default function TimelinePreview() {
               <div className="miniLeft">
                 <div className="chip">{e.label}</div>
               </div>
-
               <div className="miniRight">
                 <div className="miniText">{previewText(e.text)}</div>
               </div>
