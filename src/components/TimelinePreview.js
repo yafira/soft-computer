@@ -28,7 +28,13 @@ function parseLabel(label) {
 }
 
 function previewText(raw, maxChars = 120) {
-  const t = (raw || "").trim();
+  const t = (raw || "")
+    .trim()
+    .replace(/^#{1,6}\s+/gm, "")
+    .replace(/\*\*(.+?)\*\*/g, "$1")
+    .replace(/\*(.+?)\*/g, "$1")
+    .replace(/~~(.+?)~~/g, "$1")
+    .replace(/`(.+?)`/g, "$1");
   if (!t) return "";
   const firstLine = t.split("\n").find((line) => line.trim().length > 0) || "";
   const line = firstLine.trim();

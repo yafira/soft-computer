@@ -1317,3 +1317,36 @@ a {
   padding: 1px 5px;
   border-radius: 4px;
 }
+
+.noteBodyMarkdown h1,
+.noteBodyMarkdown h2,
+.noteBodyMarkdown h3 {
+  font-size: 15px;
+  font-weight: 700;
+  margin: 0 0 8px;
+  color: rgba(43, 33, 64, 0.92);
+}
+
+.noteBodyMarkdown h1 {
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0 0 10px;
+  color: rgba(43, 33, 64, 0.92);
+  font-family: "IBM Plex Mono", monospace;
+}
+
+.noteBodyMarkdown h2 {
+  font-size: 15px;
+  font-weight: 700;
+  margin: 0 0 8px;
+  color: rgba(43, 33, 64, 0.92);
+  font-family: "IBM Plex Mono", monospace;
+}
+
+.noteBodyMarkdown h3 {
+  font-size: 13px;
+  font-weight: 700;
+  margin: 0 0 6px;
+  color: rgba(43, 33, 64, 0.92);
+  font-family: "IBM Plex Mono", monospace;
+}

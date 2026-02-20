@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 const PublishLogsButton = dynamic(
   () => import("@/components/PublishLogsButton"),
@@ -38,7 +39,13 @@ const PAPER_MODE_KEY = "softcomputer-paper-mode";
 const PAGE_SIZE = 8;
 
 function previewText(raw, maxChars = 120) {
-  const t = (raw || "").trim();
+  const t = (raw || "")
+    .trim()
+    .replace(/^#{1,6}\s+/gm, "")
+    .replace(/\*\*(.+?)\*\*/g, "$1")
+    .replace(/\*(.+?)\*/g, "$1")
+    .replace(/~~(.+?)~~/g, "$1")
+    .replace(/`(.+?)`/g, "$1");
   if (!t) return "";
   const firstLine = t.split("\n").find((line) => line.trim().length > 0) || "";
   const line = firstLine.trim();
@@ -269,7 +276,6 @@ export default function LogNotebookPage({ focus }) {
               pagedEntries.map((e) => {
                 const isActiveRow = e?.id === activeId;
                 const prev = previewText(e?.text);
-
                 return (
                   <button
                     key={e.id}
@@ -379,7 +385,9 @@ export default function LogNotebookPage({ focus }) {
               )}
 
               <div className="noteBody noteBodyMarkdown">
-                <ReactMarkdown>{activeEntry.text}</ReactMarkdown>
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  {activeEntry.text}
+                </ReactMarkdown>
               </div>
             </article>
           ) : (
