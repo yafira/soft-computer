@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
+import ReactMarkdown from "react-markdown";
 
 const PublishLogsButton = dynamic(
   () => import("@/components/PublishLogsButton"),
@@ -324,7 +325,6 @@ export default function LogNotebookPage({ focus }) {
                 className="kbd"
                 onClick={() => setPaperMode("grid")}
                 aria-pressed={paperMode === "grid"}
-                title="grid paper"
               >
                 grid
               </button>
@@ -333,7 +333,6 @@ export default function LogNotebookPage({ focus }) {
                 className="kbd"
                 onClick={() => setPaperMode("lined")}
                 aria-pressed={paperMode === "lined"}
-                title="lined paper"
               >
                 lined
               </button>
@@ -342,7 +341,6 @@ export default function LogNotebookPage({ focus }) {
                 className="kbd"
                 onClick={() => setPaperMode("dot")}
                 aria-pressed={paperMode === "dot"}
-                title="dot grid paper"
               >
                 dot
               </button>
@@ -380,7 +378,9 @@ export default function LogNotebookPage({ focus }) {
                 </div>
               )}
 
-              <div className="noteBody">{activeEntry.text}</div>
+              <div className="noteBody noteBodyMarkdown">
+                <ReactMarkdown>{activeEntry.text}</ReactMarkdown>
+              </div>
             </article>
           ) : (
             <div className={`notePaper is-${paperMode} emptyState`}>

@@ -1274,3 +1274,46 @@ a {
   display: grid;
   gap: 0;
 }
+
+/* markdown */
+.noteBodyMarkdown p {
+  margin: 0 0 10px;
+  line-height: 1.75;
+}
+
+.noteBodyMarkdown strong {
+  font-weight: 700;
+  color: rgba(43, 33, 64, 0.95);
+}
+
+.noteBodyMarkdown em {
+  font-style: italic;
+  opacity: 0.9;
+}
+
+.noteBodyMarkdown del {
+  text-decoration: line-through;
+  opacity: 0.55;
+}
+
+.noteBodyMarkdown ul,
+.noteBodyMarkdown ol {
+  padding-left: 18px;
+  margin: 0 0 10px;
+  display: grid;
+  gap: 4px;
+}
+
+.noteBodyMarkdown a {
+  color: rgba(100, 70, 160, 0.9);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.noteBodyMarkdown code {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 13px;
+  background: rgba(233, 222, 250, 0.4);
+  padding: 1px 5px;
+  border-radius: 4px;
+}
