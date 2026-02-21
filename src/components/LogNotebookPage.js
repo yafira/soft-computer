@@ -89,7 +89,11 @@ export default function LogNotebookPage({ focus }) {
 
   function scrollToNote() {
     if (typeof window !== "undefined" && window.innerWidth < 980) {
-      notePanelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      setTimeout(() => {
+        requestAnimationFrame(() => {
+          notePanelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+        });
+      }, 600);
     }
   }
 
@@ -146,7 +150,7 @@ export default function LogNotebookPage({ focus }) {
           const targetPage = Math.floor(idx / PAGE_SIZE);
           setPage((p) => (p === targetPage ? p : targetPage));
           setActiveId((id) => (id === focus ? id : focus));
-          setTimeout(() => scrollToNote(), 100);
+          scrollToNote();
           return;
         }
       }
@@ -199,7 +203,6 @@ export default function LogNotebookPage({ focus }) {
             <div className="h1" style={{ marginBottom: 6 }}>log</div>
             <p className="p subtle" style={{ margin: 0 }}>notebook entries</p>
           </div>
-
           {isDev ? (
             <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
               <PublishLogsButton />
@@ -255,7 +258,7 @@ export default function LogNotebookPage({ focus }) {
                     className={isActiveRow ? "entryRow active" : "entryRow"}
                     onClick={() => {
                       setActiveId(e.id);
-                      setTimeout(() => scrollToNote(), 50);
+                      scrollToNote();
                     }}
                     title="view notes"
                   >
