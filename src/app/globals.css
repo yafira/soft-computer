@@ -1350,3 +1350,48 @@ a {
   color: rgba(43, 33, 64, 0.92);
   font-family: "IBM Plex Mono", monospace;
 }
+
+@media (max-width: 640px) {
+  .notePaper {
+    padding: 12px;
+    font-size: 13px;
+  }
+
+  .noteBody,
+  .noteBodyMarkdown {
+    font-size: 13px;
+    line-height: 1.65;
+  }
+
+  .noteBodyMarkdown h1 {
+    font-size: 15px;
+  }
+
+  .noteBodyMarkdown h2 {
+    font-size: 13px;
+  }
+
+  .noteBodyMarkdown h3 {
+    font-size: 12px;
+  }
+
+  .noteBodyMarkdown p,
+  .noteBodyMarkdown li {
+    font-size: 13px;
+    line-height: 1.65;
+  }
+
+  .logGrid {
+    gap: 10px;
+  }
+
+  .entryRow {
+    padding: 10px;
+  }
+
+  .chip {
+    font-size: 11px;
+    height: 24px;
+    padding: 0 8px;
+  }
+}
