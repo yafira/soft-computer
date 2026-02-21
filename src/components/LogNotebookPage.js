@@ -293,7 +293,7 @@ export default function LogNotebookPage({ focus }) {
                     className={isActiveRow ? "entryRow active" : "entryRow"}
                     onClick={() => {
                       setActiveId(e.id);
-                      scrollToNote();
+                      setTimeout(() => scrollToNote(), 50);
                     }}
                     title="view notes"
                   >
