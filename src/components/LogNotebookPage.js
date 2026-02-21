@@ -104,10 +104,20 @@ export default function LogNotebookPage({ focus }) {
   const [page, setPage] = useState(0);
 
   const didInitRef = useRef(false);
+  const notePanelRef = useRef(null);
 
   useEffect(() => {
     writePaperMode(paperMode);
   }, [paperMode]);
+
+  function scrollToNote() {
+    if (typeof window !== "undefined" && window.innerWidth < 980) {
+      notePanelRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }
+  }
 
   const load = useCallback(async () => {
     setLoaded(false);
@@ -281,7 +291,10 @@ export default function LogNotebookPage({ focus }) {
                     key={e.id}
                     type="button"
                     className={isActiveRow ? "entryRow active" : "entryRow"}
-                    onClick={() => setActiveId(e.id)}
+                    onClick={() => {
+                      setActiveId(e.id);
+                      scrollToNote();
+                    }}
                     title="view notes"
                   >
                     <div className="entryRowTop">
@@ -322,7 +335,7 @@ export default function LogNotebookPage({ focus }) {
           ) : null}
         </div>
 
-        <div className="panel logCol">
+        <div className="panel logCol" ref={notePanelRef}>
           <div className="panelTitleRow">
             <div className="h2">notes</div>
             <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
