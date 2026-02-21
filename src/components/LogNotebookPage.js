@@ -10,26 +10,10 @@ const PublishLogsButton = dynamic(
   { ssr: false },
 );
 
-const months = [
-  "jan",
-  "feb",
-  "mar",
-  "apr",
-  "may",
-  "jun",
-  "jul",
-  "aug",
-  "sep",
-  "oct",
-  "nov",
-  "dec",
-];
+const months = ["jan","feb","mar","apr","may","jun","jul","aug","sep","oct","nov","dec"];
 
 function parseLabel(label) {
-  const parts = String(label || "")
-    .toLowerCase()
-    .trim()
-    .split(/\s+/);
+  const parts = String(label || "").toLowerCase().trim().split(/\s+/);
   const m = months.indexOf(parts[0]);
   const d = parseInt(parts[1]) || 0;
   return m * 31 + d;
@@ -39,8 +23,7 @@ const PAPER_MODE_KEY = "softcomputer-paper-mode";
 const PAGE_SIZE = 8;
 
 function previewText(raw, maxChars = 120) {
-  const t = (raw || "")
-    .trim()
+  const t = (raw || "").trim()
     .replace(/^#{1,6}\s+/gm, "")
     .replace(/\*\*(.+?)\*\*/g, "$1")
     .replace(/\*(.+?)\*/g, "$1")
@@ -60,16 +43,10 @@ async function fetchLiveLogs() {
     const res = await fetch("/api/logs", { cache: "no-store" });
     if (!res.ok) {
       const t = await res.text();
-      return {
-        entries: [],
-        error: `api failed (${res.status}): ${t.slice(0, 200)}`,
-      };
+      return { entries: [], error: `api failed (${res.status}): ${t.slice(0, 200)}` };
     }
     const data = await res.json();
-    return {
-      entries: Array.isArray(data?.entries) ? data.entries : [],
-      error: "",
-    };
+    return { entries: Array.isArray(data?.entries) ? data.entries : [], error: "" };
   } catch (e) {
     return { entries: [], error: String(e?.message || e) };
   }
@@ -112,10 +89,7 @@ export default function LogNotebookPage({ focus }) {
 
   function scrollToNote() {
     if (typeof window !== "undefined" && window.innerWidth < 980) {
-      notePanelRef.current?.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
+      notePanelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   }
 
@@ -123,9 +97,7 @@ export default function LogNotebookPage({ focus }) {
     setLoaded(false);
     const snap = await fetchLiveLogs();
     const list = Array.isArray(snap.entries) ? snap.entries : [];
-    const sorted = [...list].sort(
-      (a, b) => parseLabel(b.label) - parseLabel(a.label),
-    );
+    const sorted = [...list].sort((a, b) => parseLabel(b.label) - parseLabel(a.label));
     setEntries(sorted);
     setError(snap.error || "");
     setLoaded(true);
@@ -140,8 +112,7 @@ export default function LogNotebookPage({ focus }) {
   useEffect(() => {
     const onPub = () => load();
     window.addEventListener("softcomputer-logs-published", onPub);
-    return () =>
-      window.removeEventListener("softcomputer-logs-published", onPub);
+    return () => window.removeEventListener("softcomputer-logs-published", onPub);
   }, [load]);
 
   const filtered = useMemo(() => {
@@ -175,6 +146,7 @@ export default function LogNotebookPage({ focus }) {
           const targetPage = Math.floor(idx / PAGE_SIZE);
           setPage((p) => (p === targetPage ? p : targetPage));
           setActiveId((id) => (id === focus ? id : focus));
+          setTimeout(() => scrollToNote(), 100);
           return;
         }
       }
@@ -224,12 +196,8 @@ export default function LogNotebookPage({ focus }) {
       <section className="panel">
         <div className="panelTitleRow">
           <div>
-            <div className="h1" style={{ marginBottom: 6 }}>
-              log
-            </div>
-            <p className="p subtle" style={{ margin: 0 }}>
-              notebook entries
-            </p>
+            <div className="h1" style={{ marginBottom: 6 }}>log</div>
+            <p className="p subtle" style={{ margin: 0 }}>notebook entries</p>
           </div>
 
           {isDev ? (
@@ -254,13 +222,9 @@ export default function LogNotebookPage({ focus }) {
         {error ? (
           <div className="small" style={{ marginTop: 10, opacity: 0.9 }}>
             <div style={{ marginBottom: 6 }}>failed to load entries.</div>
-            <div className="small" style={{ opacity: 0.85 }}>
-              {error}
-            </div>
+            <div className="small" style={{ opacity: 0.85 }}>{error}</div>
             <div style={{ marginTop: 10 }}>
-              <button className="btn ghost" type="button" onClick={load}>
-                retry
-              </button>
+              <button className="btn ghost" type="button" onClick={load}>retry</button>
             </div>
           </div>
         ) : null}
@@ -270,9 +234,7 @@ export default function LogNotebookPage({ focus }) {
         <div className="panel logCol">
           <div className="panelTitleRow">
             <div className="h2">entries</div>
-            <div className="small subtle">
-              page {safePage + 1} / {totalPages}
-            </div>
+            <div className="small subtle">page {safePage + 1} / {totalPages}</div>
           </div>
 
           <div className="entryList">
@@ -310,27 +272,11 @@ export default function LogNotebookPage({ focus }) {
 
           {filtered.length > PAGE_SIZE ? (
             <div className="logPagination">
-              <button
-                type="button"
-                className="btn ghost"
-                disabled={!canPrev}
-                onClick={goPrev}
-              >
-                prev
-              </button>
+              <button type="button" className="btn ghost" disabled={!canPrev} onClick={goPrev}>prev</button>
               <div className="small subtle">
-                showing {safePage * PAGE_SIZE + 1}–
-                {Math.min((safePage + 1) * PAGE_SIZE, filtered.length)} of{" "}
-                {filtered.length}
+                showing {safePage * PAGE_SIZE + 1}–{Math.min((safePage + 1) * PAGE_SIZE, filtered.length)} of {filtered.length}
               </div>
-              <button
-                type="button"
-                className="btn ghost"
-                disabled={!canNext}
-                onClick={goNext}
-              >
-                next
-              </button>
+              <button type="button" className="btn ghost" disabled={!canNext} onClick={goNext}>next</button>
             </div>
           ) : null}
         </div>
@@ -339,60 +285,30 @@ export default function LogNotebookPage({ focus }) {
           <div className="panelTitleRow">
             <div className="h2">notes</div>
             <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-              <button
-                type="button"
-                className="kbd"
-                onClick={() => setPaperMode("grid")}
-                aria-pressed={paperMode === "grid"}
-              >
-                grid
-              </button>
-              <button
-                type="button"
-                className="kbd"
-                onClick={() => setPaperMode("lined")}
-                aria-pressed={paperMode === "lined"}
-              >
-                lined
-              </button>
-              <button
-                type="button"
-                className="kbd"
-                onClick={() => setPaperMode("dot")}
-                aria-pressed={paperMode === "dot"}
-              >
-                dot
-              </button>
+              <button type="button" className="kbd" onClick={() => setPaperMode("grid")} aria-pressed={paperMode === "grid"}>grid</button>
+              <button type="button" className="kbd" onClick={() => setPaperMode("lined")} aria-pressed={paperMode === "lined"}>lined</button>
+              <button type="button" className="kbd" onClick={() => setPaperMode("dot")} aria-pressed={paperMode === "dot"}>dot</button>
             </div>
           </div>
 
           {activeEntry ? (
             <article className={`notePaper is-${paperMode}`}>
               <div className="noteHeader">
-                <div className="h2" style={{ margin: 0 }}>
-                  {activeEntry.label}
-                </div>
+                <div className="h2" style={{ margin: 0 }}>{activeEntry.label}</div>
               </div>
 
               {activeEntry.imageUrl && (
-                <div
-                  style={{
-                    marginBottom: 14,
-                    borderRadius: 12,
-                    overflow: "hidden",
-                    border: "1px solid rgba(60,35,110,0.14)",
-                    background: "#fff",
-                  }}
-                >
+                <div style={{
+                  marginBottom: 14,
+                  borderRadius: 12,
+                  overflow: "hidden",
+                  border: "1px solid rgba(60,35,110,0.14)",
+                  background: "#fff",
+                }}>
                   <img
                     src={activeEntry.imageUrl}
                     alt=""
-                    style={{
-                      width: "100%",
-                      display: "block",
-                      objectFit: "contain",
-                      maxHeight: 340,
-                    }}
+                    style={{ width: "100%", display: "block", objectFit: "contain", maxHeight: 340 }}
                   />
                 </div>
               )}
