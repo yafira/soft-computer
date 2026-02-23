@@ -1099,7 +1099,9 @@ a {
   background: rgba(233, 222, 250, 0.18);
   border-radius: 14px;
   padding: 14px 16px;
-  transition: background 200ms ease, border-color 200ms ease;
+  transition:
+    background 200ms ease,
+    border-color 200ms ease;
 }
 
 .aboutCallout:hover {
@@ -1161,7 +1163,10 @@ a {
   background: rgba(255, 255, 255, 0.55);
   border-radius: 14px;
   padding: 14px;
-  transition: transform 150ms ease, box-shadow 150ms ease, border-color 150ms ease;
+  transition:
+    transform 150ms ease,
+    box-shadow 150ms ease,
+    border-color 150ms ease;
 }
 
 .aboutCard:hover {
@@ -1226,7 +1231,10 @@ a {
 }
 
 .aboutChips .chip {
-  transition: transform 140ms ease, background 140ms ease, border-color 140ms ease;
+  transition:
+    transform 140ms ease,
+    background 140ms ease,
+    border-color 140ms ease;
   cursor: default;
   font-family: "IBM Plex Mono", monospace;
   font-size: 11px;
@@ -1250,7 +1258,9 @@ a {
   border: 1px solid rgba(120, 90, 180, 0.16);
   border-radius: 16px;
   background: rgba(255, 255, 255, 0.55);
-  transition: transform 150ms ease, box-shadow 150ms ease;
+  transition:
+    transform 150ms ease,
+    box-shadow 150ms ease;
 }
 
 .kuBlock:hover {
@@ -1437,4 +1447,13 @@ a {
     flex-wrap: wrap;
     gap: 8px;
   }
+}
+
+.aboutMetaVal a {
+  text-decoration: none;
+  color: inherit;
+}
+
+.aboutMetaVal a:hover {
+  color: #8873d5;
 }

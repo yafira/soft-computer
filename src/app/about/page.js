@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export const metadata = {
   title: "about • soft.computer",
   description:
@@ -300,7 +302,15 @@ export default function AboutPage() {
 
               <div className="aboutMetaRow">
                 <div className="aboutMetaKey">author</div>
-                <div className="aboutMetaVal">yafira martinez</div>
+                <div className="aboutMetaVal">
+                  <a
+                    href="https://yafira.xyz"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    yafira martinez
+                  </a>
+                </div>
               </div>
 
               <div className="aboutMetaRow">
