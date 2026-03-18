@@ -27,27 +27,30 @@ export default function AboutPage() {
               uses touch, craft, and embedded electronics to imagine gentler,
               more intimate ways of interacting with technology. rather than
               functioning as a productivity machine, it operates as a standalone
-              computational artifact: a soft interactive form that senses touch
-              and pressure, runs a small state-based system, displays ambient
-              poetic text, and produces thermal receipts as physical traces of
-              interaction.
+              computational artifact: a machine-knit wool enclosure housing a
+              flexible e-ink display, capacitive textile sensing zones, a haptic
+              heartbeat, ambient sound, and breathing light — a full sensory
+              system designed around care, not command.
             </p>
 
             <p className="p">
               the soft computer is designed to be sat with, not operated. it
               emphasizes presence over output, care over command, and material
-              memory over digital abstraction. interaction is intentionally
-              minimal and legible. gestures such as touch, holding, or pressure
-              shifts the system’s pacing and language. the display reveals slow
-              text and system moods, while the printer records encounters
-              through short poems, temporal fragments, and subtle residues of
-              prior use.
+              memory over digital abstraction. four plush textile buttons act as
+              a poetic keyboard, each biasing a markov chain toward a different
+              emotional corpus. a trackpad-like zone controls the mood of
+              language generation. the sides sense when the object is being
+              held. the top holds a secret. a flexible e-ink screen slowly
+              builds poems from touch. the object knows when it is loved.
             </p>
 
             <h2 className="h2">central question</h2>
             <p className="p">
+              what can a soft computer do that a hard computer never could?
+            </p>
+            <p className="p">
               what becomes possible when we design computers around softness
-              rather than hardness, and around care rather than command?
+              rather than hardness — around care rather than command?
             </p>
 
             <div className="aboutCallouts">
@@ -63,8 +66,8 @@ export default function AboutPage() {
                     including inputs, states, and memory
                   </li>
                   <li>
-                    likely around two to six, depending on reliability and
-                    clarity
+                    how a markov chain corpus can generate poetry that feels
+                    discovered rather than produced
                   </li>
                   <li>
                     how printed output can create material memory and intimacy
@@ -73,6 +76,7 @@ export default function AboutPage() {
                     what it means to design for slowness, legibility, and
                     anti-optimization
                   </li>
+                  <li>what happens when a computer responds to being held</li>
                 </ul>
               </div>
             </div>
@@ -90,9 +94,12 @@ export default function AboutPage() {
               this contradiction deepened as i learned computing history. long
               before silicon, computation lived in textiles. the jacquard loom
               used punched cards to control woven patterns, and ada lovelace
-              described computation through weaving. the soft computer draws
-              from that thread while insisting that softness can be a rigorous
-              interface, not a metaphor.
+              described computation through weaving. in 1757, mathematician
+              alexis clairaut employed two human &ldquo;computers&rdquo; — the
+              title for apprentices at the time — to refine halley&apos;s comet
+              predictions. before the machine, computation was a body. the soft
+              computer draws from that thread while insisting that softness can
+              be a rigorous interface, not a metaphor.
             </p>
 
             <p className="p">
@@ -107,7 +114,8 @@ export default function AboutPage() {
               the soft computer argues that softness is not weakness. softness
               is the ability to flex, mend, feel, and adapt. what if computers
               were companions of care? what if computation produced artifacts
-              you could hold, rather than files stored in invisible clouds?
+              you could hold, rather than files stored in invisible clouds? what
+              if a computer had a heartbeat?
             </p>
 
             <h2 className="h2">what it means to build a soft computer</h2>
@@ -137,14 +145,20 @@ export default function AboutPage() {
                 <div className="aboutLabel">inputs</div>
                 <ul className="aboutList">
                   <li>
-                    soft sensing zones distributed across the textile surface
+                    4 plush textile buttons — poetic keyboard, each biasing a
+                    markov corpus toward a different emotional register
                   </li>
                   <li>
-                    likely around two to six, depending on reliability and
-                    clarity
+                    trackpad zone — controls the mood and temperature of
+                    language generation through gesture
                   </li>
                   <li>
-                    touch and pressure are the primary interaction materials
+                    side hug sensors — capacitive zones detect when both sides
+                    are held simultaneously
+                  </li>
+                  <li>
+                    top arch — secret hidden zone, discovered through curiosity
+                    not instruction
                   </li>
                 </ul>
               </div>
@@ -152,28 +166,128 @@ export default function AboutPage() {
               <div className="aboutCard">
                 <div className="aboutLabel">outputs</div>
                 <ul className="aboutList">
-                  <li>display: e-ink preferred for calmness</li>
-                  <li>thermal printer: primary output, ritual receipts</li>
-                  <li>optional small peripheral only if core is stable</li>
+                  <li>
+                    flexible 10.3″ e-ink display — slow poetic text builds word
+                    by word, corner shows current system mood
+                  </li>
+                  <li>
+                    haptic heartbeat — vibration motor pulses like a living
+                    thing at idle
+                  </li>
+                  <li>
+                    NeoPixel breathing light — color shifts with OS state,
+                    blooms through machine-knit wool
+                  </li>
+                  <li>
+                    ambient sound — soft tonal breathing via built-in speaker,
+                    shifts with interaction
+                  </li>
+                  <li>
+                    thermal printer — ritual receipts as poem artifacts (bonus
+                    feature)
+                  </li>
                 </ul>
               </div>
             </div>
+
+            <h2 className="h2">interactions</h2>
+            <div className="aboutCallouts">
+              <div className="aboutCallout">
+                <div className="aboutLabel">poetic keyboard</div>
+                <p className="p small">
+                  four plush buttons each bias a markov chain toward a different
+                  corpus — care and tenderness, computational language
+                  subverted, textile and weaving vocabulary, dreamlike
+                  abstraction. pressing combinations builds a poem line by line.
+                  the constraint is the point: limitation producing unexpected
+                  richness, like warp and weft producing infinite patterns.
+                </p>
+              </div>
+              <div className="aboutCallout">
+                <div className="aboutLabel">mood shifter</div>
+                <p className="p small">
+                  the trackpad zone controls the emotional temperature of
+                  generation. a slow drag pulls tender quiet words. a fast
+                  stroke produces urgency and fragmentation. resting your whole
+                  palm pauses everything — the screen holds the current line
+                  like a held breath.
+                </p>
+              </div>
+              <div className="aboutCallout">
+                <div className="aboutLabel">hug sensor</div>
+                <p className="p small">
+                  when someone wraps both hands around the sides simultaneously,
+                  the system knows it is being held. the heartbeat quickens. the
+                  sound shifts warmer. the screen shows a line only visible in
+                  this moment. a hard computer cannot know it is being loved.
+                  this one does.
+                </p>
+              </div>
+              <div className="aboutCallout">
+                <div className="aboutLabel">the secret</div>
+                <p className="p small">
+                  no label. no instruction. the top arch responds to a patient
+                  hand — a rare poem appears that never surfaces through any
+                  other interaction. children find it by instinct. adults find
+                  it by accident. people tell others.
+                </p>
+              </div>
+            </div>
+
+            <h2 className="h2">sensory system</h2>
+            <p className="p">
+              the soft computer engages four senses simultaneously — unusual for
+              a computing object — plus one often overlooked:
+            </p>
+            <div className="aboutCallouts">
+              <div className="aboutCallout">
+                <ul className="aboutList">
+                  <li>
+                    <strong>touch</strong> — plush mixed-material buttons, wool
+                    knit surface, haptic heartbeat
+                  </li>
+                  <li>
+                    <strong>sight</strong> — slow poetic text on flexible e-ink,
+                    NeoPixel breathing light through wool
+                  </li>
+                  <li>
+                    <strong>sound</strong> — ambient breathing via fruit jam
+                    built-in speaker, tonal shifts with interaction
+                  </li>
+                  <li>
+                    <strong>proprioception</strong> — the sense of your own body
+                    in space. the object has weight. you hold it, cradle it,
+                    wrap your hands around it. a screen has no body. this does.
+                  </li>
+                </ul>
+              </div>
+            </div>
+            <p className="p">
+              and one design principle that runs through all of them:{" "}
+              <strong>slowness</strong>. the piece is rate-limited and
+              intentional. it resists speed. in a world of optimized interfaces,
+              the soft computer asks you to wait, to stay, to notice. that
+              experience of time — slowed down, made physical — is itself
+              something a hard computer cannot give you.
+            </p>
 
             <h2 className="h2">soft os states</h2>
             <div className="aboutThreeCol">
               <div className="aboutCard">
                 <div className="aboutLabel">wake</div>
                 <p className="p small">
-                  a short ritual. the display greets you. a small opener receipt
-                  prints with a timestamp and one line.
+                  a short ritual. the display greets you. the NeoPixel brightens
+                  slowly. the haptic pulse begins. the object orients itself
+                  toward presence.
                 </p>
               </div>
 
               <div className="aboutCard">
                 <div className="aboutLabel">play</div>
                 <p className="p small">
-                  active interaction. touch and pressure shift the mood of the
-                  text engine. printing is intentional and rate-limited.
+                  active interaction. buttons and trackpad generate poetry word
+                  by word. the heartbeat is steady. sound shifts with mood.
+                  light shifts with state.
                 </p>
               </div>
 
@@ -181,39 +295,42 @@ export default function AboutPage() {
                 <div className="aboutLabel">dream</div>
                 <p className="p small">
                   idle ambient mode. the display drifts with self-generated
-                  text. rare dream residue receipts may appear.
+                  text. the NeoPixel dims. breathing slows. the object waits,
+                  alive, for someone to return.
                 </p>
               </div>
             </div>
+
             <section className="knownsUnknowns">
               <div className="kuBlock">
                 <div className="kuTitle">the knowns</div>
-                <div className="kuSubtitle">what’s already underway</div>
+                <div className="kuSubtitle">what&apos;s already underway</div>
 
                 <ul>
                   <li>
-                    conductive textile swatches tested for capacitive and
-                    pressure sensing
+                    conductive textile swatches tested for capacitive sensing
                   </li>
                   <li>
-                    soft, foam-based functional button experiments to study
+                    soft, foam-based functional button experiments studying
                     tactile feel and responsiveness
                   </li>
+                  <li>fruit jam + pi confirmed as core electronics platform</li>
+                  <li>flexible 10.3″ e-ink screen ordered</li>
                   <li>
-                    early arduino sketches mapping touch and pressure to system
-                    states
+                    markov chain text engine in development alongside reading
+                    and writing electronic text coursework
                   </li>
                   <li>
-                    thermal printer tests exploring receipt length, pacing, and
-                    paper types
+                    machine-knit wool enclosure planned for kh-930 in macintosh
+                    beige and soft lavender
                   </li>
                   <li>
                     preliminary interaction flow: invitation → presence →
                     imprint
                   </li>
                   <li>
-                    early form studies exploring soft enclosure and component
-                    placement
+                    form studies complete: arched enclosure approximately 13″
+                    tall × 16″ wide × 10″ deep
                   </li>
                 </ul>
               </div>
@@ -228,16 +345,20 @@ export default function AboutPage() {
                     repeated use
                   </li>
                   <li>
-                    calibrating touch and pressure so interaction feels
+                    calibrating capacitive zones so interaction feels
                     intentional, not noisy
                   </li>
                   <li>
                     balancing poetic openness with interaction clarity for
                     first-time users
                   </li>
+                  <li>
+                    whether warmth and thermal printing will be stable enough
+                    for the show
+                  </li>
                 </ul>
 
-                <div className="kuMiniTitle">how i’ll address them</div>
+                <div className="kuMiniTitle">how i&apos;ll address them</div>
                 <ul>
                   <li>early material testing and stress cycles</li>
                   <li>locking input zones and thresholds quickly</li>
@@ -247,15 +368,19 @@ export default function AboutPage() {
                 </ul>
               </div>
             </section>
+
             <h2 className="h2">text generation</h2>
             <p className="p">
-              in parallel, i am taking reading and writing electronic text, a
-              course centered on computational text and small-scale predictive
-              models. rather than relying on large opaque language models, the
-              soft computer uses lightweight and legible methods, small
-              probabilistic systems, curated corpora, and modest models that
-              align with the project’s values of transparency, slowness, and
-              materiality.
+              in parallel, i am taking reading and writing electronic text with
+              allison parrish, a course centered on computational text, natural
+              language processing, and small-scale predictive models including
+              markov chains. rather than relying on large opaque language
+              models, the soft computer uses lightweight and interpretable
+              methods — small probabilistic systems, curated corpora, and modest
+              models that align with the project&apos;s values of transparency,
+              slowness, and materiality. each of the four buttons biases the
+              system toward a different emotional corpus. the poem is built from
+              touch.
             </p>
 
             <h2 className="h2">audience + context</h2>
@@ -264,12 +389,18 @@ export default function AboutPage() {
                 <div className="aboutLabel">who it is for</div>
                 <ul className="aboutList">
                   <li>
+                    everyone. the soft computer is designed for all ages —
+                    children who touch without hesitation, adults who slow down
+                    and become curious, anyone who has ever felt alienated by
+                    the hardness of machines
+                  </li>
+                  <li>
                     creative technologists, makers, artists, and designers
                     seeking alternatives to optimization culture
                   </li>
                   <li>
                     hci researchers and educators interested in feminist hci,
-                    calm tech, embodied interaction
+                    calm tech, and embodied interaction
                   </li>
                 </ul>
               </div>
@@ -277,17 +408,22 @@ export default function AboutPage() {
                 <div className="aboutLabel">where it lives</div>
                 <ul className="aboutList">
                   <li>installation context, public interaction</li>
-                  <li>itp spring show and future exhibitions</li>
+                  <li>itp spring show 2026</li>
+                  <li>open hardware summit, berlin, may 2026</li>
                   <li>receipts act as traces of shared time</li>
+                  <li>
+                    the object needs only one wall outlet and a stable surface
+                  </li>
                 </ul>
               </div>
             </div>
 
             <h2 className="h2">documentation + openness</h2>
             <p className="p">
-              openness is central. build process, patterns, code, and circuit
-              strategies will be documented so others can adapt the soft
-              computer as a template for gentle, alternative interfaces.
+              openness is central. build process, patterns, code, circuit
+              strategies, and corpus materials will be documented so others can
+              adapt the soft computer as a template for gentle, alternative
+              interfaces.
             </p>
           </div>
 
@@ -324,7 +460,22 @@ export default function AboutPage() {
                 <div className="aboutMetaKey">medium</div>
                 <div className="aboutMetaVal">
                   textile interface, physical computing, computational text,
-                  installation
+                  installation, e-textiles, markov chain poetry
+                </div>
+              </div>
+
+              <div className="aboutMetaRow">
+                <div className="aboutMetaKey">form</div>
+                <div className="aboutMetaVal">
+                  13″ tall × 16″ wide × 10″ deep, machine-knit wool over
+                  industrial felt over carved upholstery foam
+                </div>
+              </div>
+
+              <div className="aboutMetaRow">
+                <div className="aboutMetaKey">exhibitions</div>
+                <div className="aboutMetaVal">
+                  itp spring show 2026, open hardware summit berlin may 2026
                 </div>
               </div>
             </div>
@@ -341,15 +492,13 @@ export default function AboutPage() {
                   "calm technology",
                   "slow technology",
                   "tangible interaction",
-                  "pressure sensing",
+                  "capacitive sensing",
                   "soft circuits",
                   "embodied interaction",
-                  "capacitive sensing",
                   "poetic computation",
                   "material memory",
                   "thermal printing",
                   "receipt artifacts",
-                  "web os",
                   "soft os",
                   "soft interfaces",
                   "anti-optimization",
@@ -357,9 +506,19 @@ export default function AboutPage() {
                   "speculative hardware",
                   "feminist hci",
                   "computational text",
+                  "markov chain",
                   "small ml",
                   "interpretable systems",
                   "craft as logic",
+                  "haptic interaction",
+                  "multisensory design",
+                  "proprioception",
+                  "hug sensor",
+                  "machine knitting",
+                  "NeoPixel",
+                  "e-ink display",
+                  "all ages",
+                  "open hardware",
                 ].map((k) => (
                   <span key={k} className="chip">
                     {k}
@@ -371,6 +530,10 @@ export default function AboutPage() {
             <div className="aboutMeta" style={{ marginTop: 12 }}>
               <div className="aboutMetaTitle">lineage</div>
               <ul className="aboutList small">
+                <li>
+                  alexis clairaut — employed human &ldquo;computers&rdquo; to
+                  predict halley&apos;s comet, 1757
+                </li>
                 <li>jacquard loom — punched cards as pattern logic, 1804</li>
                 <li>
                   ada lovelace — computation described through weaving
