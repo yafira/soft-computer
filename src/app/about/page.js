@@ -76,7 +76,9 @@ export default function AboutPage() {
                     what it means to design for slowness, legibility, and
                     anti-optimization
                   </li>
-                  <li>what happens when a computer responds to being held</li>
+                  <li>
+                    what happens when a computer responds to being held
+                  </li>
                 </ul>
               </div>
             </div>
@@ -196,21 +198,21 @@ export default function AboutPage() {
                 <div className="aboutLabel">poetic keyboard</div>
                 <p className="p small">
                   four plush buttons each bias a markov chain toward a different
-                  corpus — care and tenderness, computational language
-                  subverted, textile and weaving vocabulary, dreamlike
-                  abstraction. pressing combinations builds a poem line by line.
-                  the constraint is the point: limitation producing unexpected
-                  richness, like warp and weft producing infinite patterns.
+                  corpus — care and tenderness, computational language subverted,
+                  textile and weaving vocabulary, dreamlike abstraction. pressing
+                  combinations builds a poem line by line. the constraint is the
+                  point: limitation producing unexpected richness, like warp and
+                  weft producing infinite patterns.
                 </p>
               </div>
               <div className="aboutCallout">
                 <div className="aboutLabel">mood shifter</div>
                 <p className="p small">
                   the trackpad zone controls the emotional temperature of
-                  generation. a slow drag pulls tender quiet words. a fast
-                  stroke produces urgency and fragmentation. resting your whole
-                  palm pauses everything — the screen holds the current line
-                  like a held breath.
+                  generation. a slow drag pulls tender quiet words. a fast stroke
+                  produces urgency and fragmentation. resting your whole palm
+                  pauses everything — the screen holds the current line like a
+                  held breath.
                 </p>
               </div>
               <div className="aboutCallout">
@@ -228,8 +230,8 @@ export default function AboutPage() {
                 <p className="p small">
                   no label. no instruction. the top arch responds to a patient
                   hand — a rare poem appears that never surfaces through any
-                  other interaction. children find it by instinct. adults find
-                  it by accident. people tell others.
+                  other interaction. children find it by instinct. adults find it
+                  by accident. people tell others.
                 </p>
               </div>
             </div>
@@ -314,7 +316,9 @@ export default function AboutPage() {
                     soft, foam-based functional button experiments studying
                     tactile feel and responsiveness
                   </li>
-                  <li>fruit jam + pi confirmed as core electronics platform</li>
+                  <li>
+                    fruit jam + pi confirmed as core electronics platform
+                  </li>
                   <li>flexible 10.3″ e-ink screen ordered</li>
                   <li>
                     markov chain text engine in development alongside reading
@@ -325,8 +329,7 @@ export default function AboutPage() {
                     beige and soft lavender
                   </li>
                   <li>
-                    preliminary interaction flow: invitation → presence →
-                    imprint
+                    preliminary interaction flow: invitation → presence → imprint
                   </li>
                   <li>
                     form studies complete: arched enclosure approximately 13″
@@ -374,10 +377,10 @@ export default function AboutPage() {
               in parallel, i am taking reading and writing electronic text with
               allison parrish, a course centered on computational text, natural
               language processing, and small-scale predictive models including
-              markov chains. rather than relying on large opaque language
-              models, the soft computer uses lightweight and interpretable
-              methods — small probabilistic systems, curated corpora, and modest
-              models that align with the project&apos;s values of transparency,
+              markov chains. rather than relying on large opaque language models,
+              the soft computer uses lightweight and interpretable methods —
+              small probabilistic systems, curated corpora, and modest models
+              that align with the project&apos;s values of transparency,
               slowness, and materiality. each of the four buttons biases the
               system toward a different emotional corpus. the poem is built from
               touch.
@@ -536,8 +539,8 @@ export default function AboutPage() {
                 </li>
                 <li>jacquard loom — punched cards as pattern logic, 1804</li>
                 <li>
-                  ada lovelace — computation described through weaving
-                  metaphors, 1843
+                  ada lovelace — computation described through weaving metaphors,
+                  1843
                 </li>
                 <li>
                   eniac programmers — six women who wired and programmed the
@@ -573,6 +576,10 @@ export default function AboutPage() {
                 <li>
                   repair culture and slow tech — jackson, broken world thinking,
                   2014
+                </li>
+                <li>
+                  olia lialina — net artist and media theorist arguing for the
+                  visible computer and the rights of users, 1996–present
                 </li>
               </ul>
             </div>
