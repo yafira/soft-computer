@@ -477,8 +477,8 @@ export default function AboutPage() {
               <div className="aboutMetaRow">
                 <div className="aboutMetaKey">exhibitions</div>
                 <div className="aboutMetaVal">
-                  itp thesis show @ nyc resistor, itp spring show, open hardware
-                  summit berlin, date: TBD
+                  itp thesis show @ nyc resistor, itp/ima spring show, open
+                  hardware summit berlin, date: TBD
                 </div>
               </div>
             </div>
