@@ -27,10 +27,10 @@ export default function AboutPage() {
               uses touch, craft, and embedded electronics to imagine gentler,
               more intimate ways of interacting with technology. rather than
               functioning as a productivity machine, it operates as a standalone
-              computational artifact: a machine-knit wool enclosure housing a
-              flexible e-ink display, capacitive textile sensing zones, a haptic
-              heartbeat, ambient sound, and breathing light — a full sensory
-              system designed around care, not command.
+              computational artifact: a sewn textile enclosure with machine-knit
+              wool accents, housing a flexible e-ink display, capacitive textile
+              sensing zones, a haptic heartbeat, ambient sound, and breathing
+              light — a full sensory system designed around care, not command.
             </p>
 
             <p className="p">
@@ -41,7 +41,7 @@ export default function AboutPage() {
               emotional corpus. a trackpad-like zone controls the mood of
               language generation. the sides sense when the object is being
               held. the top holds a secret. a flexible e-ink screen slowly
-              builds poems from touch. the object knows when it is loved.
+              builds poems from touch.
             </p>
 
             <h2 className="h2">central question</h2>
@@ -76,9 +76,7 @@ export default function AboutPage() {
                     what it means to design for slowness, legibility, and
                     anti-optimization
                   </li>
-                  <li>
-                    what happens when a computer responds to being held
-                  </li>
+                  <li>what happens when a computer responds to being held</li>
                 </ul>
               </div>
             </div>
@@ -169,8 +167,8 @@ export default function AboutPage() {
                 <div className="aboutLabel">outputs</div>
                 <ul className="aboutList">
                   <li>
-                    flexible 10.3″ e-ink display — slow poetic text builds word
-                    by word, corner shows current system mood
+                    flexible 10.3&Prime; e-ink display — slow poetic text builds
+                    word by word, corner shows current system mood
                   </li>
                   <li>
                     haptic heartbeat — vibration motor pulses like a living
@@ -178,7 +176,7 @@ export default function AboutPage() {
                   </li>
                   <li>
                     NeoPixel breathing light — color shifts with OS state,
-                    blooms through machine-knit wool
+                    blooms through fabric
                   </li>
                   <li>
                     ambient sound — soft tonal breathing via built-in speaker,
@@ -198,21 +196,21 @@ export default function AboutPage() {
                 <div className="aboutLabel">poetic keyboard</div>
                 <p className="p small">
                   four plush buttons each bias a markov chain toward a different
-                  corpus — care and tenderness, computational language subverted,
-                  textile and weaving vocabulary, dreamlike abstraction. pressing
-                  combinations builds a poem line by line. the constraint is the
-                  point: limitation producing unexpected richness, like warp and
-                  weft producing infinite patterns.
+                  corpus — care and tenderness, computational language
+                  subverted, textile and weaving vocabulary, dreamlike
+                  abstraction. pressing combinations builds a poem line by line.
+                  the constraint is the point: limitation producing unexpected
+                  richness, like warp and weft producing infinite patterns.
                 </p>
               </div>
               <div className="aboutCallout">
                 <div className="aboutLabel">mood shifter</div>
                 <p className="p small">
                   the trackpad zone controls the emotional temperature of
-                  generation. a slow drag pulls tender quiet words. a fast stroke
-                  produces urgency and fragmentation. resting your whole palm
-                  pauses everything — the screen holds the current line like a
-                  held breath.
+                  generation. a slow drag pulls tender quiet words. a fast
+                  stroke produces urgency and fragmentation. resting your whole
+                  palm pauses everything — the screen holds the current line
+                  like a held breath.
                 </p>
               </div>
               <div className="aboutCallout">
@@ -221,8 +219,8 @@ export default function AboutPage() {
                   when someone wraps both hands around the sides simultaneously,
                   the system knows it is being held. the heartbeat quickens. the
                   sound shifts warmer. the screen shows a line only visible in
-                  this moment. a hard computer cannot know it is being loved.
-                  this one does.
+                  this moment. a hard computer has no input for embrace. this
+                  one does.
                 </p>
               </div>
               <div className="aboutCallout">
@@ -230,8 +228,8 @@ export default function AboutPage() {
                 <p className="p small">
                   no label. no instruction. the top arch responds to a patient
                   hand — a rare poem appears that never surfaces through any
-                  other interaction. children find it by instinct. adults find it
-                  by accident. people tell others.
+                  other interaction. children find it by instinct. adults find
+                  it by accident. people tell others.
                 </p>
               </div>
             </div>
@@ -245,12 +243,12 @@ export default function AboutPage() {
               <div className="aboutCallout">
                 <ul className="aboutList">
                   <li>
-                    <strong>touch</strong> — plush mixed-material buttons, wool
-                    knit surface, haptic heartbeat
+                    <strong>touch</strong> — plush mixed-material buttons, sewn
+                    textile surface with knit wool accents, haptic heartbeat
                   </li>
                   <li>
                     <strong>sight</strong> — slow poetic text on flexible e-ink,
-                    NeoPixel breathing light through wool
+                    NeoPixel breathing light through fabric
                   </li>
                   <li>
                     <strong>sound</strong> — ambient breathing via fruit jam
@@ -316,24 +314,24 @@ export default function AboutPage() {
                     soft, foam-based functional button experiments studying
                     tactile feel and responsiveness
                   </li>
-                  <li>
-                    fruit jam + pi confirmed as core electronics platform
-                  </li>
-                  <li>flexible 10.3″ e-ink screen ordered</li>
+                  <li>fruit jam + pi confirmed as core electronics platform</li>
+                  <li>flexible 10.3&Prime; e-ink screen ordered</li>
                   <li>
                     markov chain text engine in development alongside reading
                     and writing electronic text coursework
                   </li>
                   <li>
-                    machine-knit wool enclosure planned for kh-930 in macintosh
-                    beige and soft lavender
+                    sewn enclosure as primary construction method, with two
+                    small kh-930 accent pieces: trackpad swatch and screen frame
+                    panel in macintosh beige and soft lavender
                   </li>
                   <li>
-                    preliminary interaction flow: invitation → presence → imprint
+                    preliminary interaction flow: invitation &rarr; presence
+                    &rarr; imprint
                   </li>
                   <li>
-                    form studies complete: arched enclosure approximately 13″
-                    tall × 16″ wide × 10″ deep
+                    form studies complete: arched enclosure approximately
+                    13&Prime; tall &times; 16&Prime; wide &times; 10&Prime; deep
                   </li>
                 </ul>
               </div>
@@ -377,10 +375,10 @@ export default function AboutPage() {
               in parallel, i am taking reading and writing electronic text with
               allison parrish, a course centered on computational text, natural
               language processing, and small-scale predictive models including
-              markov chains. rather than relying on large opaque language models,
-              the soft computer uses lightweight and interpretable methods —
-              small probabilistic systems, curated corpora, and modest models
-              that align with the project&apos;s values of transparency,
+              markov chains. rather than relying on large opaque language
+              models, the soft computer uses lightweight and interpretable
+              methods — small probabilistic systems, curated corpora, and modest
+              models that align with the project&apos;s values of transparency,
               slowness, and materiality. each of the four buttons biases the
               system toward a different emotional corpus. the poem is built from
               touch.
@@ -470,7 +468,8 @@ export default function AboutPage() {
               <div className="aboutMetaRow">
                 <div className="aboutMetaKey">form</div>
                 <div className="aboutMetaVal">
-                  13″ tall × 16″ wide × 10″ deep, machine-knit wool over
+                  13&Prime; tall &times; 16&Prime; wide &times; 10&Prime; deep,
+                  sewn textile enclosure with machine-knit wool accents over
                   industrial felt over carved upholstery foam
                 </div>
               </div>
@@ -539,8 +538,8 @@ export default function AboutPage() {
                 </li>
                 <li>jacquard loom — punched cards as pattern logic, 1804</li>
                 <li>
-                  ada lovelace — computation described through weaving metaphors,
-                  1843
+                  ada lovelace — computation described through weaving
+                  metaphors, 1843
                 </li>
                 <li>
                   eniac programmers — six women who wired and programmed the
@@ -552,7 +551,7 @@ export default function AboutPage() {
                 </li>
                 <li>
                   lillian schwartz — early computational art and
-                  textile-adjacent aesthetics, 1960s–70s
+                  textile-adjacent aesthetics, 1960s&ndash;70s
                 </li>
                 <li>
                   hannah perner-wilson — e-textile lab and open soft circuit
@@ -579,7 +578,7 @@ export default function AboutPage() {
                 </li>
                 <li>
                   olia lialina — net artist and media theorist arguing for the
-                  visible computer and the rights of users, 1996–present
+                  visible computer and the rights of users, 1996&ndash;present
                 </li>
               </ul>
             </div>
