@@ -10,7 +10,6 @@ const PublishLogsButton = dynamic(
   { ssr: false },
 );
 
-// sept 2025 → may 2026 — ordered newest first for sorting
 const MONTH_ORDER = [
   { label: "may", year: 2026 },
   { label: "apr", year: 2026 },
@@ -23,7 +22,6 @@ const MONTH_ORDER = [
   { label: "sep", year: 2025 },
 ];
 
-// returns a sortable number — higher = more recent
 function parseLabelScore(label) {
   const parts = String(label || "")
     .toLowerCase()
@@ -32,8 +30,6 @@ function parseLabelScore(label) {
   const mName = parts[0];
   const d = parseInt(parts[1]) || 0;
   const idx = MONTH_ORDER.findIndex((m) => m.label === mName);
-  // idx 0 = may 2026 (newest), idx 8 = sep 2025 (oldest)
-  // invert so higher score = more recent
   const monthScore = idx < 0 ? -1 : MONTH_ORDER.length - 1 - idx;
   return monthScore * 31 + d;
 }
@@ -54,8 +50,7 @@ function previewText(raw, maxChars = 120) {
   const line = firstLine.trim();
   const sentenceMatch = line.match(/^(.+?[.!?])(\s|$)/);
   const sentence = sentenceMatch ? sentenceMatch[1].trim() : "";
-  const out = sentence || line;
-  return out.slice(0, maxChars).trim();
+  return (sentence || line).slice(0, maxChars).trim();
 }
 
 async function fetchLiveLogs() {
@@ -95,24 +90,110 @@ function writePaperMode(mode) {
   } catch {}
 }
 
-// normalise legacy imageUrl → imageUrls
-function getImageUrls(entry) {
-  if (!entry) return [];
-  if (Array.isArray(entry.imageUrls) && entry.imageUrls.length > 0)
-    return entry.imageUrls;
-  if (typeof entry.imageUrl === "string" && entry.imageUrl.trim())
-    return [entry.imageUrl.trim()];
-  return [];
+// get image count for badge — works with both content blocks and legacy imageUrls
+function getImageCount(entry) {
+  if (!entry) return 0;
+  if (Array.isArray(entry.content)) {
+    return entry.content.filter((b) => b.type === "image").length;
+  }
+  if (Array.isArray(entry.imageUrls)) return entry.imageUrls.length;
+  if (entry.imageUrl) return 1;
+  return 0;
+}
+
+// render content blocks in order, falling back to legacy fields
+function EntryContent({ entry }) {
+  if (Array.isArray(entry.content) && entry.content.length > 0) {
+    return (
+      <div style={{ display: "grid", gap: 14 }}>
+        {entry.content.map((block, i) => {
+          if (block.type === "image") {
+            return (
+              <div
+                key={i}
+                style={{
+                  borderRadius: 12,
+                  overflow: "hidden",
+                  border: "1px solid rgba(60,35,110,0.14)",
+                  background: "#fff",
+                }}
+              >
+                <img
+                  src={block.url}
+                  alt={`image ${i + 1}`}
+                  style={{
+                    width: "100%",
+                    display: "block",
+                    objectFit: "contain",
+                    maxHeight: 400,
+                  }}
+                />
+              </div>
+            );
+          }
+          if (block.type === "text" && block.value?.trim()) {
+            return (
+              <div key={i} className="noteBody noteBodyMarkdown">
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  {block.value}
+                </ReactMarkdown>
+              </div>
+            );
+          }
+          return null;
+        })}
+      </div>
+    );
+  }
+
+  // legacy fallback
+  const imageUrls = Array.isArray(entry.imageUrls)
+    ? entry.imageUrls
+    : entry.imageUrl
+      ? [entry.imageUrl]
+      : [];
+
+  return (
+    <div style={{ display: "grid", gap: 14 }}>
+      {imageUrls.map((url, i) => (
+        <div
+          key={i}
+          style={{
+            borderRadius: 12,
+            overflow: "hidden",
+            border: "1px solid rgba(60,35,110,0.14)",
+            background: "#fff",
+          }}
+        >
+          <img
+            src={url}
+            alt={`image ${i + 1}`}
+            style={{
+              width: "100%",
+              display: "block",
+              objectFit: "contain",
+              maxHeight: 400,
+            }}
+          />
+        </div>
+      ))}
+      {entry.text?.trim() && (
+        <div className="noteBody noteBodyMarkdown">
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+            {entry.text}
+          </ReactMarkdown>
+        </div>
+      )}
+    </div>
+  );
 }
 
 export default function LogNotebookPage({ focus }) {
   const [entries, setEntries] = useState([]);
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState("");
-
   const [query, setQuery] = useState("");
   const [activeId, setActiveId] = useState(null);
-
   const [paperMode, setPaperMode] = useState(() => readPaperMode());
   const [page, setPage] = useState(0);
 
@@ -141,7 +222,6 @@ export default function LogNotebookPage({ focus }) {
     setLoaded(false);
     const snap = await fetchLiveLogs();
     const list = Array.isArray(snap.entries) ? snap.entries : [];
-    // sort by label date (newest first), NOT by createdAt
     const sorted = [...list].sort(
       (a, b) => parseLabelScore(b.label) - parseLabelScore(a.label),
     );
@@ -173,12 +253,11 @@ export default function LogNotebookPage({ focus }) {
     });
   }, [entries, query]);
 
-  const totalPages = useMemo(() => {
-    return Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  }, [filtered.length]);
-
+  const totalPages = useMemo(
+    () => Math.max(1, Math.ceil(filtered.length / PAGE_SIZE)),
+    [filtered.length],
+  );
   const safePage = Math.min(page, totalPages - 1);
-
   const pagedEntries = useMemo(() => {
     const start = safePage * PAGE_SIZE;
     return filtered.slice(start, start + PAGE_SIZE);
@@ -190,29 +269,20 @@ export default function LogNotebookPage({ focus }) {
       if (focus) {
         const idx = entries.findIndex((e) => e?.id === focus);
         if (idx >= 0) {
-          const targetPage = Math.floor(idx / PAGE_SIZE);
-          setPage((p) => (p === targetPage ? p : targetPage));
+          setPage(Math.floor(idx / PAGE_SIZE));
           setActiveId(focus);
           scrollToNote(800);
           return;
         }
       }
-      if (!activeId && filtered.length > 0) {
-        const nextId = filtered[0]?.id;
-        if (nextId) setActiveId(nextId);
-      }
+      if (!activeId && filtered.length > 0) setActiveId(filtered[0]?.id);
     });
   }, [entries]);
 
   useEffect(() => {
-    if (!activeId) return;
-    if (pagedEntries.length === 0) return;
+    if (!activeId || pagedEntries.length === 0) return;
     const onPage = pagedEntries.some((e) => e?.id === activeId);
-    if (onPage) return;
-    queueMicrotask(() => {
-      const nextId = pagedEntries[0]?.id;
-      if (nextId) setActiveId(nextId);
-    });
+    if (!onPage) queueMicrotask(() => setActiveId(pagedEntries[0]?.id));
   }, [activeId, pagedEntries]);
 
   const activeEntry = useMemo(() => {
@@ -220,16 +290,7 @@ export default function LogNotebookPage({ focus }) {
     return filtered.find((e) => e?.id === activeId) || null;
   }, [filtered, activeId]);
 
-  const activeImages = useMemo(() => getImageUrls(activeEntry), [activeEntry]);
-
   const isDev = process.env.NODE_ENV === "development";
-  const canPrev = safePage > 0;
-  const canNext = safePage < totalPages - 1;
-
-  function onSearchChange(value) {
-    setQuery(value);
-    setPage(0);
-  }
 
   return (
     <main className="wrap">
@@ -255,7 +316,10 @@ export default function LogNotebookPage({ focus }) {
             className="input"
             placeholder="search entries..."
             value={query}
-            onChange={(e) => onSearchChange(e.target.value)}
+            onChange={(e) => {
+              setQuery(e.target.value);
+              setPage(0);
+            }}
           />
           <div className="small subtle" style={{ whiteSpace: "nowrap" }}>
             {filtered.length} entr{filtered.length === 1 ? "y" : "ies"}
@@ -296,8 +360,7 @@ export default function LogNotebookPage({ focus }) {
             ) : (
               pagedEntries.map((e) => {
                 const isActiveRow = e?.id === activeId;
-                const prev = previewText(e?.text);
-                const imgs = getImageUrls(e);
+                const imgCount = getImageCount(e);
                 return (
                   <button
                     key={e.id}
@@ -311,13 +374,13 @@ export default function LogNotebookPage({ focus }) {
                   >
                     <div className="entryRowTop">
                       <div className="chip">{e.label}</div>
-                      {imgs.length > 0 && (
+                      {imgCount > 0 && (
                         <span className="small subtle">
-                          📎{imgs.length > 1 ? ` ${imgs.length}` : ""}
+                          📎{imgCount > 1 ? ` ${imgCount}` : ""}
                         </span>
                       )}
                     </div>
-                    <div className="entryPreview">{prev}</div>
+                    <div className="entryPreview">{previewText(e?.text)}</div>
                   </button>
                 );
               })
@@ -329,7 +392,7 @@ export default function LogNotebookPage({ focus }) {
               <button
                 type="button"
                 className="btn ghost"
-                disabled={!canPrev}
+                disabled={safePage === 0}
                 onClick={() => setPage((p) => Math.max(0, p - 1))}
               >
                 prev
@@ -342,7 +405,7 @@ export default function LogNotebookPage({ focus }) {
               <button
                 type="button"
                 className="btn ghost"
-                disabled={!canNext}
+                disabled={safePage >= totalPages - 1}
                 onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
               >
                 next
@@ -376,40 +439,7 @@ export default function LogNotebookPage({ focus }) {
                   {activeEntry.label}
                 </div>
               </div>
-
-              {/* multi-image display */}
-              {activeImages.length > 0 && (
-                <div style={{ display: "grid", gap: 10, marginBottom: 14 }}>
-                  {activeImages.map((url, i) => (
-                    <div
-                      key={url}
-                      style={{
-                        borderRadius: 12,
-                        overflow: "hidden",
-                        border: "1px solid rgba(60,35,110,0.14)",
-                        background: "#fff",
-                      }}
-                    >
-                      <img
-                        src={url}
-                        alt={`image ${i + 1}`}
-                        style={{
-                          width: "100%",
-                          display: "block",
-                          objectFit: "contain",
-                          maxHeight: 340,
-                        }}
-                      />
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              <div className="noteBody noteBodyMarkdown">
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                  {activeEntry.text}
-                </ReactMarkdown>
-              </div>
+              <EntryContent entry={activeEntry} />
             </article>
           ) : (
             <div className={`notePaper is-${paperMode} emptyState`}>

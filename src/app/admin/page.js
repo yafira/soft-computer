@@ -13,7 +13,6 @@ async function getEntries() {
 
 export default async function AdminPage() {
   const entries = await getEntries();
-
   return (
     <main className="wrap">
       <section className="panel">

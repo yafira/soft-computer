@@ -5,7 +5,6 @@ import { upload } from "@vercel/blob/client";
 
 const ADMIN_TOKEN = process.env.NEXT_PUBLIC_ADMIN_LOG_TOKEN || "";
 
-// sept 2025 → may 2026
 const MONTHS = [
   { label: "sep", year: 2025 },
   { label: "oct", year: 2025 },
@@ -27,6 +26,37 @@ function makeEntryLabel(r, c) {
   return `${MONTHS[r].label} ${c + 1}`;
 }
 
+function newTextBlock(value = "") {
+  return { id: crypto.randomUUID(), type: "text", value };
+}
+
+function newImageBlock(url) {
+  return { id: crypto.randomUUID(), type: "image", url };
+}
+
+function stripIds(blocks) {
+  return blocks.map(({ id: _id, ...rest }) => rest);
+}
+
+function entryToBlocks(entry) {
+  if (!entry) return [newTextBlock()];
+  if (Array.isArray(entry.content) && entry.content.length > 0) {
+    return entry.content.map((b) => ({ ...b, id: crypto.randomUUID() }));
+  }
+  const blocks = [];
+  const text = typeof entry.text === "string" ? entry.text.trim() : "";
+  if (text) blocks.push(newTextBlock(text));
+  const urls = Array.isArray(entry.imageUrls)
+    ? entry.imageUrls
+    : entry.imageUrl
+      ? [entry.imageUrl]
+      : [];
+  for (const url of urls) {
+    if (url) blocks.push(newImageBlock(url));
+  }
+  return blocks.length > 0 ? blocks : [newTextBlock()];
+}
+
 function stateFromPublishedEntries(entries) {
   const rows = MONTHS.length;
   const punched = Array.from({ length: rows }, () =>
@@ -35,23 +65,19 @@ function stateFromPublishedEntries(entries) {
   const logs = Array.from({ length: rows }, () =>
     Array.from({ length: 31 }, () => ""),
   );
-
   for (const e of entries || []) {
     const raw = String(e?.label || "")
       .toLowerCase()
       .trim();
     const parts = raw.split(/\s+/);
     if (parts.length < 2) continue;
-    const mName = parts[0];
-    const dNum = Number(parts[1]);
-    const r = MONTHS.findIndex((m) => m.label === mName);
-    const d = Number.isFinite(dNum) ? dNum - 1 : -1;
+    const r = MONTHS.findIndex((m) => m.label === parts[0]);
+    const d = Number(parts[1]) - 1;
     if (r < 0 || d < 0 || d > 30) continue;
     const text = String(e?.text || "").trim();
     logs[r][d] = text;
     punched[r][d] = text.length > 0;
   }
-
   return { punched, logs };
 }
 
@@ -67,10 +93,11 @@ export default function PunchCard({
 }) {
   const containerRef = useRef(null);
   const didAutoOpenRef = useRef(false);
+  const dragIdx = useRef(null);
+  const dragOverIdx = useRef(null);
 
   const [active, setActive] = useState(null);
-  const [draft, setDraft] = useState("");
-  const [imageUrls, setImageUrls] = useState([]);
+  const [blocks, setBlocks] = useState([newTextBlock()]);
   const [uploading, setUploading] = useState(false);
   const [hover, setHover] = useState(null);
   const [lastDeleted, setLastDeleted] = useState(null);
@@ -82,11 +109,9 @@ export default function PunchCard({
       try {
         const res = await fetch("/api/logs", { cache: "no-store" });
         const data = await res.json();
-        const entries = Array.isArray(data?.entries) ? data.entries : [];
-        setRedisEntries(entries);
+        setRedisEntries(Array.isArray(data?.entries) ? data.entries : []);
       } catch {}
     }
-
     loadFromRedis();
     const onPub = () => loadFromRedis();
     window.addEventListener("softcomputer-logs-published", onPub);
@@ -98,34 +123,34 @@ export default function PunchCard({
     setRedisEntries(publishedEntries);
   }, [publishedEntries]);
 
-  const viewState = useMemo(() => {
-    return stateFromPublishedEntries(redisEntries);
-  }, [redisEntries]);
+  const viewState = useMemo(
+    () => stateFromPublishedEntries(redisEntries),
+    [redisEntries],
+  );
 
   const geo = useMemo(() => {
-    const rows = MONTHS.length; // 9
+    const rows = MONTHS.length;
     const cols = 31;
-    const W = 1200;
-    const H = 460;
-    const cardMarginX = 46;
-    const cardMarginY = 36;
-    const leftMargin = 110;
-    const rightMargin = 40;
-    const topMargin = 110;
-    const bottomMargin = 58;
-    const cardX = cardMarginX;
-    const cardY = cardMarginY;
-    const cardW = W - 2 * cardMarginX;
-    const cardH = H - 2 * cardMarginY;
-    const gridX = cardX + leftMargin;
-    const gridY = cardY + topMargin;
+    const W = 1200,
+      H = 460;
+    const cardMarginX = 46,
+      cardMarginY = 36;
+    const leftMargin = 110,
+      rightMargin = 40,
+      topMargin = 110,
+      bottomMargin = 58;
+    const cardX = cardMarginX,
+      cardY = cardMarginY;
+    const cardW = W - 2 * cardMarginX,
+      cardH = H - 2 * cardMarginY;
+    const gridX = cardX + leftMargin,
+      gridY = cardY + topMargin;
     const gridW = cardW - leftMargin - rightMargin;
     const gridH = cardH - topMargin - bottomMargin - 28;
-    const rowH = gridH / rows;
-    const colW = gridW / cols;
-    const slotW = colW * 0.28;
-    const slotH = rowH * 0.72;
-
+    const rowH = gridH / rows,
+      colW = gridW / cols;
+    const slotW = colW * 0.28,
+      slotH = rowH * 0.72;
     return {
       rows,
       cols,
@@ -157,19 +182,33 @@ export default function PunchCard({
             .trim() === label.toLowerCase(),
       );
       setActive({ r, c });
-      setDraft(viewState.logs?.[r]?.[c] || "");
-      const urls =
-        existing?.imageUrls ?? (existing?.imageUrl ? [existing.imageUrl] : []);
-      setImageUrls(urls);
+      setBlocks(entryToBlocks(existing));
     },
-    [readOnly, viewState.logs, redisEntries],
+    [readOnly, redisEntries],
   );
 
   const closeEditor = useCallback(() => {
     setActive(null);
-    setDraft("");
-    setImageUrls([]);
+    setBlocks([newTextBlock()]);
   }, []);
+
+  // block mutations
+  function updateBlock(id, patch) {
+    setBlocks((prev) =>
+      prev.map((b) => (b.id === id ? { ...b, ...patch } : b)),
+    );
+  }
+
+  function removeBlock(id) {
+    setBlocks((prev) => {
+      const next = prev.filter((b) => b.id !== id);
+      return next.length === 0 ? [newTextBlock()] : next;
+    });
+  }
+
+  function addTextBlock() {
+    setBlocks((prev) => [...prev, newTextBlock()]);
+  }
 
   async function onImagePick(file) {
     if (!file) return;
@@ -179,7 +218,7 @@ export default function PunchCard({
         access: "public",
         handleUploadUrl: "/api/blob",
       });
-      setImageUrls((prev) => [...prev, blob.url]);
+      setBlocks((prev) => [...prev, newImageBlock(blob.url)]);
     } catch (e) {
       console.error("image upload failed", e);
     } finally {
@@ -187,20 +226,54 @@ export default function PunchCard({
     }
   }
 
-  function removeImageAt(i) {
-    setImageUrls((prev) => prev.filter((_, idx) => idx !== i));
+  // drag reorder
+  function onDragStart(i) {
+    dragIdx.current = i;
+  }
+  function onDragEnter(i) {
+    dragOverIdx.current = i;
+  }
+  function onDragEnd() {
+    const from = dragIdx.current;
+    const to = dragOverIdx.current;
+    if (from == null || to == null || from === to) {
+      dragIdx.current = null;
+      dragOverIdx.current = null;
+      return;
+    }
+    setBlocks((prev) => {
+      const next = [...prev];
+      const [moved] = next.splice(from, 1);
+      next.splice(to, 0, moved);
+      return next;
+    });
+    dragIdx.current = null;
+    dragOverIdx.current = null;
   }
 
-  const commitSave = useCallback(async () => {
-    if (readOnly || !active) return;
-    const { r, c } = active;
-    const text = draft.trim();
-    if (!text) return;
+  function moveBlock(i, dir) {
+    const to = i + dir;
+    if (to < 0 || to >= blocks.length) return;
+    setBlocks((prev) => {
+      const next = [...prev];
+      const [moved] = next.splice(i, 1);
+      next.splice(to, 0, moved);
+      return next;
+    });
+  }
 
+  const hasContent = useMemo(() => {
+    return blocks.some((b) =>
+      b.type === "text" ? b.value.trim().length > 0 : !!b.url,
+    );
+  }, [blocks]);
+
+  const commitSave = useCallback(async () => {
+    if (readOnly || !active || !hasContent) return;
+    const { r, c } = active;
     setSaving(true);
     const label = makeEntryLabel(r, c);
     const id = makeId(r, c);
-
     try {
       await fetch("/api/logs", {
         method: "POST",
@@ -208,7 +281,7 @@ export default function PunchCard({
           "Content-Type": "application/json",
           "x-admin-token": ADMIN_TOKEN,
         },
-        body: JSON.stringify({ id, label, text, imageUrls }),
+        body: JSON.stringify({ id, label, content: stripIds(blocks) }),
       });
       const res = await fetch("/api/logs", { cache: "no-store" });
       const data = await res.json();
@@ -219,9 +292,8 @@ export default function PunchCard({
     } finally {
       setSaving(false);
     }
-
     closeEditor();
-  }, [readOnly, active, draft, imageUrls, closeEditor]);
+  }, [readOnly, active, blocks, hasContent, closeEditor]);
 
   const commitDelete = useCallback(async () => {
     if (readOnly || !active) return;
@@ -229,7 +301,6 @@ export default function PunchCard({
     const id = makeId(r, c);
     const prevText = (viewState.logs?.[r]?.[c] || "").trim();
     setLastDeleted(prevText ? { r, c, text: prevText } : null);
-
     setSaving(true);
     try {
       await fetch("/api/logs", {
@@ -249,9 +320,7 @@ export default function PunchCard({
     } finally {
       setSaving(false);
     }
-
-    setDraft("");
-    setImageUrls([]);
+    setBlocks([newTextBlock()]);
   }, [readOnly, active, viewState.logs]);
 
   const undoDelete = useCallback(async () => {
@@ -259,7 +328,6 @@ export default function PunchCard({
     const { r, c, text } = lastDeleted;
     const label = makeEntryLabel(r, c);
     const id = makeId(r, c);
-
     setSaving(true);
     try {
       await fetch("/api/logs", {
@@ -268,7 +336,11 @@ export default function PunchCard({
           "Content-Type": "application/json",
           "x-admin-token": ADMIN_TOKEN,
         },
-        body: JSON.stringify({ id, label, text, imageUrls: [] }),
+        body: JSON.stringify({
+          id,
+          label,
+          content: [{ type: "text", value: text }],
+        }),
       });
       const res = await fetch("/api/logs", { cache: "no-store" });
       const data = await res.json();
@@ -279,8 +351,8 @@ export default function PunchCard({
     } finally {
       setSaving(false);
     }
-
-    if (active && active.r === r && active.c === c) setDraft(text);
+    if (active && active.r === r && active.c === c)
+      setBlocks([newTextBlock(text)]);
     setLastDeleted(null);
   }, [readOnly, lastDeleted, active]);
 
@@ -291,11 +363,6 @@ export default function PunchCard({
       if (e.key === "Escape") {
         e.preventDefault();
         closeEditor();
-        return;
-      }
-      if (e.key === "Enter" && !e.shiftKey) {
-        e.preventDefault();
-        commitSave();
         return;
       }
       if ((e.key === "Backspace" || e.key === "Delete") && meta) {
@@ -311,11 +378,10 @@ export default function PunchCard({
     window.addEventListener("keydown", onKey, { capture: true });
     return () =>
       window.removeEventListener("keydown", onKey, { capture: true });
-  }, [readOnly, active, closeEditor, commitSave, commitDelete, undoDelete]);
+  }, [readOnly, active, closeEditor, commitDelete, undoDelete]);
 
   useEffect(() => {
     if (readOnly || didAutoOpenRef.current) return;
-
     const today = new Date();
     const todayMonth = today
       .toLocaleString("en", { month: "short" })
@@ -326,21 +392,18 @@ export default function PunchCard({
     );
     if (r < 0) r = MONTHS.length - 1;
     let d = clamp(today.getDate() - 1, 0, 30);
-
     if (focusM != null && focusD != null) {
-      const mm = Number(focusM);
-      const dd = Number(focusD);
+      const mm = Number(focusM),
+        dd = Number(focusD);
       if (!Number.isNaN(mm) && !Number.isNaN(dd)) {
         r = clamp(mm, 0, MONTHS.length - 1);
         d = clamp(dd, 0, 30);
       }
     }
-
     const t = setTimeout(() => {
       openEditor(r, d);
       didAutoOpenRef.current = true;
     }, 140);
-
     return () => clearTimeout(t);
   }, [readOnly, focusM, focusD, openEditor]);
 
@@ -407,7 +470,6 @@ export default function PunchCard({
                 />
               </clipPath>
             </defs>
-
             <g clipPath="url(#punchCardClip)">
               <rect
                 x={geo.cardX}
@@ -429,33 +491,26 @@ export default function PunchCard({
                 soft computer — process memory 2025–2026
               </text>
 
-              {Array.from({ length: geo.cols }).map((_, c) => {
-                const x = geo.gridX + c * geo.colW + geo.colW / 2;
-                return (
-                  <text
-                    key={`day-${c}`}
-                    x={x}
-                    y={geo.gridY - 18}
-                    className="punchDayNum"
-                  >
-                    {c + 1}
-                  </text>
-                );
-              })}
-
-              {Array.from({ length: geo.cols }).map((_, c) => {
-                const x = geo.gridX + c * geo.colW + geo.colW / 2;
-                return (
-                  <line
-                    key={`v-${c}`}
-                    x1={x}
-                    y1={geo.gridY - 8}
-                    x2={x}
-                    y2={geo.gridY + geo.gridH + 8}
-                    className="punchGuide"
-                  />
-                );
-              })}
+              {Array.from({ length: geo.cols }).map((_, c) => (
+                <text
+                  key={`day-${c}`}
+                  x={geo.gridX + c * geo.colW + geo.colW / 2}
+                  y={geo.gridY - 18}
+                  className="punchDayNum"
+                >
+                  {c + 1}
+                </text>
+              ))}
+              {Array.from({ length: geo.cols }).map((_, c) => (
+                <line
+                  key={`v-${c}`}
+                  x1={geo.gridX + c * geo.colW + geo.colW / 2}
+                  y1={geo.gridY - 8}
+                  x2={geo.gridX + c * geo.colW + geo.colW / 2}
+                  y2={geo.gridY + geo.gridH + 8}
+                  className="punchGuide"
+                />
+              ))}
 
               {MONTHS.map(({ label }, r) => {
                 const cy = geo.gridY + r * geo.rowH + geo.rowH / 2;
@@ -471,19 +526,18 @@ export default function PunchCard({
                     </text>
                     {Array.from({ length: geo.cols }).map((__, c) => {
                       const cx = geo.gridX + c * geo.colW + geo.colW / 2;
-                      const x = cx - geo.slotW / 2;
-                      const y = cy - geo.slotH / 2;
-                      const isPunched = !!viewState.punched?.[r]?.[c];
                       return (
                         <rect
                           key={`slot-${r}-${c}`}
-                          x={x}
-                          y={y}
+                          x={cx - geo.slotW / 2}
+                          y={cy - geo.slotH / 2}
                           width={geo.slotW}
                           height={geo.slotH}
                           rx="3"
                           className={
-                            isPunched ? "punchSlot punched" : "punchSlot"
+                            viewState.punched?.[r]?.[c]
+                              ? "punchSlot punched"
+                              : "punchSlot"
                           }
                         />
                       );
@@ -519,44 +573,39 @@ export default function PunchCard({
                 </text>
               </g>
 
-              {hover ? (
-                <g>
-                  {(() => {
-                    const raw = (
-                      viewState.logs?.[hover.r]?.[hover.c] || ""
-                    ).trim();
-                    const shown =
-                      raw.length > 72 ? `${raw.slice(0, 72)}…` : raw;
-                    const tx = clamp(
-                      hover.x + 20,
-                      geo.cardX + 22,
-                      geo.cardX + geo.cardW - 420,
-                    );
-                    const ty = clamp(
-                      hover.y - 14,
-                      geo.cardY + 108,
-                      geo.cardY + geo.cardH - 88,
-                    );
-                    return (
-                      <>
-                        <rect
-                          x={tx}
-                          y={ty}
-                          width="400"
-                          height="34"
-                          rx="10"
-                          className="tooltip"
-                        />
-                        <text x={tx + 12} y={ty + 22} className="tooltipText">
-                          {shown}
-                        </text>
-                      </>
-                    );
-                  })()}
-                </g>
-              ) : null}
+              {hover &&
+                (() => {
+                  const raw = (
+                    viewState.logs?.[hover.r]?.[hover.c] || ""
+                  ).trim();
+                  const shown = raw.length > 72 ? `${raw.slice(0, 72)}…` : raw;
+                  const tx = clamp(
+                    hover.x + 20,
+                    geo.cardX + 22,
+                    geo.cardX + geo.cardW - 420,
+                  );
+                  const ty = clamp(
+                    hover.y - 14,
+                    geo.cardY + 108,
+                    geo.cardY + geo.cardH - 88,
+                  );
+                  return (
+                    <g>
+                      <rect
+                        x={tx}
+                        y={ty}
+                        width="400"
+                        height="34"
+                        rx="10"
+                        className="tooltip"
+                      />
+                      <text x={tx + 12} y={ty + 22} className="tooltipText">
+                        {shown}
+                      </text>
+                    </g>
+                  );
+                })()}
             </g>
-
             <path
               d={`M ${geo.cardX + 24} ${geo.cardY} H ${geo.cardX + geo.cardW} V ${geo.cardY + geo.cardH} H ${geo.cardX} V ${geo.cardY + 24} Z`}
               className="punchCardCutStroke"
@@ -571,29 +620,128 @@ export default function PunchCard({
                 {MONTHS[active.r].label} {active.c + 1}
               </div>
               <div className="small subtle">
-                enter = save • esc = close • cmd/ctrl+z = undo •
-                cmd/ctrl+backspace = delete
+                esc = close • cmd/ctrl+backspace = delete • cmd/ctrl+z = undo
               </div>
             </div>
 
-            <textarea
-              className="textarea"
-              value={draft}
-              onChange={(e) => setDraft(e.target.value)}
-              placeholder="write a small memory…"
-              rows={3}
-              autoFocus
-            />
+            {/* block composer */}
+            <div style={{ display: "grid", gap: 8 }}>
+              {blocks.map((block, i) => (
+                <div
+                  key={block.id}
+                  draggable
+                  onDragStart={() => onDragStart(i)}
+                  onDragEnter={() => onDragEnter(i)}
+                  onDragEnd={onDragEnd}
+                  onDragOver={(e) => e.preventDefault()}
+                  style={{
+                    display: "grid",
+                    gap: 6,
+                    padding: 10,
+                    borderRadius: 10,
+                    border: "1px solid rgba(60,35,110,0.12)",
+                    background: "rgba(255,255,255,0.6)",
+                    cursor: "grab",
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: 6,
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                    }}
+                  >
+                    <span
+                      className="small subtle"
+                      style={{ userSelect: "none" }}
+                    >
+                      ⠿ {block.type === "text" ? "text" : "image"}
+                    </span>
+                    <div style={{ display: "flex", gap: 4 }}>
+                      <button
+                        type="button"
+                        className="btn ghost"
+                        style={{ padding: "2px 7px" }}
+                        disabled={i === 0}
+                        onClick={() => moveBlock(i, -1)}
+                      >
+                        ↑
+                      </button>
+                      <button
+                        type="button"
+                        className="btn ghost"
+                        style={{ padding: "2px 7px" }}
+                        disabled={i === blocks.length - 1}
+                        onClick={() => moveBlock(i, 1)}
+                      >
+                        ↓
+                      </button>
+                      <button
+                        type="button"
+                        className="btn danger"
+                        style={{ padding: "2px 7px" }}
+                        onClick={() => removeBlock(block.id)}
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  </div>
 
+                  {block.type === "text" ? (
+                    <textarea
+                      className="textarea"
+                      rows={4}
+                      placeholder="write a small memory… (markdown supported)"
+                      value={block.value}
+                      onChange={(e) =>
+                        updateBlock(block.id, { value: e.target.value })
+                      }
+                      style={{ resize: "vertical" }}
+                      autoFocus={i === 0}
+                    />
+                  ) : (
+                    <div
+                      style={{
+                        borderRadius: 8,
+                        overflow: "hidden",
+                        border: "1px solid rgba(60,35,110,0.1)",
+                      }}
+                    >
+                      <img
+                        src={block.url}
+                        alt="block image"
+                        style={{
+                          width: "100%",
+                          maxHeight: 200,
+                          objectFit: "contain",
+                          display: "block",
+                          background: "#fff",
+                        }}
+                      />
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {/* add block controls */}
             <div
               style={{
                 display: "flex",
                 gap: 10,
                 alignItems: "center",
-                marginTop: 8,
+                marginTop: 4,
                 flexWrap: "wrap",
               }}
             >
+              <button
+                type="button"
+                className="btn ghost"
+                onClick={addTextBlock}
+              >
+                + text block
+              </button>
               <label
                 className="btn ghost"
                 style={{
@@ -601,7 +749,7 @@ export default function PunchCard({
                   opacity: uploading ? 0.6 : 1,
                 }}
               >
-                {uploading ? "uploading…" : "attach image"}
+                {uploading ? "uploading…" : "+ image"}
                 <input
                   type="file"
                   accept="image/*"
@@ -610,61 +758,13 @@ export default function PunchCard({
                   onChange={(e) => onImagePick(e.target.files?.[0])}
                 />
               </label>
-              {imageUrls.length > 0 && (
-                <span className="small subtle">
-                  {imageUrls.length} image{imageUrls.length > 1 ? "s" : ""}{" "}
-                  attached
-                </span>
-              )}
             </div>
-
-            {imageUrls.length > 0 && (
-              <div style={{ display: "grid", gap: 8, marginTop: 10 }}>
-                {imageUrls.map((url, i) => (
-                  <div
-                    key={url}
-                    style={{
-                      position: "relative",
-                      borderRadius: 12,
-                      overflow: "hidden",
-                      border: "1px solid rgba(60,35,110,0.14)",
-                    }}
-                  >
-                    <img
-                      src={url}
-                      alt={`attached ${i + 1}`}
-                      style={{
-                        width: "100%",
-                        maxHeight: 200,
-                        objectFit: "contain",
-                        display: "block",
-                        background: "#fff",
-                      }}
-                    />
-                    <button
-                      type="button"
-                      className="btn ghost"
-                      onClick={() => removeImageAt(i)}
-                      style={{
-                        position: "absolute",
-                        top: 6,
-                        right: 6,
-                        padding: "2px 8px",
-                        fontSize: 11,
-                      }}
-                    >
-                      remove
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
 
             <div className="punchEditorActions">
               <button
                 className="btn"
                 onClick={commitSave}
-                disabled={saving || uploading}
+                disabled={saving || uploading || !hasContent}
               >
                 {saving ? "saving…" : "save"}
               </button>

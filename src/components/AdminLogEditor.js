@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { upload } from "@vercel/blob/client";
 
 const ADMIN_FLAG_KEY = "softcomputer_admin_logs_enabled";
@@ -16,6 +16,37 @@ function readAdminState() {
   }
 }
 
+function newTextBlock(value = "") {
+  return { id: crypto.randomUUID(), type: "text", value };
+}
+
+function newImageBlock(url) {
+  return { id: crypto.randomUUID(), type: "image", url };
+}
+
+function stripIds(blocks) {
+  return blocks.map(({ id: _id, ...rest }) => rest);
+}
+
+// convert a saved entry's content/imageUrls/text into local blocks with ids
+function entryToBlocks(entry) {
+  if (Array.isArray(entry.content) && entry.content.length > 0) {
+    return entry.content.map((b) => ({ ...b, id: crypto.randomUUID() }));
+  }
+  const blocks = [];
+  const text = typeof entry.text === "string" ? entry.text.trim() : "";
+  if (text) blocks.push(newTextBlock(text));
+  const urls = Array.isArray(entry.imageUrls)
+    ? entry.imageUrls
+    : entry.imageUrl
+      ? [entry.imageUrl]
+      : [];
+  for (const url of urls) {
+    if (url) blocks.push(newImageBlock(url));
+  }
+  return blocks.length > 0 ? blocks : [newTextBlock()];
+}
+
 export default function AdminLogEditor() {
   const [adminEnabled, setAdminEnabled] = useState(false);
   const [adminToken, setAdminToken] = useState("");
@@ -24,11 +55,16 @@ export default function AdminLogEditor() {
   const [loaded, setLoaded] = useState(false);
   const [busy, setBusy] = useState(false);
   const [uploading, setUploading] = useState(false);
-
-  const [label, setLabel] = useState("");
-  const [text, setText] = useState("");
-  const [imageUrls, setImageUrls] = useState([]);
   const [error, setError] = useState("");
+
+  // editing state — null means "new entry"
+  const [editingId, setEditingId] = useState(null);
+  const [label, setLabel] = useState("");
+  const [blocks, setBlocks] = useState([newTextBlock()]);
+
+  const dragIdx = useRef(null);
+  const dragOverIdx = useRef(null);
+  const composerRef = useRef(null);
 
   useEffect(() => {
     const { flag, token } = readAdminState();
@@ -80,15 +116,57 @@ export default function AdminLogEditor() {
   const isDev = process.env.NODE_ENV === "development";
   const canShowEditor = adminEnabled || isDev;
 
-  const canSubmit = useMemo(() => {
-    return (
-      adminToken.trim().length > 0 &&
-      label.trim().length > 0 &&
-      text.trim().length > 0 &&
-      !busy &&
-      !uploading
+  const hasContent = useMemo(() => {
+    return blocks.some((b) =>
+      b.type === "text" ? b.value.trim().length > 0 : !!b.url,
     );
-  }, [adminToken, label, text, busy, uploading]);
+  }, [blocks]);
+
+  const canSubmit =
+    adminToken.trim().length > 0 &&
+    label.trim().length > 0 &&
+    hasContent &&
+    !busy &&
+    !uploading;
+
+  function resetComposer() {
+    setEditingId(null);
+    setLabel("");
+    setBlocks([newTextBlock()]);
+    setError("");
+  }
+
+  function startEdit(entry) {
+    setEditingId(entry.id);
+    setLabel(entry.label || "");
+    setBlocks(entryToBlocks(entry));
+    setError("");
+    // scroll composer into view
+    setTimeout(() => {
+      composerRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }, 50);
+  }
+
+  // block mutations
+  function updateBlock(id, patch) {
+    setBlocks((prev) =>
+      prev.map((b) => (b.id === id ? { ...b, ...patch } : b)),
+    );
+  }
+
+  function removeBlock(id) {
+    setBlocks((prev) => {
+      const next = prev.filter((b) => b.id !== id);
+      return next.length === 0 ? [newTextBlock()] : next;
+    });
+  }
+
+  function addTextBlock() {
+    setBlocks((prev) => [...prev, newTextBlock()]);
+  }
 
   async function onImagePick(file) {
     if (!file) return;
@@ -98,7 +176,7 @@ export default function AdminLogEditor() {
         access: "public",
         handleUploadUrl: "/api/blob",
       });
-      setImageUrls((prev) => [...prev, blob.url]);
+      setBlocks((prev) => [...prev, newImageBlock(blob.url)]);
     } catch (e) {
       console.error("image upload failed", e);
       setError("image upload failed");
@@ -107,11 +185,43 @@ export default function AdminLogEditor() {
     }
   }
 
-  function removeImageAt(i) {
-    setImageUrls((prev) => prev.filter((_, idx) => idx !== i));
+  // drag handlers
+  function onDragStart(i) {
+    dragIdx.current = i;
+  }
+  function onDragEnter(i) {
+    dragOverIdx.current = i;
+  }
+  function onDragEnd() {
+    const from = dragIdx.current;
+    const to = dragOverIdx.current;
+    if (from == null || to == null || from === to) {
+      dragIdx.current = null;
+      dragOverIdx.current = null;
+      return;
+    }
+    setBlocks((prev) => {
+      const next = [...prev];
+      const [moved] = next.splice(from, 1);
+      next.splice(to, 0, moved);
+      return next;
+    });
+    dragIdx.current = null;
+    dragOverIdx.current = null;
   }
 
-  async function onCreate() {
+  function moveBlock(i, dir) {
+    const to = i + dir;
+    if (to < 0 || to >= blocks.length) return;
+    setBlocks((prev) => {
+      const next = [...prev];
+      const [moved] = next.splice(i, 1);
+      next.splice(to, 0, moved);
+      return next;
+    });
+  }
+
+  async function onSave() {
     if (!canSubmit) return;
     setBusy(true);
     setError("");
@@ -122,17 +232,20 @@ export default function AdminLogEditor() {
           "content-type": "application/json",
           "x-admin-token": adminToken,
         },
-        body: JSON.stringify({ label, text, imageUrls }),
+        body: JSON.stringify({
+          // if editing, pass the existing id so the API updates in place
+          ...(editingId ? { id: editingId } : {}),
+          label,
+          content: stripIds(blocks),
+        }),
       });
 
       if (!res.ok) {
         const t = await res.text();
-        throw new Error(`create failed (${res.status}): ${t.slice(0, 200)}`);
+        throw new Error(`save failed (${res.status}): ${t.slice(0, 200)}`);
       }
 
-      setLabel("");
-      setText("");
-      setImageUrls([]);
+      resetComposer();
       await refresh();
     } catch (e) {
       setError(String(e?.message || e));
@@ -160,6 +273,7 @@ export default function AdminLogEditor() {
         throw new Error(`delete failed (${res.status}): ${t.slice(0, 200)}`);
       }
 
+      if (editingId === id) resetComposer();
       await refresh();
     } catch (e) {
       setError(String(e?.message || e));
@@ -171,7 +285,7 @@ export default function AdminLogEditor() {
   if (!loaded) return <div className="emptyState">loading…</div>;
 
   return (
-    <div style={{ display: "grid", gap: 12 }}>
+    <div style={{ display: "grid", gap: 16 }}>
       <div className="panelTitleRow">
         <div>
           <div className="h2" style={{ margin: 0 }}>
@@ -194,14 +308,51 @@ export default function AdminLogEditor() {
         <div className="emptyState">editor is off.</div>
       ) : (
         <>
-          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-            <input
-              className="input"
-              style={{ maxWidth: 320 }}
-              placeholder="admin token"
-              value={adminToken}
-              onChange={(e) => saveAdmin(true, e.target.value)}
-            />
+          {/* token input — always visible when editor is on */}
+          <input
+            className="input"
+            style={{ maxWidth: 320 }}
+            placeholder="admin token"
+            value={adminToken}
+            onChange={(e) => saveAdmin(true, e.target.value)}
+          />
+
+          {/* composer */}
+          <div
+            ref={composerRef}
+            style={{
+              display: "grid",
+              gap: 12,
+              padding: 14,
+              borderRadius: 12,
+              border: editingId
+                ? "1.5px solid rgba(100,60,200,0.3)"
+                : "1px solid rgba(60,35,110,0.12)",
+              background: editingId ? "rgba(220,214,247,0.15)" : "transparent",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                gap: 8,
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
+              <div className="small subtle">
+                {editingId ? `editing: ${label || "…"}` : "new entry"}
+              </div>
+              {editingId && (
+                <button
+                  type="button"
+                  className="btn ghost"
+                  onClick={resetComposer}
+                >
+                  cancel edit
+                </button>
+              )}
+            </div>
+
             <input
               className="input"
               style={{ maxWidth: 320 }}
@@ -209,136 +360,221 @@ export default function AdminLogEditor() {
               value={label}
               onChange={(e) => setLabel(e.target.value)}
             />
-          </div>
 
-          <textarea
-            className="input"
-            rows={8}
-            placeholder="write entry text…"
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-          />
-
-          {/* multi-image upload */}
-          <div
-            style={{
-              display: "flex",
-              gap: 10,
-              alignItems: "center",
-              flexWrap: "wrap",
-            }}
-          >
-            <label
-              className="btn ghost"
-              style={{
-                cursor: uploading ? "not-allowed" : "pointer",
-                opacity: uploading ? 0.6 : 1,
-              }}
-            >
-              {uploading ? "uploading…" : "attach image"}
-              <input
-                type="file"
-                accept="image/*"
-                hidden
-                disabled={uploading}
-                onChange={(e) => onImagePick(e.target.files?.[0])}
-              />
-            </label>
-            {imageUrls.length > 0 && (
-              <span className="small subtle">
-                {imageUrls.length} image{imageUrls.length > 1 ? "s" : ""}{" "}
-                attached
-              </span>
-            )}
-          </div>
-
-          {imageUrls.length > 0 && (
+            {/* blocks */}
             <div style={{ display: "grid", gap: 8 }}>
-              {imageUrls.map((url, i) => (
+              {blocks.map((block, i) => (
                 <div
-                  key={url}
+                  key={block.id}
+                  draggable
+                  onDragStart={() => onDragStart(i)}
+                  onDragEnter={() => onDragEnter(i)}
+                  onDragEnd={onDragEnd}
+                  onDragOver={(e) => e.preventDefault()}
                   style={{
-                    position: "relative",
-                    borderRadius: 12,
-                    overflow: "hidden",
-                    border: "1px solid rgba(60,35,110,0.14)",
+                    display: "grid",
+                    gap: 6,
+                    padding: 10,
+                    borderRadius: 10,
+                    border: "1px solid rgba(60,35,110,0.12)",
+                    background: "rgba(255,255,255,0.6)",
+                    cursor: "grab",
                   }}
                 >
-                  <img
-                    src={url}
-                    alt={`attached ${i + 1}`}
+                  <div
                     style={{
-                      width: "100%",
-                      maxHeight: 180,
-                      objectFit: "contain",
-                      display: "block",
-                      background: "#fff",
-                    }}
-                  />
-                  <button
-                    type="button"
-                    className="btn ghost"
-                    onClick={() => removeImageAt(i)}
-                    style={{
-                      position: "absolute",
-                      top: 6,
-                      right: 6,
-                      padding: "2px 8px",
-                      fontSize: 11,
+                      display: "flex",
+                      gap: 6,
+                      alignItems: "center",
+                      justifyContent: "space-between",
                     }}
                   >
-                    remove
-                  </button>
+                    <span
+                      className="small subtle"
+                      style={{ userSelect: "none" }}
+                    >
+                      ⠿ {block.type === "text" ? "text" : "image"}
+                    </span>
+                    <div style={{ display: "flex", gap: 4 }}>
+                      <button
+                        type="button"
+                        className="btn ghost"
+                        style={{ padding: "2px 7px" }}
+                        disabled={i === 0}
+                        onClick={() => moveBlock(i, -1)}
+                      >
+                        ↑
+                      </button>
+                      <button
+                        type="button"
+                        className="btn ghost"
+                        style={{ padding: "2px 7px" }}
+                        disabled={i === blocks.length - 1}
+                        onClick={() => moveBlock(i, 1)}
+                      >
+                        ↓
+                      </button>
+                      <button
+                        type="button"
+                        className="btn danger"
+                        style={{ padding: "2px 7px" }}
+                        onClick={() => removeBlock(block.id)}
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  </div>
+
+                  {block.type === "text" ? (
+                    <textarea
+                      className="input"
+                      rows={5}
+                      placeholder="write entry text… (markdown supported)"
+                      value={block.value}
+                      onChange={(e) =>
+                        updateBlock(block.id, { value: e.target.value })
+                      }
+                      style={{ resize: "vertical" }}
+                    />
+                  ) : (
+                    <div
+                      style={{
+                        borderRadius: 8,
+                        overflow: "hidden",
+                        border: "1px solid rgba(60,35,110,0.1)",
+                      }}
+                    >
+                      <img
+                        src={block.url}
+                        alt="block image"
+                        style={{
+                          width: "100%",
+                          maxHeight: 200,
+                          objectFit: "contain",
+                          display: "block",
+                          background: "#fff",
+                        }}
+                      />
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
-          )}
 
-          <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-            <button className="btn" disabled={!canSubmit} onClick={onCreate}>
-              {busy ? "saving…" : "add entry"}
-            </button>
-            {error ? <div className="small subtle">{error}</div> : null}
+            {/* add block controls */}
+            <div
+              style={{
+                display: "flex",
+                gap: 10,
+                alignItems: "center",
+                flexWrap: "wrap",
+              }}
+            >
+              <button
+                type="button"
+                className="btn ghost"
+                onClick={addTextBlock}
+              >
+                + text block
+              </button>
+              <label
+                className="btn ghost"
+                style={{
+                  cursor: uploading ? "not-allowed" : "pointer",
+                  opacity: uploading ? 0.6 : 1,
+                }}
+              >
+                {uploading ? "uploading…" : "+ image"}
+                <input
+                  type="file"
+                  accept="image/*"
+                  hidden
+                  disabled={uploading}
+                  onChange={(e) => onImagePick(e.target.files?.[0])}
+                />
+              </label>
+            </div>
+
+            <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+              <button className="btn" disabled={!canSubmit} onClick={onSave}>
+                {busy ? "saving…" : editingId ? "save changes" : "add entry"}
+              </button>
+              {error ? <div className="small subtle">{error}</div> : null}
+            </div>
           </div>
 
+          {/* existing entries list */}
           <div style={{ display: "grid", gap: 8 }}>
-            {entries.map((e) => (
-              <div key={e.id} className="cardRow">
+            {entries.map((e) => {
+              const imgCount = e.imageUrls?.length ?? 0;
+              const isEditing = e.id === editingId;
+              return (
                 <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    gap: 10,
-                    alignItems: "baseline",
-                  }}
+                  key={e.id}
+                  className="cardRow"
+                  style={
+                    isEditing
+                      ? {
+                          border: "1.5px solid rgba(100,60,200,0.3)",
+                          background: "rgba(220,214,247,0.15)",
+                        }
+                      : {}
+                  }
                 >
-                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                    <span className="chip">{e.label}</span>
-                    <span className="small subtle">
-                      {new Date(e.createdAt).toLocaleDateString()}
-                    </span>
-                    {(e.imageUrls?.length ?? 0) > 0 && (
-                      <span className="small subtle">
-                        {e.imageUrls.length} image
-                        {e.imageUrls.length > 1 ? "s" : ""}
-                      </span>
-                    )}
-                  </div>
-                  <button
-                    type="button"
-                    className="btn danger"
-                    disabled={busy}
-                    onClick={() => onDelete(e.id)}
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      gap: 10,
+                      alignItems: "baseline",
+                    }}
                   >
-                    delete
-                  </button>
+                    <div
+                      style={{
+                        display: "flex",
+                        gap: 8,
+                        flexWrap: "wrap",
+                        alignItems: "center",
+                      }}
+                    >
+                      <span className="chip">{e.label}</span>
+                      <span className="small subtle">
+                        {new Date(e.createdAt).toLocaleDateString()}
+                      </span>
+                      {imgCount > 0 && (
+                        <span className="small subtle">
+                          {imgCount} image{imgCount > 1 ? "s" : ""}
+                        </span>
+                      )}
+                    </div>
+                    <div style={{ display: "flex", gap: 6 }}>
+                      <button
+                        type="button"
+                        className={isEditing ? "btn ghost" : "btn ghost"}
+                        disabled={busy}
+                        onClick={() =>
+                          isEditing ? resetComposer() : startEdit(e)
+                        }
+                      >
+                        {isEditing ? "cancel" : "edit"}
+                      </button>
+                      <button
+                        type="button"
+                        className="btn danger"
+                        disabled={busy}
+                        onClick={() => onDelete(e.id)}
+                      >
+                        delete
+                      </button>
+                    </div>
+                  </div>
+                  <div className="small subtle" style={{ marginTop: 8 }}>
+                    {(e.text || "").slice(0, 140)}
+                    {(e.text || "").length > 140 ? "…" : ""}
+                  </div>
                 </div>
-                <div className="small subtle" style={{ marginTop: 8 }}>
-                  {(e.text || "").slice(0, 140)}
-                  {(e.text || "").length > 140 ? "…" : ""}
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </>
       )}
