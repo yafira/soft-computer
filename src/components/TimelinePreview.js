@@ -2,29 +2,29 @@
 
 import { useEffect, useMemo, useState } from "react";
 
-const months = [
-  "jan",
-  "feb",
-  "mar",
-  "apr",
-  "may",
-  "jun",
-  "jul",
-  "aug",
-  "sep",
-  "oct",
-  "nov",
-  "dec",
+// sept 2025 → may 2026, newest first
+const MONTH_ORDER = [
+  { label: "may", year: 2026 },
+  { label: "apr", year: 2026 },
+  { label: "mar", year: 2026 },
+  { label: "feb", year: 2026 },
+  { label: "jan", year: 2026 },
+  { label: "dec", year: 2025 },
+  { label: "nov", year: 2025 },
+  { label: "oct", year: 2025 },
+  { label: "sep", year: 2025 },
 ];
 
-function parseLabel(label) {
+function parseLabelScore(label) {
   const parts = String(label || "")
     .toLowerCase()
     .trim()
     .split(/\s+/);
-  const m = months.indexOf(parts[0]);
+  const mName = parts[0];
   const d = parseInt(parts[1]) || 0;
-  return m * 31 + d;
+  const idx = MONTH_ORDER.findIndex((m) => m.label === mName);
+  const monthScore = idx < 0 ? -1 : MONTH_ORDER.length - 1 - idx;
+  return monthScore * 31 + d;
 }
 
 function previewText(raw, maxChars = 120) {
@@ -63,7 +63,7 @@ export default function TimelinePreview() {
     const snap = await fetchLiveLogs();
     const list = Array.isArray(snap.entries) ? snap.entries : [];
     const sorted = [...list].sort(
-      (a, b) => parseLabel(b.label) - parseLabel(a.label),
+      (a, b) => parseLabelScore(b.label) - parseLabelScore(a.label),
     );
     setEntries(sorted);
     setLoaded(true);
@@ -73,7 +73,6 @@ export default function TimelinePreview() {
     let alive = true;
     (async () => {
       await load();
-      if (!alive) return;
     })();
     return () => {
       alive = false;
