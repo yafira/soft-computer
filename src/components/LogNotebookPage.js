@@ -10,29 +10,32 @@ const PublishLogsButton = dynamic(
   { ssr: false },
 );
 
-const months = [
-  "jan",
-  "feb",
-  "mar",
-  "apr",
-  "may",
-  "jun",
-  "jul",
-  "aug",
-  "sep",
-  "oct",
-  "nov",
-  "dec",
+// sept 2025 → may 2026 — ordered newest first for sorting
+const MONTH_ORDER = [
+  { label: "may", year: 2026 },
+  { label: "apr", year: 2026 },
+  { label: "mar", year: 2026 },
+  { label: "feb", year: 2026 },
+  { label: "jan", year: 2026 },
+  { label: "dec", year: 2025 },
+  { label: "nov", year: 2025 },
+  { label: "oct", year: 2025 },
+  { label: "sep", year: 2025 },
 ];
 
-function parseLabel(label) {
+// returns a sortable number — higher = more recent
+function parseLabelScore(label) {
   const parts = String(label || "")
     .toLowerCase()
     .trim()
     .split(/\s+/);
-  const m = months.indexOf(parts[0]);
+  const mName = parts[0];
   const d = parseInt(parts[1]) || 0;
-  return m * 31 + d;
+  const idx = MONTH_ORDER.findIndex((m) => m.label === mName);
+  // idx 0 = may 2026 (newest), idx 8 = sep 2025 (oldest)
+  // invert so higher score = more recent
+  const monthScore = idx < 0 ? -1 : MONTH_ORDER.length - 1 - idx;
+  return monthScore * 31 + d;
 }
 
 const PAPER_MODE_KEY = "softcomputer-paper-mode";
@@ -92,6 +95,16 @@ function writePaperMode(mode) {
   } catch {}
 }
 
+// normalise legacy imageUrl → imageUrls
+function getImageUrls(entry) {
+  if (!entry) return [];
+  if (Array.isArray(entry.imageUrls) && entry.imageUrls.length > 0)
+    return entry.imageUrls;
+  if (typeof entry.imageUrl === "string" && entry.imageUrl.trim())
+    return [entry.imageUrl.trim()];
+  return [];
+}
+
 export default function LogNotebookPage({ focus }) {
   const [entries, setEntries] = useState([]);
   const [loaded, setLoaded] = useState(false);
@@ -110,7 +123,6 @@ export default function LogNotebookPage({ focus }) {
     writePaperMode(paperMode);
   }, [paperMode]);
 
-  // delay=0 for immediate (log page click), delay=800 for navigation from homepage
   function scrollToNote(delay = 0) {
     if (typeof window === "undefined") return;
     if (window.innerWidth < 980) {
@@ -129,8 +141,9 @@ export default function LogNotebookPage({ focus }) {
     setLoaded(false);
     const snap = await fetchLiveLogs();
     const list = Array.isArray(snap.entries) ? snap.entries : [];
+    // sort by label date (newest first), NOT by createdAt
     const sorted = [...list].sort(
-      (a, b) => parseLabel(b.label) - parseLabel(a.label),
+      (a, b) => parseLabelScore(b.label) - parseLabelScore(a.label),
     );
     setEntries(sorted);
     setError(snap.error || "");
@@ -171,10 +184,8 @@ export default function LogNotebookPage({ focus }) {
     return filtered.slice(start, start + PAGE_SIZE);
   }, [filtered, safePage]);
 
-  // handle focus from homepage navigation
   useEffect(() => {
     if (!entries.length) return;
-
     queueMicrotask(() => {
       if (focus) {
         const idx = entries.findIndex((e) => e?.id === focus);
@@ -186,7 +197,6 @@ export default function LogNotebookPage({ focus }) {
           return;
         }
       }
-
       if (!activeId && filtered.length > 0) {
         const nextId = filtered[0]?.id;
         if (nextId) setActiveId(nextId);
@@ -210,6 +220,8 @@ export default function LogNotebookPage({ focus }) {
     return filtered.find((e) => e?.id === activeId) || null;
   }, [filtered, activeId]);
 
+  const activeImages = useMemo(() => getImageUrls(activeEntry), [activeEntry]);
+
   const isDev = process.env.NODE_ENV === "development";
   const canPrev = safePage > 0;
   const canNext = safePage < totalPages - 1;
@@ -217,14 +229,6 @@ export default function LogNotebookPage({ focus }) {
   function onSearchChange(value) {
     setQuery(value);
     setPage(0);
-  }
-
-  function goPrev() {
-    setPage((p) => Math.max(0, p - 1));
-  }
-
-  function goNext() {
-    setPage((p) => Math.min(totalPages - 1, p + 1));
   }
 
   return (
@@ -293,6 +297,7 @@ export default function LogNotebookPage({ focus }) {
               pagedEntries.map((e) => {
                 const isActiveRow = e?.id === activeId;
                 const prev = previewText(e?.text);
+                const imgs = getImageUrls(e);
                 return (
                   <button
                     key={e.id}
@@ -306,7 +311,11 @@ export default function LogNotebookPage({ focus }) {
                   >
                     <div className="entryRowTop">
                       <div className="chip">{e.label}</div>
-                      {e.imageUrl && <span className="small subtle">📎</span>}
+                      {imgs.length > 0 && (
+                        <span className="small subtle">
+                          📎{imgs.length > 1 ? ` ${imgs.length}` : ""}
+                        </span>
+                      )}
                     </div>
                     <div className="entryPreview">{prev}</div>
                   </button>
@@ -321,7 +330,7 @@ export default function LogNotebookPage({ focus }) {
                 type="button"
                 className="btn ghost"
                 disabled={!canPrev}
-                onClick={goPrev}
+                onClick={() => setPage((p) => Math.max(0, p - 1))}
               >
                 prev
               </button>
@@ -334,7 +343,7 @@ export default function LogNotebookPage({ focus }) {
                 type="button"
                 className="btn ghost"
                 disabled={!canNext}
-                onClick={goNext}
+                onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
               >
                 next
               </button>
@@ -346,30 +355,17 @@ export default function LogNotebookPage({ focus }) {
           <div className="panelTitleRow">
             <div className="h2">notes</div>
             <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-              <button
-                type="button"
-                className="kbd"
-                onClick={() => setPaperMode("grid")}
-                aria-pressed={paperMode === "grid"}
-              >
-                grid
-              </button>
-              <button
-                type="button"
-                className="kbd"
-                onClick={() => setPaperMode("lined")}
-                aria-pressed={paperMode === "lined"}
-              >
-                lined
-              </button>
-              <button
-                type="button"
-                className="kbd"
-                onClick={() => setPaperMode("dot")}
-                aria-pressed={paperMode === "dot"}
-              >
-                dot
-              </button>
+              {["grid", "lined", "dot"].map((m) => (
+                <button
+                  key={m}
+                  type="button"
+                  className="kbd"
+                  onClick={() => setPaperMode(m)}
+                  aria-pressed={paperMode === m}
+                >
+                  {m}
+                </button>
+              ))}
             </div>
           </div>
 
@@ -381,26 +377,31 @@ export default function LogNotebookPage({ focus }) {
                 </div>
               </div>
 
-              {activeEntry.imageUrl && (
-                <div
-                  style={{
-                    marginBottom: 14,
-                    borderRadius: 12,
-                    overflow: "hidden",
-                    border: "1px solid rgba(60,35,110,0.14)",
-                    background: "#fff",
-                  }}
-                >
-                  <img
-                    src={activeEntry.imageUrl}
-                    alt=""
-                    style={{
-                      width: "100%",
-                      display: "block",
-                      objectFit: "contain",
-                      maxHeight: 340,
-                    }}
-                  />
+              {/* multi-image display */}
+              {activeImages.length > 0 && (
+                <div style={{ display: "grid", gap: 10, marginBottom: 14 }}>
+                  {activeImages.map((url, i) => (
+                    <div
+                      key={url}
+                      style={{
+                        borderRadius: 12,
+                        overflow: "hidden",
+                        border: "1px solid rgba(60,35,110,0.14)",
+                        background: "#fff",
+                      }}
+                    >
+                      <img
+                        src={url}
+                        alt={`image ${i + 1}`}
+                        style={{
+                          width: "100%",
+                          display: "block",
+                          objectFit: "contain",
+                          maxHeight: 340,
+                        }}
+                      />
+                    </div>
+                  ))}
                 </div>
               )}
 

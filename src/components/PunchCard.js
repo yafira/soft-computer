@@ -5,43 +5,51 @@ import { upload } from "@vercel/blob/client";
 
 const ADMIN_TOKEN = process.env.NEXT_PUBLIC_ADMIN_LOG_TOKEN || "";
 
-const months = [
-  "jan",
-  "feb",
-  "mar",
-  "apr",
-  "may",
-  "jun",
-  "jul",
-  "aug",
-  "sep",
-  "oct",
-  "nov",
-  "dec",
+// sept 2025 → may 2026
+const MONTHS = [
+  { label: "sep", year: 2025 },
+  { label: "oct", year: 2025 },
+  { label: "nov", year: 2025 },
+  { label: "dec", year: 2025 },
+  { label: "jan", year: 2026 },
+  { label: "feb", year: 2026 },
+  { label: "mar", year: 2026 },
+  { label: "apr", year: 2026 },
+  { label: "may", year: 2026 },
 ];
 
+function makeId(r, c) {
+  const { label, year } = MONTHS[r];
+  return `${label}-${year}-${String(c + 1).padStart(2, "0")}`;
+}
+
+function makeEntryLabel(r, c) {
+  return `${MONTHS[r].label} ${c + 1}`;
+}
+
 function stateFromPublishedEntries(entries) {
-  const punched = Array.from({ length: 12 }, () =>
+  const rows = MONTHS.length;
+  const punched = Array.from({ length: rows }, () =>
     Array.from({ length: 31 }, () => false),
   );
-  const logs = Array.from({ length: 12 }, () =>
+  const logs = Array.from({ length: rows }, () =>
     Array.from({ length: 31 }, () => ""),
   );
 
   for (const e of entries || []) {
-    const label = String(e?.label || "")
+    const raw = String(e?.label || "")
       .toLowerCase()
       .trim();
-    const parts = label.split(/\s+/);
+    const parts = raw.split(/\s+/);
     if (parts.length < 2) continue;
     const mName = parts[0];
     const dNum = Number(parts[1]);
-    const m = months.indexOf(mName);
+    const r = MONTHS.findIndex((m) => m.label === mName);
     const d = Number.isFinite(dNum) ? dNum - 1 : -1;
-    if (m < 0 || d < 0 || d > 30) continue;
+    if (r < 0 || d < 0 || d > 30) continue;
     const text = String(e?.text || "").trim();
-    logs[m][d] = text;
-    punched[m][d] = text.length > 0;
+    logs[r][d] = text;
+    punched[r][d] = text.length > 0;
   }
 
   return { punched, logs };
@@ -62,7 +70,7 @@ export default function PunchCard({
 
   const [active, setActive] = useState(null);
   const [draft, setDraft] = useState("");
-  const [imageUrls, setImageUrls] = useState([]); // array now
+  const [imageUrls, setImageUrls] = useState([]);
   const [uploading, setUploading] = useState(false);
   const [hover, setHover] = useState(null);
   const [lastDeleted, setLastDeleted] = useState(null);
@@ -80,7 +88,6 @@ export default function PunchCard({
     }
 
     loadFromRedis();
-
     const onPub = () => loadFromRedis();
     window.addEventListener("softcomputer-logs-published", onPub);
     return () =>
@@ -96,10 +103,10 @@ export default function PunchCard({
   }, [redisEntries]);
 
   const geo = useMemo(() => {
-    const rows = 12;
+    const rows = MONTHS.length; // 9
     const cols = 31;
     const W = 1200;
-    const H = 520;
+    const H = 460;
     const cardMarginX = 46;
     const cardMarginY = 36;
     const leftMargin = 110;
@@ -117,7 +124,7 @@ export default function PunchCard({
     const rowH = gridH / rows;
     const colW = gridW / cols;
     const slotW = colW * 0.28;
-    const slotH = rowH * 0.82;
+    const slotH = rowH * 0.72;
 
     return {
       rows,
@@ -142,7 +149,7 @@ export default function PunchCard({
   const openEditor = useCallback(
     (r, c) => {
       if (readOnly) return;
-      const label = `${months[r]} ${c + 1}`;
+      const label = makeEntryLabel(r, c);
       const existing = redisEntries.find(
         (e) =>
           String(e?.label || "")
@@ -151,7 +158,6 @@ export default function PunchCard({
       );
       setActive({ r, c });
       setDraft(viewState.logs?.[r]?.[c] || "");
-      // support both legacy imageUrl and new imageUrls
       const urls =
         existing?.imageUrls ?? (existing?.imageUrl ? [existing.imageUrl] : []);
       setImageUrls(urls);
@@ -192,9 +198,8 @@ export default function PunchCard({
     if (!text) return;
 
     setSaving(true);
-
-    const label = `${months[r]} ${c + 1}`;
-    const id = `2026-${String(r + 1).padStart(2, "0")}-${String(c + 1).padStart(2, "0")}`;
+    const label = makeEntryLabel(r, c);
+    const id = makeId(r, c);
 
     try {
       await fetch("/api/logs", {
@@ -205,7 +210,6 @@ export default function PunchCard({
         },
         body: JSON.stringify({ id, label, text, imageUrls }),
       });
-
       const res = await fetch("/api/logs", { cache: "no-store" });
       const data = await res.json();
       setRedisEntries(Array.isArray(data?.entries) ? data.entries : []);
@@ -222,7 +226,7 @@ export default function PunchCard({
   const commitDelete = useCallback(async () => {
     if (readOnly || !active) return;
     const { r, c } = active;
-    const id = `2026-${String(r + 1).padStart(2, "0")}-${String(c + 1).padStart(2, "0")}`;
+    const id = makeId(r, c);
     const prevText = (viewState.logs?.[r]?.[c] || "").trim();
     setLastDeleted(prevText ? { r, c, text: prevText } : null);
 
@@ -236,7 +240,6 @@ export default function PunchCard({
         },
         body: JSON.stringify({ id }),
       });
-
       const res = await fetch("/api/logs", { cache: "no-store" });
       const data = await res.json();
       setRedisEntries(Array.isArray(data?.entries) ? data.entries : []);
@@ -254,8 +257,8 @@ export default function PunchCard({
   const undoDelete = useCallback(async () => {
     if (readOnly || !lastDeleted) return;
     const { r, c, text } = lastDeleted;
-    const label = `${months[r]} ${c + 1}`;
-    const id = `2026-${String(r + 1).padStart(2, "0")}-${String(c + 1).padStart(2, "0")}`;
+    const label = makeEntryLabel(r, c);
+    const id = makeId(r, c);
 
     setSaving(true);
     try {
@@ -267,7 +270,6 @@ export default function PunchCard({
         },
         body: JSON.stringify({ id, label, text, imageUrls: [] }),
       });
-
       const res = await fetch("/api/logs", { cache: "no-store" });
       const data = await res.json();
       setRedisEntries(Array.isArray(data?.entries) ? data.entries : []);
@@ -284,7 +286,6 @@ export default function PunchCard({
 
   useEffect(() => {
     if (readOnly || !active) return;
-
     const onKey = (e) => {
       const meta = e.metaKey || e.ctrlKey;
       if (e.key === "Escape") {
@@ -307,39 +308,36 @@ export default function PunchCard({
         undoDelete();
       }
     };
-
     window.addEventListener("keydown", onKey, { capture: true });
     return () =>
       window.removeEventListener("keydown", onKey, { capture: true });
   }, [readOnly, active, closeEditor, commitSave, commitDelete, undoDelete]);
 
   useEffect(() => {
-    if (readOnly) return;
-    if (didAutoOpenRef.current) return;
+    if (readOnly || didAutoOpenRef.current) return;
 
-    let m = null;
-    let d = null;
+    const today = new Date();
+    const todayMonth = today
+      .toLocaleString("en", { month: "short" })
+      .toLowerCase();
+    const todayYear = today.getFullYear();
+    let r = MONTHS.findIndex(
+      (m) => m.label === todayMonth && m.year === todayYear,
+    );
+    if (r < 0) r = MONTHS.length - 1;
+    let d = clamp(today.getDate() - 1, 0, 30);
 
     if (focusM != null && focusD != null) {
       const mm = Number(focusM);
       const dd = Number(focusD);
       if (!Number.isNaN(mm) && !Number.isNaN(dd)) {
-        m = mm;
-        d = dd;
+        r = clamp(mm, 0, MONTHS.length - 1);
+        d = clamp(dd, 0, 30);
       }
     }
 
-    if (m == null || d == null) {
-      const today = new Date();
-      m = today.getMonth();
-      d = today.getDate() - 1;
-    }
-
-    m = clamp(m, 0, 11);
-    d = clamp(d, 0, 30);
-
     const t = setTimeout(() => {
-      openEditor(m, d);
+      openEditor(r, d);
       didAutoOpenRef.current = true;
     }, 140);
 
@@ -356,7 +354,7 @@ export default function PunchCard({
     if (x < gridX || x > gridX + gridW || y < gridY || y > gridY + gridH)
       return null;
     const c = clamp(Math.floor((x - gridX) / colW), 0, 30);
-    const r = clamp(Math.floor((y - gridY) / rowH), 0, 11);
+    const r = clamp(Math.floor((y - gridY) / rowH), 0, MONTHS.length - 1);
     return { r, c, x, y };
   }
 
@@ -428,7 +426,7 @@ export default function PunchCard({
                 y={geo.cardY + 40}
                 className="punchTitle"
               >
-                soft computer — process memory 2026
+                soft computer — process memory 2025–2026
               </text>
 
               {Array.from({ length: geo.cols }).map((_, c) => {
@@ -459,7 +457,7 @@ export default function PunchCard({
                 );
               })}
 
-              {Array.from({ length: geo.rows }).map((_, r) => {
+              {MONTHS.map(({ label }, r) => {
                 const cy = geo.gridY + r * geo.rowH + geo.rowH / 2;
                 return (
                   <g key={`row-${r}`}>
@@ -469,7 +467,7 @@ export default function PunchCard({
                       className="punchMonth"
                       textAnchor="end"
                     >
-                      {months[r]}
+                      {label}
                     </text>
                     {Array.from({ length: geo.cols }).map((__, c) => {
                       const cx = geo.gridX + c * geo.colW + geo.colW / 2;
@@ -570,7 +568,7 @@ export default function PunchCard({
           <div className="punchEditorBlock">
             <div className="punchEditorHeader">
               <div className="chip">
-                {months[active.r]} {active.c + 1}
+                {MONTHS[active.r].label} {active.c + 1}
               </div>
               <div className="small subtle">
                 enter = save • esc = close • cmd/ctrl+z = undo •
@@ -587,7 +585,6 @@ export default function PunchCard({
               autoFocus
             />
 
-            {/* multi-image upload */}
             <div
               style={{
                 display: "flex",
@@ -621,7 +618,6 @@ export default function PunchCard({
               )}
             </div>
 
-            {/* image previews */}
             {imageUrls.length > 0 && (
               <div style={{ display: "grid", gap: 8, marginTop: 10 }}>
                 {imageUrls.map((url, i) => (
