@@ -62,7 +62,7 @@ export default function PunchCard({
 
   const [active, setActive] = useState(null);
   const [draft, setDraft] = useState("");
-  const [imageUrl, setImageUrl] = useState("");
+  const [imageUrls, setImageUrls] = useState([]); // array now
   const [uploading, setUploading] = useState(false);
   const [hover, setHover] = useState(null);
   const [lastDeleted, setLastDeleted] = useState(null);
@@ -151,7 +151,10 @@ export default function PunchCard({
       );
       setActive({ r, c });
       setDraft(viewState.logs?.[r]?.[c] || "");
-      setImageUrl(existing?.imageUrl || "");
+      // support both legacy imageUrl and new imageUrls
+      const urls =
+        existing?.imageUrls ?? (existing?.imageUrl ? [existing.imageUrl] : []);
+      setImageUrls(urls);
     },
     [readOnly, viewState.logs, redisEntries],
   );
@@ -159,7 +162,7 @@ export default function PunchCard({
   const closeEditor = useCallback(() => {
     setActive(null);
     setDraft("");
-    setImageUrl("");
+    setImageUrls([]);
   }, []);
 
   async function onImagePick(file) {
@@ -170,7 +173,7 @@ export default function PunchCard({
         access: "public",
         handleUploadUrl: "/api/blob",
       });
-      setImageUrl(blob.url);
+      setImageUrls((prev) => [...prev, blob.url]);
     } catch (e) {
       console.error("image upload failed", e);
     } finally {
@@ -178,9 +181,12 @@ export default function PunchCard({
     }
   }
 
+  function removeImageAt(i) {
+    setImageUrls((prev) => prev.filter((_, idx) => idx !== i));
+  }
+
   const commitSave = useCallback(async () => {
-    if (readOnly) return;
-    if (!active) return;
+    if (readOnly || !active) return;
     const { r, c } = active;
     const text = draft.trim();
     if (!text) return;
@@ -197,7 +203,7 @@ export default function PunchCard({
           "Content-Type": "application/json",
           "x-admin-token": ADMIN_TOKEN,
         },
-        body: JSON.stringify({ id, label, text, imageUrl: imageUrl || null }),
+        body: JSON.stringify({ id, label, text, imageUrls }),
       });
 
       const res = await fetch("/api/logs", { cache: "no-store" });
@@ -211,11 +217,10 @@ export default function PunchCard({
     }
 
     closeEditor();
-  }, [readOnly, active, draft, imageUrl, closeEditor]);
+  }, [readOnly, active, draft, imageUrls, closeEditor]);
 
   const commitDelete = useCallback(async () => {
-    if (readOnly) return;
-    if (!active) return;
+    if (readOnly || !active) return;
     const { r, c } = active;
     const id = `2026-${String(r + 1).padStart(2, "0")}-${String(c + 1).padStart(2, "0")}`;
     const prevText = (viewState.logs?.[r]?.[c] || "").trim();
@@ -243,12 +248,11 @@ export default function PunchCard({
     }
 
     setDraft("");
-    setImageUrl("");
+    setImageUrls([]);
   }, [readOnly, active, viewState.logs]);
 
   const undoDelete = useCallback(async () => {
-    if (readOnly) return;
-    if (!lastDeleted) return;
+    if (readOnly || !lastDeleted) return;
     const { r, c, text } = lastDeleted;
     const label = `${months[r]} ${c + 1}`;
     const id = `2026-${String(r + 1).padStart(2, "0")}-${String(c + 1).padStart(2, "0")}`;
@@ -261,7 +265,7 @@ export default function PunchCard({
           "Content-Type": "application/json",
           "x-admin-token": ADMIN_TOKEN,
         },
-        body: JSON.stringify({ id, label, text }),
+        body: JSON.stringify({ id, label, text, imageUrls: [] }),
       });
 
       const res = await fetch("/api/logs", { cache: "no-store" });
@@ -279,8 +283,7 @@ export default function PunchCard({
   }, [readOnly, lastDeleted, active]);
 
   useEffect(() => {
-    if (readOnly) return;
-    if (!active) return;
+    if (readOnly || !active) return;
 
     const onKey = (e) => {
       const meta = e.metaKey || e.ctrlKey;
@@ -584,13 +587,14 @@ export default function PunchCard({
               autoFocus
             />
 
-            {/* image upload */}
+            {/* multi-image upload */}
             <div
               style={{
                 display: "flex",
                 gap: 10,
                 alignItems: "center",
                 marginTop: 8,
+                flexWrap: "wrap",
               }}
             >
               <label
@@ -600,11 +604,7 @@ export default function PunchCard({
                   opacity: uploading ? 0.6 : 1,
                 }}
               >
-                {uploading
-                  ? "uploading…"
-                  : imageUrl
-                    ? "image attached ✓"
-                    : "attach image"}
+                {uploading ? "uploading…" : "attach image"}
                 <input
                   type="file"
                   accept="image/*"
@@ -613,38 +613,54 @@ export default function PunchCard({
                   onChange={(e) => onImagePick(e.target.files?.[0])}
                 />
               </label>
-              {imageUrl && (
-                <button
-                  className="btn ghost"
-                  type="button"
-                  onClick={() => setImageUrl("")}
-                >
-                  remove image
-                </button>
+              {imageUrls.length > 0 && (
+                <span className="small subtle">
+                  {imageUrls.length} image{imageUrls.length > 1 ? "s" : ""}{" "}
+                  attached
+                </span>
               )}
             </div>
 
-            {/* image preview */}
-            {imageUrl && (
-              <div
-                style={{
-                  marginTop: 10,
-                  borderRadius: 12,
-                  overflow: "hidden",
-                  border: "1px solid rgba(60,35,110,0.14)",
-                }}
-              >
-                <img
-                  src={imageUrl}
-                  alt="attached"
-                  style={{
-                    width: "100%",
-                    maxHeight: 200,
-                    objectFit: "contain",
-                    display: "block",
-                    background: "#fff",
-                  }}
-                />
+            {/* image previews */}
+            {imageUrls.length > 0 && (
+              <div style={{ display: "grid", gap: 8, marginTop: 10 }}>
+                {imageUrls.map((url, i) => (
+                  <div
+                    key={url}
+                    style={{
+                      position: "relative",
+                      borderRadius: 12,
+                      overflow: "hidden",
+                      border: "1px solid rgba(60,35,110,0.14)",
+                    }}
+                  >
+                    <img
+                      src={url}
+                      alt={`attached ${i + 1}`}
+                      style={{
+                        width: "100%",
+                        maxHeight: 200,
+                        objectFit: "contain",
+                        display: "block",
+                        background: "#fff",
+                      }}
+                    />
+                    <button
+                      type="button"
+                      className="btn ghost"
+                      onClick={() => removeImageAt(i)}
+                      style={{
+                        position: "absolute",
+                        top: 6,
+                        right: 6,
+                        padding: "2px 8px",
+                        fontSize: 11,
+                      }}
+                    >
+                      remove
+                    </button>
+                  </div>
+                ))}
               </div>
             )}
 

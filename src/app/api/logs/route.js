@@ -34,10 +34,22 @@ function isAuthorized(req) {
   return (req.headers.get("x-admin-token") || "").trim() === ADMIN_TOKEN.trim();
 }
 
+// normalise legacy imageUrl → imageUrls array
+function normaliseEntry(e) {
+  if (!e) return e;
+  if (Array.isArray(e.imageUrls)) return e;
+  const urls = [];
+  if (typeof e.imageUrl === "string" && e.imageUrl.trim()) {
+    urls.push(e.imageUrl.trim());
+  }
+  const { imageUrl, ...rest } = e;
+  return { ...rest, imageUrls: urls };
+}
+
 export async function GET() {
   try {
     const raw = await redis.get(KEY);
-    const entries = Array.isArray(raw) ? raw : [];
+    const entries = (Array.isArray(raw) ? raw : []).map(normaliseEntry);
     return NextResponse.json({ entries });
   } catch (err) {
     console.error("logs GET failed", err);
@@ -51,7 +63,7 @@ export async function POST(req) {
   }
   try {
     const body = await req.json().catch(() => ({}));
-    const { id, label, text, imageUrl } = body;
+    const { id, label, text, imageUrls } = body;
 
     if (!label?.trim() || !text?.trim()) {
       return NextResponse.json(
@@ -67,10 +79,9 @@ export async function POST(req) {
       id: id || globalThis.crypto.randomUUID(),
       label: label.trim(),
       text: text.trim(),
-      imageUrl:
-        typeof imageUrl === "string" && imageUrl.trim()
-          ? imageUrl.trim()
-          : null,
+      imageUrls: Array.isArray(imageUrls)
+        ? imageUrls.map((u) => String(u).trim()).filter(Boolean)
+        : [],
       createdAt: Date.now(),
     };
 
@@ -81,7 +92,6 @@ export async function POST(req) {
     );
 
     await redis.set(KEY, sorted);
-
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error("logs POST failed", err);

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { upload } from "@vercel/blob/client";
 
 const ADMIN_FLAG_KEY = "softcomputer_admin_logs_enabled";
 const ADMIN_TOKEN_KEY = "softcomputer_admin_logs_token";
@@ -22,9 +23,11 @@ export default function AdminLogEditor() {
   const [entries, setEntries] = useState([]);
   const [loaded, setLoaded] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
   const [label, setLabel] = useState("");
   const [text, setText] = useState("");
+  const [imageUrls, setImageUrls] = useState([]);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -36,7 +39,6 @@ export default function AdminLogEditor() {
   function saveAdmin(flag, token) {
     setAdminEnabled(flag);
     setAdminToken(token);
-
     try {
       localStorage.setItem(ADMIN_FLAG_KEY, String(flag));
       localStorage.setItem(ADMIN_TOKEN_KEY, token || "");
@@ -59,7 +61,6 @@ export default function AdminLogEditor() {
 
   useEffect(() => {
     let alive = true;
-
     (async () => {
       try {
         await refresh();
@@ -71,7 +72,6 @@ export default function AdminLogEditor() {
         setError(String(e?.message || e));
       }
     })();
-
     return () => {
       alive = false;
     };
@@ -85,16 +85,36 @@ export default function AdminLogEditor() {
       adminToken.trim().length > 0 &&
       label.trim().length > 0 &&
       text.trim().length > 0 &&
-      !busy
+      !busy &&
+      !uploading
     );
-  }, [adminToken, label, text, busy]);
+  }, [adminToken, label, text, busy, uploading]);
+
+  async function onImagePick(file) {
+    if (!file) return;
+    setUploading(true);
+    try {
+      const blob = await upload(`logs/${Date.now()}-${file.name}`, file, {
+        access: "public",
+        handleUploadUrl: "/api/blob",
+      });
+      setImageUrls((prev) => [...prev, blob.url]);
+    } catch (e) {
+      console.error("image upload failed", e);
+      setError("image upload failed");
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  function removeImageAt(i) {
+    setImageUrls((prev) => prev.filter((_, idx) => idx !== i));
+  }
 
   async function onCreate() {
     if (!canSubmit) return;
-
     setBusy(true);
     setError("");
-
     try {
       const res = await fetch("/api/logs", {
         method: "POST",
@@ -102,7 +122,7 @@ export default function AdminLogEditor() {
           "content-type": "application/json",
           "x-admin-token": adminToken,
         },
-        body: JSON.stringify({ label, text }),
+        body: JSON.stringify({ label, text, imageUrls }),
       });
 
       if (!res.ok) {
@@ -112,6 +132,7 @@ export default function AdminLogEditor() {
 
       setLabel("");
       setText("");
+      setImageUrls([]);
       await refresh();
     } catch (e) {
       setError(String(e?.message || e));
@@ -122,10 +143,8 @@ export default function AdminLogEditor() {
 
   async function onDelete(id) {
     if (!confirm("delete this entry?")) return;
-
     setBusy(true);
     setError("");
-
     try {
       const res = await fetch("/api/logs", {
         method: "DELETE",
@@ -162,7 +181,6 @@ export default function AdminLogEditor() {
             hidden tool for posting live without redeploying
           </div>
         </div>
-
         <button
           type="button"
           className="btn ghost"
@@ -187,7 +205,7 @@ export default function AdminLogEditor() {
             <input
               className="input"
               style={{ maxWidth: 320 }}
-              placeholder="label (e.g. week 3)"
+              placeholder="label (e.g. apr 11)"
               value={label}
               onChange={(e) => setLabel(e.target.value)}
             />
@@ -200,6 +218,81 @@ export default function AdminLogEditor() {
             value={text}
             onChange={(e) => setText(e.target.value)}
           />
+
+          {/* multi-image upload */}
+          <div
+            style={{
+              display: "flex",
+              gap: 10,
+              alignItems: "center",
+              flexWrap: "wrap",
+            }}
+          >
+            <label
+              className="btn ghost"
+              style={{
+                cursor: uploading ? "not-allowed" : "pointer",
+                opacity: uploading ? 0.6 : 1,
+              }}
+            >
+              {uploading ? "uploading…" : "attach image"}
+              <input
+                type="file"
+                accept="image/*"
+                hidden
+                disabled={uploading}
+                onChange={(e) => onImagePick(e.target.files?.[0])}
+              />
+            </label>
+            {imageUrls.length > 0 && (
+              <span className="small subtle">
+                {imageUrls.length} image{imageUrls.length > 1 ? "s" : ""}{" "}
+                attached
+              </span>
+            )}
+          </div>
+
+          {imageUrls.length > 0 && (
+            <div style={{ display: "grid", gap: 8 }}>
+              {imageUrls.map((url, i) => (
+                <div
+                  key={url}
+                  style={{
+                    position: "relative",
+                    borderRadius: 12,
+                    overflow: "hidden",
+                    border: "1px solid rgba(60,35,110,0.14)",
+                  }}
+                >
+                  <img
+                    src={url}
+                    alt={`attached ${i + 1}`}
+                    style={{
+                      width: "100%",
+                      maxHeight: 180,
+                      objectFit: "contain",
+                      display: "block",
+                      background: "#fff",
+                    }}
+                  />
+                  <button
+                    type="button"
+                    className="btn ghost"
+                    onClick={() => removeImageAt(i)}
+                    style={{
+                      position: "absolute",
+                      top: 6,
+                      right: 6,
+                      padding: "2px 8px",
+                      fontSize: 11,
+                    }}
+                  >
+                    remove
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
 
           <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
             <button className="btn" disabled={!canSubmit} onClick={onCreate}>
@@ -224,8 +317,13 @@ export default function AdminLogEditor() {
                     <span className="small subtle">
                       {new Date(e.createdAt).toLocaleDateString()}
                     </span>
+                    {(e.imageUrls?.length ?? 0) > 0 && (
+                      <span className="small subtle">
+                        {e.imageUrls.length} image
+                        {e.imageUrls.length > 1 ? "s" : ""}
+                      </span>
+                    )}
                   </div>
-
                   <button
                     type="button"
                     className="btn danger"
@@ -235,7 +333,6 @@ export default function AdminLogEditor() {
                     delete
                   </button>
                 </div>
-
                 <div className="small subtle" style={{ marginTop: 8 }}>
                   {(e.text || "").slice(0, 140)}
                   {(e.text || "").length > 140 ? "…" : ""}
