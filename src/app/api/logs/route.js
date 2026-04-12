@@ -34,16 +34,56 @@ function isAuthorized(req) {
   return (req.headers.get("x-admin-token") || "").trim() === ADMIN_TOKEN.trim();
 }
 
-// normalise legacy imageUrl → imageUrls array
+// migrate legacy entry to content blocks — images go at end
 function normaliseEntry(e) {
   if (!e) return e;
-  if (Array.isArray(e.imageUrls)) return e;
-  const urls = [];
-  if (typeof e.imageUrl === "string" && e.imageUrl.trim()) {
-    urls.push(e.imageUrl.trim());
+  if (Array.isArray(e.content) && e.content.length > 0) return e;
+
+  const blocks = [];
+  const text = typeof e.text === "string" ? e.text.trim() : "";
+  if (text) blocks.push({ type: "text", value: text });
+
+  const urls = Array.isArray(e.imageUrls)
+    ? e.imageUrls
+    : typeof e.imageUrl === "string" && e.imageUrl.trim()
+      ? [e.imageUrl.trim()]
+      : [];
+
+  for (const url of urls) {
+    if (url) blocks.push({ type: "image", url });
   }
-  const { imageUrl, ...rest } = e;
-  return { ...rest, imageUrls: urls };
+
+  const { text: _t, imageUrls: _iu, imageUrl: _i, ...rest } = e;
+  return { ...rest, content: blocks };
+}
+
+// derive compat fields from content so PunchCard + TimelinePreview still work
+function deriveCompat(content) {
+  const text = content
+    .filter((b) => b.type === "text")
+    .map((b) => b.value || "")
+    .join("\n\n");
+  const imageUrls = content
+    .filter((b) => b.type === "image")
+    .map((b) => b.url || "")
+    .filter(Boolean);
+  return { text, imageUrls };
+}
+
+function validateBlocks(raw) {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .map((b) => {
+      if (b?.type === "text")
+        return { type: "text", value: String(b.value || "").trimEnd() };
+      if (b?.type === "image") {
+        const url = String(b.url || "").trim();
+        if (!url) return null;
+        return { type: "image", url };
+      }
+      return null;
+    })
+    .filter(Boolean);
 }
 
 export async function GET() {
@@ -63,31 +103,32 @@ export async function POST(req) {
   }
   try {
     const body = await req.json().catch(() => ({}));
-    const { id, label, text, imageUrls } = body;
+    const { id, label, content: rawContent } = body;
 
-    if (!label?.trim() || !text?.trim()) {
-      return NextResponse.json(
-        { error: "label and text required" },
-        { status: 400 },
-      );
+    if (!label?.trim()) {
+      return NextResponse.json({ error: "label required" }, { status: 400 });
     }
 
+    const content = validateBlocks(rawContent);
+    if (content.length === 0) {
+      return NextResponse.json({ error: "content required" }, { status: 400 });
+    }
+
+    const compat = deriveCompat(content);
     const raw = await redis.get(KEY);
     const existing = Array.isArray(raw) ? raw : [];
 
     const entry = {
       id: id || globalThis.crypto.randomUUID(),
       label: label.trim(),
-      text: text.trim(),
-      imageUrls: Array.isArray(imageUrls)
-        ? imageUrls.map((u) => String(u).trim()).filter(Boolean)
-        : [],
+      content,
+      text: compat.text,
+      imageUrls: compat.imageUrls,
       createdAt: Date.now(),
     };
 
     const filtered = existing.filter((e) => e.id !== entry.id);
-    const all = [entry, ...filtered];
-    const sorted = all.sort(
+    const sorted = [entry, ...filtered].sort(
       (a, b) => parseLabel(b.label) - parseLabel(a.label),
     );
 
