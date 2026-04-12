@@ -19,7 +19,6 @@ async function fetchImages() {
 }
 
 export default function ConceptGallery({ admin = false }) {
-  const isDev = process.env.NODE_ENV === "development";
   const canAdmin = admin;
 
   const [images, setImages] = useState([]);
@@ -29,21 +28,20 @@ export default function ConceptGallery({ admin = false }) {
   const [adminToken, setAdminToken] = useState("");
   const [index, setIndex] = useState(0);
 
+  // inline caption editing state
+  const [editingCaption, setEditingCaption] = useState(false);
+  const [editCaptionValue, setEditCaptionValue] = useState("");
+
   useEffect(() => {
     fetchImages().then(setImages);
   }, []);
 
-  // force uploader off if not admin
   useEffect(() => {
-    if (!canAdmin) {
-      setAdminEnabled(false);
-    }
+    if (!canAdmin) setAdminEnabled(false);
   }, [canAdmin]);
 
-  // load admin state from localStorage (only matters when canAdmin=true)
   useEffect(() => {
     if (!canAdmin) return;
-
     try {
       const flag = localStorage.getItem(ADMIN_FLAG_KEY) === "true";
       const token = localStorage.getItem(ADMIN_TOKEN_KEY) || "";
@@ -55,7 +53,6 @@ export default function ConceptGallery({ admin = false }) {
   function saveAdmin(flag, token) {
     setAdminEnabled(flag);
     setAdminToken(token);
-
     try {
       localStorage.setItem(ADMIN_FLAG_KEY, String(flag));
       localStorage.setItem(ADMIN_TOKEN_KEY, token || "");
@@ -74,7 +71,13 @@ export default function ConceptGallery({ admin = false }) {
       return;
     }
     setIndex((i) => Math.min(i, sorted.length - 1));
+    setEditingCaption(false);
   }, [sorted.length]);
+
+  // reset caption edit state when navigating
+  useEffect(() => {
+    setEditingCaption(false);
+  }, [index]);
 
   const current = sorted.length > 0 ? sorted[index] : null;
   const hasMany = sorted.length > 1;
@@ -89,12 +92,44 @@ export default function ConceptGallery({ admin = false }) {
     setIndex((i) => (i + 1) % sorted.length);
   }
 
-  async function onPickFile(file) {
-    if (!file) return;
-    if (!canAdmin) return;
+  function startEditCaption() {
+    setEditCaptionValue(current?.caption || "");
+    setEditingCaption(true);
+  }
 
+  async function saveCaption() {
+    if (!current) return;
     setBusy(true);
+    try {
+      const res = await fetch("/api/concept-images", {
+        method: "PATCH",
+        headers: {
+          "content-type": "application/json",
+          "x-admin-token": adminToken,
+        },
+        body: JSON.stringify({ id: current.id, caption: editCaptionValue }),
+      });
 
+      if (!res.ok) {
+        const text = await res.text();
+        alert(`caption save failed (${res.status})\n${text}`);
+        return;
+      }
+
+      const next = await fetchImages();
+      setImages(next);
+      setEditingCaption(false);
+    } catch (err) {
+      console.error("caption save failed", err);
+      alert("caption save failed. check console.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function onPickFile(file) {
+    if (!file || !canAdmin) return;
+    setBusy(true);
     try {
       const blob = await upload(`concept/${Date.now()}-${file.name}`, file, {
         access: "public",
@@ -112,7 +147,6 @@ export default function ConceptGallery({ admin = false }) {
 
       let json = null;
       let text = "";
-
       try {
         json = await res.json();
       } catch {
@@ -120,11 +154,6 @@ export default function ConceptGallery({ admin = false }) {
       }
 
       if (!res.ok) {
-        console.error("concept save failed:", {
-          status: res.status,
-          json,
-          text,
-        });
         alert(
           `save failed (${res.status})\n` +
             (json?.error || text || "check env vars / admin token"),
@@ -145,11 +174,8 @@ export default function ConceptGallery({ admin = false }) {
   }
 
   async function removeImage(id) {
-    if (!canAdmin) return;
-    if (!confirm("delete this image?")) return;
-
+    if (!canAdmin || !confirm("delete this image?")) return;
     setBusy(true);
-
     try {
       const res = await fetch("/api/concept-images", {
         method: "DELETE",
@@ -161,8 +187,6 @@ export default function ConceptGallery({ admin = false }) {
       });
 
       if (!res.ok) {
-        const text = await res.text();
-        console.error("delete failed:", text);
         alert("delete failed");
         return;
       }
@@ -206,7 +230,6 @@ export default function ConceptGallery({ admin = false }) {
                 value={adminToken}
                 onChange={(e) => saveAdmin(true, e.target.value)}
               />
-
               <input
                 className="input"
                 style={{ maxWidth: 260 }}
@@ -214,7 +237,6 @@ export default function ConceptGallery({ admin = false }) {
                 value={caption}
                 onChange={(e) => setCaption(e.target.value)}
               />
-
               <label
                 className="btn"
                 style={{
@@ -286,8 +308,55 @@ export default function ConceptGallery({ admin = false }) {
               <div />
             )}
 
-            <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-              {current.caption ? (
+            <div
+              style={{
+                display: "flex",
+                gap: 10,
+                alignItems: "center",
+                flexWrap: "wrap",
+              }}
+            >
+              {/* caption display / edit */}
+              {canAdmin && adminEnabled ? (
+                editingCaption ? (
+                  <div
+                    style={{ display: "flex", gap: 8, alignItems: "center" }}
+                  >
+                    <input
+                      className="input"
+                      style={{ maxWidth: 220 }}
+                      value={editCaptionValue}
+                      onChange={(e) => setEditCaptionValue(e.target.value)}
+                      placeholder="edit caption"
+                      autoFocus
+                    />
+                    <button
+                      type="button"
+                      className="btn"
+                      disabled={busy}
+                      onClick={saveCaption}
+                    >
+                      {busy ? "saving..." : "save"}
+                    </button>
+                    <button
+                      type="button"
+                      className="btn ghost"
+                      disabled={busy}
+                      onClick={() => setEditingCaption(false)}
+                    >
+                      cancel
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    className="btn ghost"
+                    onClick={startEditCaption}
+                  >
+                    {current.caption ? `"${current.caption}"` : "add caption"}
+                  </button>
+                )
+              ) : current.caption ? (
                 <figcaption className="small subtle">
                   {current.caption}
                 </figcaption>

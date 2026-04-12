@@ -9,7 +9,6 @@ const redis = new Redis({
 const KEY = "softcomputer:concept-images";
 const ADMIN_TOKEN = process.env.ADMIN_UPLOAD_TOKEN || "";
 
-// simple auth gate for write operations
 function isAuthorized(req) {
   if (!ADMIN_TOKEN) return false;
   const got = req.headers.get("x-admin-token") || "";
@@ -48,7 +47,6 @@ export async function POST(req) {
     }
 
     const images = safeArray(await redis.get(KEY));
-
     const item = {
       id:
         globalThis.crypto?.randomUUID?.() ||
@@ -57,16 +55,44 @@ export async function POST(req) {
       caption,
       createdAt: Date.now(),
     };
-
     const next = [item, ...images];
-
     await redis.set(KEY, next);
-
     return NextResponse.json({ ok: true, item });
   } catch (err) {
     console.error("concept-images POST failed", err);
     return NextResponse.json(
       { error: "failed to save image" },
+      { status: 500 },
+    );
+  }
+}
+
+export async function PATCH(req) {
+  try {
+    if (!isAuthorized(req)) {
+      return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+    }
+
+    const body = await req.json().catch(() => ({}));
+    const id = (body?.id || "").trim();
+    const caption =
+      typeof body?.caption === "string" ? body.caption.trim() : "";
+
+    if (!id) {
+      return NextResponse.json({ error: "missing id" }, { status: 400 });
+    }
+
+    const images = safeArray(await redis.get(KEY));
+    const next = images.map((img) =>
+      img?.id === id ? { ...img, caption } : img,
+    );
+
+    await redis.set(KEY, next);
+    return NextResponse.json({ ok: true });
+  } catch (err) {
+    console.error("concept-images PATCH failed", err);
+    return NextResponse.json(
+      { error: "failed to update caption" },
       { status: 500 },
     );
   }
@@ -87,9 +113,7 @@ export async function DELETE(req) {
 
     const images = safeArray(await redis.get(KEY));
     const next = images.filter((img) => img?.id !== id);
-
     await redis.set(KEY, next);
-
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error("concept-images DELETE failed", err);
