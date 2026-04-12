@@ -89,7 +89,12 @@ function validateBlocks(raw) {
 export async function GET() {
   try {
     const raw = await redis.get(KEY);
-    const entries = (Array.isArray(raw) ? raw : []).map(normaliseEntry);
+    const entries = (Array.isArray(raw) ? raw : []).map((e) => {
+      const normalised = normaliseEntry(e);
+      if (!normalised) return normalised;
+      const compat = deriveCompat(normalised.content || []);
+      return { ...normalised, text: compat.text, imageUrls: compat.imageUrls };
+    });
     return NextResponse.json({ entries });
   } catch (err) {
     console.error("logs GET failed", err);
