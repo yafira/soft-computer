@@ -359,7 +359,11 @@ export default function PunchCard({
   useEffect(() => {
     if (readOnly || !active) return;
     const onKey = (e) => {
+      const tag = document.activeElement?.tagName?.toLowerCase();
+      const isTyping = tag === "textarea" || tag === "input";
       const meta = e.metaKey || e.ctrlKey;
+      // don't intercept anything while user is typing in a field
+      if (isTyping) return;
       if (e.key === "Escape") {
         e.preventDefault();
         closeEditor();
@@ -375,9 +379,8 @@ export default function PunchCard({
         undoDelete();
       }
     };
-    window.addEventListener("keydown", onKey, { capture: true });
-    return () =>
-      window.removeEventListener("keydown", onKey, { capture: true });
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
   }, [readOnly, active, closeEditor, commitDelete, undoDelete]);
 
   useEffect(() => {
@@ -629,10 +632,7 @@ export default function PunchCard({
               {blocks.map((block, i) => (
                 <div
                   key={block.id}
-                  draggable
-                  onDragStart={() => onDragStart(i)}
                   onDragEnter={() => onDragEnter(i)}
-                  onDragEnd={onDragEnd}
                   onDragOver={(e) => e.preventDefault()}
                   style={{
                     display: "grid",
@@ -641,7 +641,6 @@ export default function PunchCard({
                     borderRadius: 10,
                     border: "1px solid rgba(60,35,110,0.12)",
                     background: "rgba(255,255,255,0.6)",
-                    cursor: "grab",
                   }}
                 >
                   <div
@@ -654,7 +653,10 @@ export default function PunchCard({
                   >
                     <span
                       className="small subtle"
-                      style={{ userSelect: "none" }}
+                      draggable
+                      onDragStart={() => onDragStart(i)}
+                      onDragEnd={onDragEnd}
+                      style={{ userSelect: "none", cursor: "grab" }}
                     >
                       ⠿ {block.type === "text" ? "text" : "image"}
                     </span>

@@ -366,10 +366,7 @@ export default function AdminLogEditor() {
               {blocks.map((block, i) => (
                 <div
                   key={block.id}
-                  draggable
-                  onDragStart={() => onDragStart(i)}
                   onDragEnter={() => onDragEnter(i)}
-                  onDragEnd={onDragEnd}
                   onDragOver={(e) => e.preventDefault()}
                   style={{
                     display: "grid",
@@ -378,7 +375,6 @@ export default function AdminLogEditor() {
                     borderRadius: 10,
                     border: "1px solid rgba(60,35,110,0.12)",
                     background: "rgba(255,255,255,0.6)",
-                    cursor: "grab",
                   }}
                 >
                   <div
@@ -391,7 +387,10 @@ export default function AdminLogEditor() {
                   >
                     <span
                       className="small subtle"
-                      style={{ userSelect: "none" }}
+                      draggable
+                      onDragStart={() => onDragStart(i)}
+                      onDragEnd={onDragEnd}
+                      style={{ userSelect: "none", cursor: "grab" }}
                     >
                       ⠿ {block.type === "text" ? "text" : "image"}
                     </span>
