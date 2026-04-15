@@ -23,12 +23,12 @@ export default function AboutPage() {
             <h2 className="h2">the soft computer</h2>
 
             <p className="p">
-              the soft computer is a textile-based computing object that uses
-              touch, craft, and embedded electronics to imagine gentler, more
-              intimate ways of interacting with technology. rather than
-              functioning as a productivity machine, it operates as a standalone
-              computational artifact: an enclosure constructed from soft
-              materials with machine-knit wool accents, housing a flexible e-ink
+              the soft computer is a compact all-in-one, textile-based computing
+              object that uses touch, craft, and embedded electronics to imagine
+              gentler, more intimate ways of interacting with technology. rather
+              than functioning as a productivity machine, it operates as a
+              standalone computational artifact: an enclosure constructed from
+              soft materials with machine-knit accents, housing a flexible e-ink
               display, capacitive sensing zones, a haptic motor, ambient sound,
               and breathing light.
             </p>
@@ -108,7 +108,7 @@ export default function AboutPage() {
             </p>
 
             <p className="p">
-              the soft computer argues that softness is not weakness. softness
+              this soft computer argues that softness is not weakness. softness
               is the ability to flex, mend, feel, and adapt.
             </p>
 
