@@ -384,16 +384,15 @@ export default function AboutPage() {
               </div>
 
               <div className="aboutMetaRow">
-                <div className="aboutMetaKey">medium</div>
+                <div className="aboutMetaKey">materials</div>
                 <div className="aboutMetaVal">
-                  textile interface, physical computing, computational text,
-                  installation, e-textiles, generative text
+                  soft materials, machine-knit yarn, industrial felt, neoprene,
+                  conductive fabric, flexible e-ink, embedded electronics
                 </div>
               </div>
 
               <div className="aboutMetaRow">
                 <div className="aboutMetaKey">categories</div>
-
                 <div className="aboutMetaVal">
                   physical computing · textile interfaces · interaction design ·
                   electronic text
