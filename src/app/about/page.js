@@ -516,7 +516,6 @@ export default function AboutPage() {
                   "haptic interaction",
                   "multisensory design",
                   "proprioception",
-                  "hug sensor",
                   "machine knitting",
                   "NeoPixel",
                   "e-ink display",
