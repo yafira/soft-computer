@@ -72,12 +72,12 @@ export default function ConceptGallery({ admin = false }) {
     setBusy(true);
     try {
       const res = await fetch("/api/concept-images", {
-        method: "PUT",
+        method: "POST",
         headers: {
           "content-type": "application/json",
           "x-admin-token": adminToken,
         },
-        body: JSON.stringify({ images: reorderList }),
+        body: JSON.stringify({ action: "reorder", images: reorderList }),
       });
       if (!res.ok) {
         alert("save order failed");

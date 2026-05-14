@@ -52,6 +52,16 @@ export async function POST(req) {
       caption,
       createdAt: Date.now(),
     };
+    // reorder action — replaces full array
+    if (body?.action === "reorder") {
+      const ordered = safeArray(body?.images);
+      if (ordered.length === 0) {
+        return NextResponse.json({ error: "missing images" }, { status: 400 });
+      }
+      await redis.set(KEY, ordered);
+      return NextResponse.json({ ok: true });
+    }
+
     const next = [item, ...images];
     await redis.set(KEY, next);
     return NextResponse.json({ ok: true, item });
@@ -59,27 +69,6 @@ export async function POST(req) {
     console.error("concept-images POST failed", err);
     return NextResponse.json(
       { error: "failed to save image" },
-      { status: 500 },
-    );
-  }
-}
-
-export async function PUT(req) {
-  try {
-    if (!isAuthorized(req)) {
-      return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-    }
-    const body = await req.json().catch(() => ({}));
-    const images = safeArray(body?.images);
-    if (images.length === 0) {
-      return NextResponse.json({ error: "missing images" }, { status: 400 });
-    }
-    await redis.set(KEY, images);
-    return NextResponse.json({ ok: true });
-  } catch (err) {
-    console.error("concept-images PUT failed", err);
-    return NextResponse.json(
-      { error: "failed to save order" },
       { status: 500 },
     );
   }
