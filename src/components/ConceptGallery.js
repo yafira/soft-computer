@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useRef, useMemo, useState } from "react";
 import Image from "next/image";
 import { upload } from "@vercel/blob/client";
 
@@ -27,19 +27,20 @@ export default function ConceptGallery({ admin = false }) {
   const [adminEnabled, setAdminEnabled] = useState(false);
   const [adminToken, setAdminToken] = useState("");
   const [index, setIndex] = useState(0);
-
-  // inline caption editing state
+  const [reordering, setReordering] = useState(false);
   const [editingCaption, setEditingCaption] = useState(false);
   const [editCaptionValue, setEditCaptionValue] = useState("");
+
+  // drag state for reorder mode
+  const dragIdx = useRef(null);
+  const dragOverIdx = useRef(null);
 
   useEffect(() => {
     fetchImages().then(setImages);
   }, []);
-
   useEffect(() => {
     if (!canAdmin) setAdminEnabled(false);
   }, [canAdmin]);
-
   useEffect(() => {
     if (!canAdmin) return;
     try {
@@ -59,11 +60,83 @@ export default function ConceptGallery({ admin = false }) {
     } catch {}
   }
 
-  const sorted = useMemo(() => {
-    return [...images].sort(
-      (a, b) => (b?.createdAt || 0) - (a?.createdAt || 0),
-    );
-  }, [images]);
+  // in reorder mode we use a local copy the user can drag around
+  const [reorderList, setReorderList] = useState([]);
+
+  function enterReorder() {
+    setReorderList([...images]); // preserve current display order
+    setReordering(true);
+  }
+
+  async function saveOrder() {
+    setBusy(true);
+    try {
+      const res = await fetch("/api/concept-images", {
+        method: "PUT",
+        headers: {
+          "content-type": "application/json",
+          "x-admin-token": adminToken,
+        },
+        body: JSON.stringify({ images: reorderList }),
+      });
+      if (!res.ok) {
+        alert("save order failed");
+        return;
+      }
+      const next = await fetchImages();
+      setImages(next);
+      setReordering(false);
+      setIndex(0);
+    } catch (err) {
+      console.error("save order failed", err);
+      alert("save order failed");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function cancelReorder() {
+    setReordering(false);
+  }
+
+  // drag handlers for reorder list
+  function onDragStart(i) {
+    dragIdx.current = i;
+  }
+  function onDragEnter(i) {
+    dragOverIdx.current = i;
+  }
+  function onDragEnd() {
+    const from = dragIdx.current;
+    const to = dragOverIdx.current;
+    if (from == null || to == null || from === to) {
+      dragIdx.current = null;
+      dragOverIdx.current = null;
+      return;
+    }
+    setReorderList((prev) => {
+      const next = [...prev];
+      const [moved] = next.splice(from, 1);
+      next.splice(to, 0, moved);
+      return next;
+    });
+    dragIdx.current = null;
+    dragOverIdx.current = null;
+  }
+
+  function moveItem(i, dir) {
+    const to = i + dir;
+    if (to < 0 || to >= reorderList.length) return;
+    setReorderList((prev) => {
+      const next = [...prev];
+      const [moved] = next.splice(i, 1);
+      next.splice(to, 0, moved);
+      return next;
+    });
+  }
+
+  // respect stored order from API — no re-sort
+  const sorted = useMemo(() => [...images], [images]);
 
   useEffect(() => {
     if (sorted.length === 0) {
@@ -74,7 +147,6 @@ export default function ConceptGallery({ admin = false }) {
     setEditingCaption(false);
   }, [sorted.length]);
 
-  // reset caption edit state when navigating
   useEffect(() => {
     setEditingCaption(false);
   }, [index]);
@@ -86,7 +158,6 @@ export default function ConceptGallery({ admin = false }) {
     if (!hasMany) return;
     setIndex((i) => (i - 1 + sorted.length) % sorted.length);
   }
-
   function goNext() {
     if (!hasMany) return;
     setIndex((i) => (i + 1) % sorted.length);
@@ -109,19 +180,15 @@ export default function ConceptGallery({ admin = false }) {
         },
         body: JSON.stringify({ id: current.id, caption: editCaptionValue }),
       });
-
       if (!res.ok) {
-        const text = await res.text();
-        alert(`caption save failed (${res.status})\n${text}`);
+        alert(`caption save failed (${res.status})`);
         return;
       }
-
       const next = await fetchImages();
       setImages(next);
       setEditingCaption(false);
     } catch (err) {
-      console.error("caption save failed", err);
-      alert("caption save failed. check console.");
+      alert("caption save failed.");
     } finally {
       setBusy(false);
     }
@@ -135,7 +202,6 @@ export default function ConceptGallery({ admin = false }) {
         access: "public",
         handleUploadUrl: "/api/blob",
       });
-
       const res = await fetch("/api/concept-images", {
         method: "POST",
         headers: {
@@ -144,29 +210,18 @@ export default function ConceptGallery({ admin = false }) {
         },
         body: JSON.stringify({ url: blob.url, caption }),
       });
-
-      let json = null;
-      let text = "";
-      try {
-        json = await res.json();
-      } catch {
-        text = await res.text();
-      }
-
       if (!res.ok) {
+        const json = await res.json().catch(() => ({}));
         alert(
-          `save failed (${res.status})\n` +
-            (json?.error || text || "check env vars / admin token"),
+          `save failed (${res.status})\n${json?.error || "check env vars / admin token"}`,
         );
         return;
       }
-
       setCaption("");
       const next = await fetchImages();
       setImages(next);
       setIndex(0);
     } catch (err) {
-      console.error("upload pipeline failed", err);
       alert("upload failed. check console.");
     } finally {
       setBusy(false);
@@ -185,23 +240,132 @@ export default function ConceptGallery({ admin = false }) {
         },
         body: JSON.stringify({ id }),
       });
-
       if (!res.ok) {
         alert("delete failed");
         return;
       }
-
       const next = await fetchImages();
       setImages(next);
       setIndex((i) => Math.max(0, i - (i >= next.length ? 1 : 0)));
     } catch (err) {
-      console.error("delete pipeline failed", err);
       alert("delete failed");
     } finally {
       setBusy(false);
     }
   }
 
+  // ── reorder mode UI ──
+  if (reordering) {
+    return (
+      <div style={{ display: "grid", gap: 12 }}>
+        <div
+          style={{
+            display: "flex",
+            gap: 10,
+            alignItems: "center",
+            justifyContent: "space-between",
+            flexWrap: "wrap",
+          }}
+        >
+          <div className="small subtle">drag or use ↑↓ to reorder</div>
+          <div style={{ display: "flex", gap: 8 }}>
+            <button
+              type="button"
+              className="btn"
+              disabled={busy}
+              onClick={saveOrder}
+            >
+              {busy ? "saving..." : "save order"}
+            </button>
+            <button type="button" className="btn ghost" onClick={cancelReorder}>
+              cancel
+            </button>
+          </div>
+        </div>
+
+        <div style={{ display: "grid", gap: 8 }}>
+          {reorderList.map((img, i) => (
+            <div
+              key={img.id}
+              onDragEnter={() => onDragEnter(i)}
+              onDragOver={(e) => e.preventDefault()}
+              style={{
+                display: "flex",
+                gap: 10,
+                alignItems: "center",
+                padding: 10,
+                borderRadius: 12,
+                border: "1px solid rgba(60,35,110,0.14)",
+                background: "rgba(255,255,255,0.7)",
+              }}
+            >
+              {/* drag handle */}
+              <span
+                draggable
+                onDragStart={() => onDragStart(i)}
+                onDragEnd={onDragEnd}
+                style={{
+                  cursor: "grab",
+                  userSelect: "none",
+                  fontSize: 16,
+                  opacity: 0.5,
+                }}
+              >
+                ⠿
+              </span>
+
+              {/* thumbnail */}
+              <div
+                style={{
+                  width: 60,
+                  height: 60,
+                  borderRadius: 8,
+                  overflow: "hidden",
+                  flexShrink: 0,
+                  border: "1px solid rgba(60,35,110,0.1)",
+                }}
+              >
+                <img
+                  src={img.url}
+                  alt={img.caption || `image ${i + 1}`}
+                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                />
+              </div>
+
+              {/* caption or index */}
+              <div className="small" style={{ flex: 1, opacity: 0.7 }}>
+                {img.caption || `image ${i + 1}`}
+              </div>
+
+              {/* arrow buttons */}
+              <div style={{ display: "flex", gap: 4 }}>
+                <button
+                  type="button"
+                  className="btn ghost"
+                  style={{ padding: "2px 7px" }}
+                  disabled={i === 0}
+                  onClick={() => moveItem(i, -1)}
+                >
+                  ↑
+                </button>
+                <button
+                  type="button"
+                  className="btn ghost"
+                  style={{ padding: "2px 7px" }}
+                  disabled={i === reorderList.length - 1}
+                  onClick={() => moveItem(i, 1)}
+                >
+                  ↓
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // ── normal gallery UI ──
   return (
     <div style={{ display: "grid", gap: 12 }}>
       {canAdmin ? (
@@ -220,7 +384,6 @@ export default function ConceptGallery({ admin = false }) {
           >
             {adminEnabled ? "uploader: on" : "uploader: off"}
           </button>
-
           {adminEnabled ? (
             <>
               <input
@@ -253,6 +416,15 @@ export default function ConceptGallery({ admin = false }) {
                   onChange={(e) => onPickFile(e.target.files?.[0])}
                 />
               </label>
+              {images.length > 1 && (
+                <button
+                  type="button"
+                  className="btn ghost"
+                  onClick={enterReorder}
+                >
+                  reorder
+                </button>
+              )}
             </>
           ) : null}
         </div>
@@ -316,7 +488,6 @@ export default function ConceptGallery({ admin = false }) {
                 flexWrap: "wrap",
               }}
             >
-              {/* caption display / edit */}
               {canAdmin && adminEnabled ? (
                 editingCaption ? (
                   <div

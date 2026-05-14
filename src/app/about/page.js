@@ -541,6 +541,11 @@ export default function AboutPage() {
             <h2 className="h2" id="buttons">
               four buttons, four answers
             </h2>
+            <p className="p">
+              each button represents a different relationship to computation.
+              each one answers the central question differently. together they
+              tell the complete story of the soft computer.
+            </p>
             <div
               style={{
                 marginTop: 16,
@@ -560,11 +565,6 @@ export default function AboutPage() {
                 }}
               />
             </div>
-            <p className="p">
-              each button represents a different relationship to computation.
-              each one answers the central question differently. together they
-              tell the complete story of the soft computer.
-            </p>
             <div className="aboutCallouts">
               <div
                 className="aboutCallout"
