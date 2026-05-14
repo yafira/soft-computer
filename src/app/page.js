@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import "./SoftOSWindow.css";
 
 const RAW_CORPORA = {
   blush: `
