@@ -21,10 +21,12 @@ export default function Nav() {
             <div className="small">process memory</div>
           </div>
         </Link>
-
         <nav style={{ display: "flex", gap: 14, alignItems: "center" }}>
           <Link href="/about" className="kbd">
             about
+          </Link>
+          <Link href="/process" className="kbd">
+            process
           </Link>
           <Link href="/resources" className="kbd">
             resources
