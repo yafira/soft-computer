@@ -37,15 +37,23 @@ export async function POST(req) {
     if (!isAuthorized(req)) {
       return NextResponse.json({ error: "unauthorized" }, { status: 401 });
     }
-
     const body = await req.json().catch(() => ({}));
+
+    // reorder action — must be checked before url validation
+    if (body?.action === "reorder") {
+      const ordered = safeArray(body?.images);
+      if (ordered.length === 0) {
+        return NextResponse.json({ error: "missing images" }, { status: 400 });
+      }
+      await redis.set(KEY, ordered);
+      return NextResponse.json({ ok: true });
+    }
+
     const url = (body?.url || "").trim();
     const caption = (body?.caption || "").trim();
-
     if (!url) {
       return NextResponse.json({ error: "missing url" }, { status: 400 });
     }
-
     const images = safeArray(await redis.get(KEY));
     const item = {
       id:
@@ -55,6 +63,7 @@ export async function POST(req) {
       caption,
       createdAt: Date.now(),
     };
+
     const next = [item, ...images];
     await redis.set(KEY, next);
     return NextResponse.json({ ok: true, item });
@@ -72,21 +81,17 @@ export async function PATCH(req) {
     if (!isAuthorized(req)) {
       return NextResponse.json({ error: "unauthorized" }, { status: 401 });
     }
-
     const body = await req.json().catch(() => ({}));
     const id = (body?.id || "").trim();
     const caption =
       typeof body?.caption === "string" ? body.caption.trim() : "";
-
     if (!id) {
       return NextResponse.json({ error: "missing id" }, { status: 400 });
     }
-
     const images = safeArray(await redis.get(KEY));
     const next = images.map((img) =>
       img?.id === id ? { ...img, caption } : img,
     );
-
     await redis.set(KEY, next);
     return NextResponse.json({ ok: true });
   } catch (err) {
@@ -103,14 +108,11 @@ export async function DELETE(req) {
     if (!isAuthorized(req)) {
       return NextResponse.json({ error: "unauthorized" }, { status: 401 });
     }
-
     const body = await req.json().catch(() => ({}));
     const id = (body?.id || "").trim();
-
     if (!id) {
       return NextResponse.json({ error: "missing id" }, { status: 400 });
     }
-
     const images = safeArray(await redis.get(KEY));
     const next = images.filter((img) => img?.id !== id);
     await redis.set(KEY, next);
