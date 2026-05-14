@@ -120,10 +120,10 @@ for (const [k, v] of Object.entries(RAW_CORPORA)) {
 }
 
 const BUTTONS = {
-  blush: { bg: "#f2cdd1", dot: "#c47c82", shadow: "#e8b4b8" },
-  blue: { bg: "#c2dff0", dot: "#4a85aa", shadow: "#87b5d4" },
-  mint: { bg: "#b8e0d2", dot: "#4a9478", shadow: "#a8d4c2" },
-  yellow: { bg: "#f7e99a", dot: "#a88c1a", shadow: "#f5e06e" },
+  blush: { bg: "#fce8ea", dot: "#d4909a", shadow: "#f2cdd1" },
+  blue: { bg: "#deeef8", dot: "#7aaec8", shadow: "#c2dff0" },
+  mint: { bg: "#d6f0e8", dot: "#7ec4aa", shadow: "#b8e0d2" },
+  yellow: { bg: "#fdf5c8", dot: "#c8a83a", shadow: "#f7e99a" },
 };
 
 const CORPUS_LABELS = {
