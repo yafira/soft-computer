@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Image from "next/image";
 
 export const metadata = {
   title: "about • soft.computer",
@@ -28,10 +27,28 @@ export default function AboutPage() {
           grow beyond it.
         </p>
 
+        <div
+          style={{
+            marginTop: 16,
+            marginBottom: 16,
+            borderRadius: 12,
+            overflow: "hidden",
+          }}
+        >
+          <img
+            src="https://ie6wpryluu0khsu3.public.blob.vercel-storage.com/concept/1778726135301-tsc_01-E0uhncqo8VXGT9jhxjQQ8qmnEiyO7u.png"
+            alt="the soft computer — full object"
+            style={{
+              width: "100%",
+              height: "auto",
+              display: "block",
+              borderRadius: 12,
+            }}
+          />
+        </div>
+
         <div className="aboutGrid">
           <div className="aboutMain">
-            {/* opening narrative */}
-            {/* chapter TOC */}
             <nav className="aboutToc">
               <div className="aboutTocLabel">chapters</div>
               <div className="aboutTocChapters">
@@ -39,7 +56,7 @@ export default function AboutPage() {
                   {
                     title: "narrative",
                     links: [
-                      ["#imagine", "imagine you’re a kid again"],
+                      ["#imagine", "the family computer"],
                       ["#care", "what i mean by care"],
                       ["#question", "central question"],
                     ],
@@ -49,14 +66,14 @@ export default function AboutPage() {
                     links: [
                       ["#form", "materials + construction"],
                       ["#knit", "the knit panel"],
-                      ["#system", "inputs + outputs"],
+                      ["#system", "electronics architecture"],
                       ["#buttons", "four buttons"],
                     ],
                   },
                   {
                     title: "soft os",
                     links: [
-                      ["#poetry", "how the poetry works"],
+                      ["#poetry", "electronic text"],
                       ["#os-states", "os states"],
                     ],
                   },
@@ -66,11 +83,11 @@ export default function AboutPage() {
                       ["#motivation", "motivation"],
                       ["#sensory", "sensory system"],
                       ["#testing", "user testing"],
-                      ["#coming-back", "coming back"],
+                      ["#coming-back", "y2k revisited"],
                     ],
                   },
                   {
-                    title: "what’s next",
+                    title: "what&#39;s next",
                     links: [["#whats-next", "v2 + open source"]],
                   },
                 ].map((chapter) => (
@@ -89,8 +106,9 @@ export default function AboutPage() {
                 ))}
               </div>
             </nav>
+
             <h2 className="h2" id="imagine">
-              imagine you&#39;re a kid again
+              the family computer
             </h2>
             <p className="p">
               you walk over to the family computer. you sit down. the chair is
@@ -123,55 +141,57 @@ export default function AboutPage() {
 
             <div
               style={{
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+                gap: 12,
                 marginTop: 16,
-                marginBottom: 16,
-                borderRadius: 12,
-                overflow: "hidden",
+                marginBottom: 12,
               }}
             >
-              <Image
-                src="https://ie6wpryluu0khsu3.public.blob.vercel-storage.com/concept/1775956745032-tsc_fullcolor-ECp5gyo6xhqx4KveXSkKK3sCkLI6O6.png"
-                alt="the soft computer — color sketch"
-                width={1200}
-                height={800}
-                style={{ width: "100%", height: "auto", display: "block" }}
-              />
-            </div>
-            <div
-              style={{
-                marginTop: 16,
-                marginBottom: 16,
-                borderRadius: 12,
-                overflow: "hidden",
-              }}
-            >
-              <Image
+              <img
                 src="https://ie6wpryluu0khsu3.public.blob.vercel-storage.com/concept/1771301366397-tsc-rr4XFyJOhbidqM05Q4fEedVrButqTN.png"
                 alt="early sketch of the soft computer"
-                width={1200}
-                height={800}
-                style={{ width: "100%", height: "auto", display: "block" }}
+                style={{
+                  width: "100%",
+                  height: "auto",
+                  display: "block",
+                  borderRadius: 12,
+                }}
+              />
+              <img
+                src="https://ie6wpryluu0khsu3.public.blob.vercel-storage.com/concept/1775956745032-tsc_fullcolor-ECp5gyo6xhqx4KveXSkKK3sCkLI6O6.png"
+                alt="the soft computer color sketch"
+                style={{
+                  width: "100%",
+                  height: "auto",
+                  display: "block",
+                  borderRadius: 12,
+                }}
               />
             </div>
-            <div
-              style={{
-                marginTop: 16,
-                marginBottom: 16,
-                borderRadius: 12,
-                overflow: "hidden",
-              }}
-            >
-              <Image
-                src="https://ie6wpryluu0khsu3.public.blob.vercel-storage.com/concept/1778726135301-tsc_01-E0uhncqo8VXGT9jhxjQQ8qmnEiyO7u.png"
-                alt="the soft computer — full object"
-                width={1200}
-                height={800}
-                style={{ width: "100%", height: "auto", display: "block" }}
-              />
-            </div>
+
             <h2 className="h2" id="what-it-is">
               the soft computer
             </h2>
+            <div
+              style={{
+                marginTop: 16,
+                marginBottom: 16,
+                borderRadius: 12,
+                overflow: "hidden",
+              }}
+            >
+              <img
+                src="https://ie6wpryluu0khsu3.public.blob.vercel-storage.com/concept/1778726140195-tsc-TQTXdUNgseorGS4xebibRNWTy8W4JZ.png"
+                alt="the soft computer"
+                style={{
+                  width: "100%",
+                  height: "auto",
+                  display: "block",
+                  borderRadius: 12,
+                }}
+              />
+            </div>
             <p className="p">
               the soft computer is a compact all-in-one, textile-based computing
               object that uses touch, craft, and embedded electronics to imagine
@@ -228,7 +248,6 @@ export default function AboutPage() {
               what becomes possible when we design computers around softness
               rather than hardness, around care rather than command?
             </p>
-
             <div className="aboutCallouts">
               <div className="aboutCallout">
                 <div className="aboutLabel">this project asks</div>
@@ -288,6 +307,25 @@ export default function AboutPage() {
             </p>
 
             <h2 className="h2">what it means to build a soft computer</h2>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                marginTop: 16,
+                marginBottom: 16,
+              }}
+            >
+              <img
+                src="https://ie6wpryluu0khsu3.public.blob.vercel-storage.com/concept/1778728477536-prototype-mpINh9IUNDKKiLYKY0nLL1NadVEvhe.png"
+                alt="early prototype of the soft computer"
+                style={{
+                  width: "75%",
+                  height: "auto",
+                  display: "block",
+                  borderRadius: 12,
+                }}
+              />
+            </div>
             <div className="aboutCallouts">
               <div className="aboutCallout">
                 <ul className="aboutList">
@@ -330,19 +368,17 @@ export default function AboutPage() {
                   </li>
                   <li>neoprene on the outside, holding everything together</li>
                   <li>
-                    a removable fabric slip cover in macintosh beige open-weave
-                    linen
+                    a fabric slip cover in macintosh beige open-weave linen
                   </li>
                 </ul>
               </div>
             </div>
             <p className="p">
-              the chassis is modular. the slip cover is removable. the buttons
-              snap on and off. the whole thing is designed to be repairable,
-              opened, and modified — a counter to consumer electronics that ship
-              sealed.
+              the chassis is modular. the buttons snap on and off. the
+              electronics can be easily disconnected. the whole thing is
+              designed to be repairable, opened, and modified — a counter to
+              consumer electronics that ship sealed.
             </p>
-
             <div
               style={{
                 marginTop: 16,
@@ -351,16 +387,20 @@ export default function AboutPage() {
                 overflow: "hidden",
               }}
             >
-              <Image
+              <img
                 src="https://ie6wpryluu0khsu3.public.blob.vercel-storage.com/concept/1778726507343-material-form-faECb0ZprC7B5TJOG7CaAt0Z3k6sSj.png"
                 alt="layered materials and construction"
-                width={1200}
-                height={800}
-                style={{ width: "100%", height: "auto", display: "block" }}
+                style={{
+                  width: "100%",
+                  height: "auto",
+                  display: "block",
+                  borderRadius: 12,
+                }}
               />
             </div>
+
             <h2 className="h2" id="system">
-              system form
+              electronics architecture
             </h2>
             <div className="aboutTwoCol">
               <div className="aboutCard">
@@ -398,6 +438,44 @@ export default function AboutPage() {
                 </ul>
               </div>
             </div>
+            <div
+              style={{
+                marginTop: 16,
+                marginBottom: 16,
+                borderRadius: 12,
+                overflow: "hidden",
+              }}
+            >
+              <img
+                src="https://ie6wpryluu0khsu3.public.blob.vercel-storage.com/concept/1778726513845-electronics-IwoyPc9AZXhdoUfNmTaPYmRwWjAr9G.png"
+                alt="e-ink display showing generated poetry"
+                style={{
+                  width: "100%",
+                  height: "auto",
+                  display: "block",
+                  borderRadius: 12,
+                }}
+              />
+            </div>
+            <div
+              style={{
+                marginTop: 16,
+                marginBottom: 16,
+                borderRadius: 12,
+                overflow: "hidden",
+              }}
+            >
+              <img
+                src="https://ie6wpryluu0khsu3.public.blob.vercel-storage.com/concept/1778726494806-architecture-iwjHUkl4voP2TH5HuaFO2lLXfEcBU0.jpg"
+                alt="system architecture diagram"
+                style={{
+                  width: "100%",
+                  height: "auto",
+                  display: "block",
+                  borderRadius: 12,
+                }}
+              />
+            </div>
 
             <h2 className="h2" id="knit">
               the knit panel
@@ -429,42 +507,59 @@ export default function AboutPage() {
               Raspberry Pi on my desk and quietly makes the same point the
               project is making.
             </p>
-
             <div
               style={{
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+                gap: 12,
                 marginTop: 16,
                 marginBottom: 16,
-                borderRadius: 12,
-                overflow: "hidden",
               }}
             >
-              <Image
+              <img
                 src="https://ie6wpryluu0khsu3.public.blob.vercel-storage.com/concept/1778726539899-kh930-Rbdeilq27EIgB5kuIC2j3A3DV2Hh5p.png"
                 alt="Brother KH-930 knitting machine"
-                width={1200}
-                height={800}
-                style={{ width: "100%", height: "auto", display: "block" }}
+                style={{
+                  width: "100%",
+                  height: "auto",
+                  display: "block",
+                  borderRadius: 12,
+                }}
               />
-            </div>
-            <div
-              style={{
-                marginTop: 16,
-                marginBottom: 16,
-                borderRadius: 12,
-                overflow: "hidden",
-              }}
-            >
-              <Image
+              <img
                 src="https://ie6wpryluu0khsu3.public.blob.vercel-storage.com/concept/1778726500287-knit-panel-jGVItGxk0OoTYiICeQLRuohoU59W78.png"
                 alt="machine-knit lavender panel"
-                width={1200}
-                height={800}
-                style={{ width: "100%", height: "auto", display: "block" }}
+                style={{
+                  width: "100%",
+                  height: "auto",
+                  display: "block",
+                  borderRadius: 12,
+                }}
               />
             </div>
+
             <h2 className="h2" id="buttons">
               four buttons, four answers
             </h2>
+            <div
+              style={{
+                marginTop: 16,
+                marginBottom: 16,
+                borderRadius: 12,
+                overflow: "hidden",
+              }}
+            >
+              <img
+                src="https://ie6wpryluu0khsu3.public.blob.vercel-storage.com/concept/1778729722544-buttons-HAzFh1BmyhHwlBVVa1iXh7Ga8QhfYS.png"
+                alt="four felt buttons close-up"
+                style={{
+                  width: "100%",
+                  height: "auto",
+                  display: "block",
+                  borderRadius: 12,
+                }}
+              />
+            </div>
             <p className="p">
               each button represents a different relationship to computation.
               each one answers the central question differently. together they
@@ -527,7 +622,6 @@ export default function AboutPage() {
                 </p>
               </div>
             </div>
-
             <div
               style={{
                 marginTop: 16,
@@ -536,16 +630,20 @@ export default function AboutPage() {
                 overflow: "hidden",
               }}
             >
-              <Image
+              <img
                 src="https://ie6wpryluu0khsu3.public.blob.vercel-storage.com/concept/1778726199199-tsc2-JpXbD1w6wXttvanejBzERO6tIPpd2U.jpg"
-                alt="four felt buttons close-up"
-                width={1200}
-                height={800}
-                style={{ width: "100%", height: "auto", display: "block" }}
+                alt="four felt buttons"
+                style={{
+                  width: "100%",
+                  height: "auto",
+                  display: "block",
+                  borderRadius: 12,
+                }}
               />
             </div>
+
             <h2 className="h2" id="poetry">
-              how the poetry works
+              electronic text
             </h2>
             <p className="p">
               most people hear &ldquo;the computer generates text&rdquo; and
@@ -581,7 +679,6 @@ export default function AboutPage() {
               interpret. a poem doesn&#39;t optimize anything. it asks you to
               slow down and pay attention.
             </p>
-
             <div
               style={{
                 marginTop: 16,
@@ -590,28 +687,15 @@ export default function AboutPage() {
                 overflow: "hidden",
               }}
             >
-              <Image
-                src="https://ie6wpryluu0khsu3.public.blob.vercel-storage.com/concept/1778726494806-architecture-iwjHUkl4voP2TH5HuaFO2lLXfEcBU0.jpg"
-                alt="signal flow diagram: sensors to fruit jam to raspberry pi to e-ink and printer"
-                width={1200}
-                height={800}
-                style={{ width: "100%", height: "auto", display: "block" }}
-              />
-            </div>
-            <div
-              style={{
-                marginTop: 16,
-                marginBottom: 16,
-                borderRadius: 12,
-                overflow: "hidden",
-              }}
-            >
-              <Image
+              <img
                 src="https://ie6wpryluu0khsu3.public.blob.vercel-storage.com/concept/1778726485969-corpus-G2mf5NPSj7vTcPYTVoA72ifkodYQ3u.jpg"
                 alt="diagram of four buttons mapped to four corpora"
-                width={1200}
-                height={800}
-                style={{ width: "100%", height: "auto", display: "block" }}
+                style={{
+                  width: "100%",
+                  height: "auto",
+                  display: "block",
+                  borderRadius: 12,
+                }}
               />
             </div>
             <div
@@ -622,14 +706,18 @@ export default function AboutPage() {
                 overflow: "hidden",
               }}
             >
-              <Image
-                src="https://ie6wpryluu0khsu3.public.blob.vercel-storage.com/concept/1778726513845-electronics-IwoyPc9AZXhdoUfNmTaPYmRwWjAr9G.png"
-                alt="e-ink display showing generated poetry"
-                width={1200}
-                height={800}
-                style={{ width: "100%", height: "auto", display: "block" }}
+              <img
+                src="https://ie6wpryluu0khsu3.public.blob.vercel-storage.com/concept/1778728486953-receipt-EhIRvFvSakB27arFLntNJMyIwhCzeY.png"
+                alt="thermal printer receipt — a poem artifact"
+                style={{
+                  width: "100%",
+                  height: "auto",
+                  display: "block",
+                  borderRadius: 12,
+                }}
               />
             </div>
+
             <h2 className="h2" id="os-states">
               soft os states
             </h2>
@@ -716,7 +804,6 @@ export default function AboutPage() {
               the things people asked for — sound, scent, warmth — are the
               things i can&#39;t wait to build next.
             </p>
-
             <div
               style={{
                 marginTop: 16,
@@ -725,16 +812,20 @@ export default function AboutPage() {
                 overflow: "hidden",
               }}
             >
-              <Image
+              <img
                 src="https://ie6wpryluu0khsu3.public.blob.vercel-storage.com/concept/1778726140195-tsc-TQTXdUNgseorGS4xebibRNWTy8W4JZ.png"
                 alt="person interacting with the soft computer"
-                width={1200}
-                height={800}
-                style={{ width: "100%", height: "auto", display: "block" }}
+                style={{
+                  width: "100%",
+                  height: "auto",
+                  display: "block",
+                  borderRadius: 12,
+                }}
               />
             </div>
+
             <h2 className="h2" id="coming-back">
-              coming back to where we started
+              y2k revisited
             </h2>
             <p className="p">
               i want to come back to the dial-up. the blue screen of death. the
@@ -877,7 +968,6 @@ export default function AboutPage() {
                 </div>
               </div>
             </div>
-
             <div className="aboutMeta" style={{ marginTop: 12 }}>
               <div className="aboutMetaTitle">keywords</div>
               <div className="aboutChips">
@@ -919,7 +1009,6 @@ export default function AboutPage() {
                 ))}
               </div>
             </div>
-
             <div className="aboutMeta" style={{ marginTop: 12 }}>
               <div className="aboutMetaTitle">lineage</div>
               <ul className="aboutList small">
