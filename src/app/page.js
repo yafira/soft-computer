@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import "./SoftOSWindow.css";
 
 const RAW_CORPORA = {
   blush: `
@@ -76,9 +77,9 @@ const RAW_CORPORA = {
 function buildChain(text, n = 2) {
   const words = text
     .toLowerCase()
-    .replace(/[^\w\s]/g, " ")
+    .replace(/[^a-z0-9\s]/g, " ")
     .split(/\s+/)
-    .filter(Boolean);
+    .filter((w) => w && w.length > 0 && w !== "undefined");
   const chain = {};
   for (let i = 0; i < words.length - n; i++) {
     const key = words.slice(i, i + n).join(" ");
@@ -93,7 +94,8 @@ function generate(chain, length) {
   const keys = Object.keys(chain);
   if (!keys.length) return "";
   let key = keys[Math.floor(Math.random() * keys.length)];
-  const result = key.split(" ");
+  const seed = key.split(" ").filter(Boolean);
+  const result = [...seed];
   for (let i = 0; i < length; i++) {
     const options = chain[key];
     if (!options || !options.length) {
@@ -101,11 +103,16 @@ function generate(chain, length) {
       continue;
     }
     const next = options[Math.floor(Math.random() * options.length)];
+    if (!next || next === "undefined") {
+      key = keys[Math.floor(Math.random() * keys.length)];
+      continue;
+    }
     result.push(next);
-    key = [...key.split(" ").slice(1), next].join(" ");
+    const parts = key.split(" ");
+    key = [...parts.slice(1), next].join(" ");
   }
-  const text = result.join(" ");
-  return text.charAt(0).toUpperCase() + text.slice(1);
+  const text = result.filter((w) => w && w !== "undefined").join(" ");
+  return text;
 }
 
 const CHAINS = {};
@@ -149,13 +156,16 @@ export default function HomePage() {
     setIsGenerating(true);
     setIsDreaming(false);
     const text = generate(CHAINS[corpus], 30);
-    const words = text.split(" ");
+    const words = text.split(" ").filter((w) => w && w !== "undefined");
     let i = 0;
     setDisplayText("");
 
     function addWord() {
       if (i < words.length) {
-        setDisplayText((prev) => (prev ? prev + " " + words[i] : words[i]));
+        const w = words[i];
+        if (w && w !== "undefined") {
+          setDisplayText((prev) => (prev ? prev + " " + w : w));
+        }
         i++;
         wordTimerRef.current = setTimeout(addWord, 300 + Math.random() * 220);
       } else {
