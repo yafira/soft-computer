@@ -209,7 +209,7 @@ export default function HomePage() {
             ))}
           </div>
           <div className="softOS__title">
-            soft.computer — {CORPUS_LABELS[activeCorpus]}
+            softOS — {CORPUS_LABELS[activeCorpus]}
           </div>
           <div className="softOS__state">
             {isDreaming ? "dream" : isGenerating ? "play" : "wake"}
