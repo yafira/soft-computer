@@ -38,6 +38,17 @@ export async function POST(req) {
       return NextResponse.json({ error: "unauthorized" }, { status: 401 });
     }
     const body = await req.json().catch(() => ({}));
+
+    // reorder action — must be checked before url validation
+    if (body?.action === "reorder") {
+      const ordered = safeArray(body?.images);
+      if (ordered.length === 0) {
+        return NextResponse.json({ error: "missing images" }, { status: 400 });
+      }
+      await redis.set(KEY, ordered);
+      return NextResponse.json({ ok: true });
+    }
+
     const url = (body?.url || "").trim();
     const caption = (body?.caption || "").trim();
     if (!url) {
@@ -52,15 +63,6 @@ export async function POST(req) {
       caption,
       createdAt: Date.now(),
     };
-    // reorder action — replaces full array
-    if (body?.action === "reorder") {
-      const ordered = safeArray(body?.images);
-      if (ordered.length === 0) {
-        return NextResponse.json({ error: "missing images" }, { status: 400 });
-      }
-      await redis.set(KEY, ordered);
-      return NextResponse.json({ ok: true });
-    }
 
     const next = [item, ...images];
     await redis.set(KEY, next);
