@@ -130,7 +130,39 @@ export default function AboutPage() {
               }}
             >
               <Image
-                src="/images/about/hero.jpg"
+                src="https://ie6wpryluu0khsu3.public.blob.vercel-storage.com/concept/1775956745032-tsc_fullcolor-ECp5gyo6xhqx4KveXSkKK3sCkLI6O6.png"
+                alt="the soft computer — color sketch"
+                width={1200}
+                height={800}
+                style={{ width: "100%", height: "auto", display: "block" }}
+              />
+            </div>
+            <div
+              style={{
+                marginTop: 16,
+                marginBottom: 16,
+                borderRadius: 12,
+                overflow: "hidden",
+              }}
+            >
+              <Image
+                src="https://ie6wpryluu0khsu3.public.blob.vercel-storage.com/concept/1771301366397-tsc-rr4XFyJOhbidqM05Q4fEedVrButqTN.png"
+                alt="early sketch of the soft computer"
+                width={1200}
+                height={800}
+                style={{ width: "100%", height: "auto", display: "block" }}
+              />
+            </div>
+            <div
+              style={{
+                marginTop: 16,
+                marginBottom: 16,
+                borderRadius: 12,
+                overflow: "hidden",
+              }}
+            >
+              <Image
+                src="https://ie6wpryluu0khsu3.public.blob.vercel-storage.com/concept/1778726135301-tsc_01-E0uhncqo8VXGT9jhxjQQ8qmnEiyO7u.png"
                 alt="the soft computer — full object"
                 width={1200}
                 height={800}
@@ -320,7 +352,7 @@ export default function AboutPage() {
               }}
             >
               <Image
-                src="/images/about/materials.jpg"
+                src="https://ie6wpryluu0khsu3.public.blob.vercel-storage.com/concept/1778726507343-material-form-faECb0ZprC7B5TJOG7CaAt0Z3k6sSj.png"
                 alt="layered materials and construction"
                 width={1200}
                 height={800}
@@ -407,8 +439,24 @@ export default function AboutPage() {
               }}
             >
               <Image
-                src="/images/about/knit-panel.jpg"
-                alt="machine-knit lavender panel on Brother KH-930"
+                src="https://ie6wpryluu0khsu3.public.blob.vercel-storage.com/concept/1778726539899-kh930-Rbdeilq27EIgB5kuIC2j3A3DV2Hh5p.png"
+                alt="Brother KH-930 knitting machine"
+                width={1200}
+                height={800}
+                style={{ width: "100%", height: "auto", display: "block" }}
+              />
+            </div>
+            <div
+              style={{
+                marginTop: 16,
+                marginBottom: 16,
+                borderRadius: 12,
+                overflow: "hidden",
+              }}
+            >
+              <Image
+                src="https://ie6wpryluu0khsu3.public.blob.vercel-storage.com/concept/1778726500287-knit-panel-jGVItGxk0OoTYiICeQLRuohoU59W78.png"
+                alt="machine-knit lavender panel"
                 width={1200}
                 height={800}
                 style={{ width: "100%", height: "auto", display: "block" }}
@@ -489,7 +537,7 @@ export default function AboutPage() {
               }}
             >
               <Image
-                src="/images/about/buttons.jpg"
+                src="https://ie6wpryluu0khsu3.public.blob.vercel-storage.com/concept/1778726199199-tsc2-JpXbD1w6wXttvanejBzERO6tIPpd2U.jpg"
                 alt="four felt buttons close-up"
                 width={1200}
                 height={800}
@@ -543,7 +591,7 @@ export default function AboutPage() {
               }}
             >
               <Image
-                src="/images/about/diagram-signal-flow.jpg"
+                src="https://ie6wpryluu0khsu3.public.blob.vercel-storage.com/concept/1778726494806-architecture-iwjHUkl4voP2TH5HuaFO2lLXfEcBU0.jpg"
                 alt="signal flow diagram: sensors to fruit jam to raspberry pi to e-ink and printer"
                 width={1200}
                 height={800}
@@ -559,7 +607,7 @@ export default function AboutPage() {
               }}
             >
               <Image
-                src="/images/about/diagram-corpus-mapping.jpg"
+                src="https://ie6wpryluu0khsu3.public.blob.vercel-storage.com/concept/1778726485969-corpus-G2mf5NPSj7vTcPYTVoA72ifkodYQ3u.jpg"
                 alt="diagram of four buttons mapped to four corpora"
                 width={1200}
                 height={800}
@@ -575,7 +623,7 @@ export default function AboutPage() {
               }}
             >
               <Image
-                src="/images/about/eink-display.jpg"
+                src="https://ie6wpryluu0khsu3.public.blob.vercel-storage.com/concept/1778726513845-electronics-IwoyPc9AZXhdoUfNmTaPYmRwWjAr9G.png"
                 alt="e-ink display showing generated poetry"
                 width={1200}
                 height={800}
@@ -678,7 +726,7 @@ export default function AboutPage() {
               }}
             >
               <Image
-                src="/images/about/user-testing.jpg"
+                src="https://ie6wpryluu0khsu3.public.blob.vercel-storage.com/concept/1778726140195-tsc-TQTXdUNgseorGS4xebibRNWTy8W4JZ.png"
                 alt="person interacting with the soft computer"
                 width={1200}
                 height={800}
