@@ -16,9 +16,8 @@ export default function Nav() {
         <Link href="/" style={{ textDecoration: "none" }}>
           <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
             <div style={{ fontWeight: 700, letterSpacing: "-0.02em" }}>
-              soft.computer
+              the soft computer
             </div>
-            <div className="small">process memory</div>
           </div>
         </Link>
         <nav style={{ display: "flex", gap: 14, alignItems: "center" }}>
