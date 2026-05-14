@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 
 export const metadata = {
   title: "about • soft.computer",
@@ -14,14 +15,131 @@ export default function AboutPage() {
           about
         </div>
         <p className="p subtle" style={{ marginTop: 0 }}>
-          the soft computer is a thesis project exploring textiles as
-          computational logic.
+          a textile-based computing object that imagines a gentler way of being
+          with technology. this project started as a thesis at{" "}
+          <a
+            href="https://itp.nyu.edu"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            nyu itp (interactive telecommunications program)
+          </a>
+          , a master&#39;s program at new york university, and is continuing to
+          grow beyond it.
         </p>
 
         <div className="aboutGrid">
           <div className="aboutMain">
-            <h2 className="h2">the soft computer</h2>
+            {/* opening narrative */}
+            {/* chapter TOC */}
+            <nav className="aboutToc">
+              <div className="aboutTocLabel">chapters</div>
+              <div className="aboutTocChapters">
+                {[
+                  {
+                    title: "narrative",
+                    links: [
+                      ["#imagine", "imagine you’re a kid again"],
+                      ["#care", "what i mean by care"],
+                      ["#question", "central question"],
+                    ],
+                  },
+                  {
+                    title: "the form",
+                    links: [
+                      ["#form", "materials + construction"],
+                      ["#knit", "the knit panel"],
+                      ["#system", "inputs + outputs"],
+                      ["#buttons", "four buttons"],
+                    ],
+                  },
+                  {
+                    title: "soft os",
+                    links: [
+                      ["#poetry", "how the poetry works"],
+                      ["#os-states", "os states"],
+                    ],
+                  },
+                  {
+                    title: "the work",
+                    links: [
+                      ["#motivation", "motivation"],
+                      ["#sensory", "sensory system"],
+                      ["#testing", "user testing"],
+                      ["#coming-back", "coming back"],
+                    ],
+                  },
+                  {
+                    title: "what’s next",
+                    links: [["#whats-next", "v2 + open source"]],
+                  },
+                ].map((chapter) => (
+                  <div key={chapter.title} className="aboutTocChapter">
+                    <div className="aboutTocChapterTitle">{chapter.title}</div>
+                    <ul className="aboutTocLinks">
+                      {chapter.links.map(([href, label]) => (
+                        <li key={href}>
+                          <a href={href} className="aboutTocLink">
+                            {label}
+                          </a>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            </nav>
+            <h2 className="h2" id="imagine">
+              imagine you&#39;re a kid again
+            </h2>
+            <p className="p">
+              you walk over to the family computer. you sit down. the chair is
+              too big for you. you turn on the PC and you wait. the monitor hums
+              to life slowly, line by line.
+            </p>
+            <p className="p">
+              you want to use the internet. but your mom is on the phone. so you
+              wait. and you wait some more. when she finally hangs up, you plug
+              in the modem. you hear the dial-up sound. the page loads one image
+              at a time. one paragraph at a time. and then the cursor freezes.
+              the little hourglass spins. you click anyway. nothing. and then,
+              sometimes, the blue screen of death.
+            </p>
+            <p className="p">
+              you sit there. you wait. you restart. you wait more. you try
+              again.
+            </p>
+            <p className="p">
+              here&#39;s the thing. the computer takes its time, and so do you.
+              it&#39;s slow, almost ceremonial. it doesn&#39;t follow you
+              anywhere. it doesn&#39;t ask anything of you. when it works, it
+              just waits with you, until something arrives. when it breaks, it
+              tells you. you fix it, or you walk away.
+            </p>
+            <p className="p subtle" style={{ fontStyle: "italic" }}>
+              somewhere along the way, we lost the patience the machine used to
+              have. i wanted to see if i could find it again.
+            </p>
 
+            <div
+              style={{
+                marginTop: 16,
+                marginBottom: 16,
+                borderRadius: 12,
+                overflow: "hidden",
+              }}
+            >
+              <Image
+                src="/images/about/hero.jpg"
+                alt="the soft computer — full object"
+                width={1200}
+                height={800}
+                style={{ width: "100%", height: "auto", display: "block" }}
+              />
+            </div>
+            <h2 className="h2" id="what-it-is">
+              the soft computer
+            </h2>
             <p className="p">
               the soft computer is a compact all-in-one, textile-based computing
               object that uses touch, craft, and embedded electronics to imagine
@@ -29,10 +147,8 @@ export default function AboutPage() {
               than functioning as a productivity machine, it operates as a
               standalone computational artifact: an enclosure constructed from
               soft materials with machine-knit accents, housing a flexible e-ink
-              display, capacitive sensing zones, a haptic motor, ambient sound,
-              and breathing light.
+              display, capacitive sensing zones, and a haptic motor.
             </p>
-
             <p className="p">
               the soft computer is designed to be sat with, not operated. it
               emphasizes presence over output, care over command, and material
@@ -42,7 +158,37 @@ export default function AboutPage() {
               a flexible e-ink screen slowly builds poems from touch.
             </p>
 
-            <h2 className="h2">central question</h2>
+            <h2 className="h2" id="care">
+              what i mean by care
+            </h2>
+            <p className="p">
+              the soft computer started as an experiment in care, and i should
+              be specific about what i mean by that, because it&#39;s a word
+              that gets used a lot.
+            </p>
+            <p className="p">
+              care, for me, means a machine that doesn&#39;t extract from you.
+              that doesn&#39;t optimize you. that doesn&#39;t treat your
+              attention as a resource to mine. care means the computer assumes
+              you have a body, a tempo, a tolerance for ambiguity. it means the
+              computer is willing to wait for you, instead of demanding you
+              hurry up for it. care means the relationship between you and the
+              machine is gentle, not transactional.
+            </p>
+            <p className="p">
+              mark weiser, in 1991, called for something close to this. he
+              called it calm technology. but i wanted to go further than calm. i
+              wanted warm. i wanted tactile. i wanted a computer designed around
+              care, not command.
+            </p>
+            <p className="p">
+              in the age of AI, we need a moment of softness. to slow down. to
+              ask what we actually want from our machines.
+            </p>
+
+            <h2 className="h2" id="question">
+              central question
+            </h2>
             <p className="p">
               what can a soft computer do that a hard computer never could?
             </p>
@@ -78,7 +224,9 @@ export default function AboutPage() {
               </div>
             </div>
 
-            <h2 className="h2">motivation</h2>
+            <h2 className="h2" id="motivation">
+              motivation
+            </h2>
             <p className="p">
               my relationship to electronics and computation has always been
               shadowed by dissonance with the language of hardness that defines
@@ -86,19 +234,15 @@ export default function AboutPage() {
               every rigid circuit is something fundamentally soft: flexible
               wires, malleable solder, human hands, and patient care.
             </p>
-
             <p className="p">
               this contradiction deepened as i learned computing history. long
               before silicon, computation lived in textiles. the jacquard loom
               used punched cards to control woven patterns, and ada lovelace
               described computation through weaving. in 1757, mathematician
-              alexis clairaut employed two human &ldquo;computers&rdquo; — the
-              title for apprentices at the time — to refine halley&apos;s comet
-              predictions. before the machine, computation was a body. the soft
-              computer draws from that thread while insisting that softness can
-              be a rigorous interface, not a metaphor.
+              alexis clairaut employed two human &ldquo;computers&rdquo; to
+              refine halley&#39;s comet predictions. before the machine,
+              computation was a body.
             </p>
-
             <p className="p">
               as computing industrialized, its soft origins were systematically
               erased. women who wired eniac, who wove rope core memory for
@@ -106,7 +250,6 @@ export default function AboutPage() {
               framed as assistants rather than inventors. meanwhile computing
               hardened. speed became virtue. precision became power.
             </p>
-
             <p className="p">
               this soft computer argues that softness is not weakness. softness
               is the ability to flex, mend, feel, and adapt.
@@ -133,7 +276,60 @@ export default function AboutPage() {
               </div>
             </div>
 
-            <h2 className="h2">system form</h2>
+            <h2 className="h2" id="form">
+              the form
+            </h2>
+            <p className="p">
+              the soft computer is built in layers. months of trying different
+              combinations until it felt right. soft enough to hold. firm enough
+              to hold itself.
+            </p>
+            <div className="aboutCallouts">
+              <div className="aboutCallout">
+                <ul className="aboutList">
+                  <li>
+                    machine-knit lavender wool-cotton yarn on a Brother KH-930
+                    knitting machine
+                  </li>
+                  <li>industrial felt for the soft buttons</li>
+                  <li>
+                    upholstery foam carved out in the middle for the
+                    electronics, filled with batting for structure
+                  </li>
+                  <li>neoprene on the outside, holding everything together</li>
+                  <li>
+                    a removable fabric slip cover in macintosh beige open-weave
+                    linen
+                  </li>
+                </ul>
+              </div>
+            </div>
+            <p className="p">
+              the chassis is modular. the slip cover is removable. the buttons
+              snap on and off. the whole thing is designed to be repairable,
+              opened, and modified — a counter to consumer electronics that ship
+              sealed.
+            </p>
+
+            <div
+              style={{
+                marginTop: 16,
+                marginBottom: 16,
+                borderRadius: 12,
+                overflow: "hidden",
+              }}
+            >
+              <Image
+                src="/images/about/materials.jpg"
+                alt="layered materials and construction"
+                width={1200}
+                height={800}
+                style={{ width: "100%", height: "auto", display: "block" }}
+              />
+            </div>
+            <h2 className="h2" id="system">
+              system form
+            </h2>
             <div className="aboutTwoCol">
               <div className="aboutCard">
                 <div className="aboutLabel">inputs</div>
@@ -143,100 +339,283 @@ export default function AboutPage() {
                     text engine toward a different corpus
                   </li>
                   <li>
+                    soft matrix keypad — 4×4 capacitive zones built from copper
+                    tape under fabric, modulating the mood of generation
+                  </li>
+                  <li>
                     trackpad zone — controls the mood and temperature of
                     language generation through gesture
                   </li>
                 </ul>
               </div>
-
               <div className="aboutCard">
                 <div className="aboutLabel">outputs</div>
                 <ul className="aboutList">
                   <li>
                     flexible 10.3&Prime; e-ink display — slow poetic text builds
-                    word by word, corner shows current system mood
-                  </li>
-                  <li>haptic motor — pulses with each interaction</li>
-                  <li>
-                    NeoPixel breathing light — color shifts with OS state,
-                    blooms through fabric
+                    word by word
                   </li>
                   <li>
-                    ambient sound — soft tonal breathing via built-in speaker,
-                    shifts with interaction
+                    haptic motor — pulses with each interaction, each button has
+                    its own signature
                   </li>
-                  <li>thermal printer — ritual receipts as poem artifacts</li>
+                  <li>
+                    thermal printer — ritual receipts as poem artifacts you can
+                    take with you
+                  </li>
                 </ul>
               </div>
             </div>
 
-            <h2 className="h2">four buttons, four answers</h2>
+            <h2 className="h2" id="knit">
+              the knit panel
+            </h2>
+            <p className="p">
+              the knit panel that frames the e-ink display is the part of the
+              object you see first. it is a wool-cotton blend in lavender, knit
+              flat on a Brother KH-930 from 1986. 70 stitches, 56 rows, roughly
+              10&Prime; &times; 8&Prime;.
+            </p>
+            <p className="p">
+              wool gives it warmth and a slight halo. cotton keeps it stable
+              enough to sit cleanly behind the e-ink without sagging. the panel
+              is mounted so the e-ink reads as if it&#39;s sitting inside a soft
+              window.
+            </p>
+            <p className="p">
+              a second knit pouch in the same lavender yarn holds the Raspberry
+              Pi 5 inside. tucking the Pi inside a soft sleeve felt right. the
+              part of the computer doing the most thinking is also the part you
+              can&#39;t see, wrapped in the same material as the face.
+            </p>
+            <p className="p">
+              using the KH-930 mattered. the machine is from 1986. it&#39;s the
+              same kind of domestic technology that has historically been coded
+              as women&#39;s work and dismissed as not-really-engineering, even
+              though it&#39;s a programmable patterning system that predates
+              much of what we now call computing. it sat a few feet from the
+              Raspberry Pi on my desk and quietly makes the same point the
+              project is making.
+            </p>
+
+            <div
+              style={{
+                marginTop: 16,
+                marginBottom: 16,
+                borderRadius: 12,
+                overflow: "hidden",
+              }}
+            >
+              <Image
+                src="/images/about/knit-panel.jpg"
+                alt="machine-knit lavender panel on Brother KH-930"
+                width={1200}
+                height={800}
+                style={{ width: "100%", height: "auto", display: "block" }}
+              />
+            </div>
+            <h2 className="h2" id="buttons">
+              four buttons, four answers
+            </h2>
             <p className="p">
               each button represents a different relationship to computation.
               each one answers the central question differently. together they
               tell the complete story of the soft computer.
             </p>
-
             <div className="aboutCallouts">
-              <div className="aboutCallout">
-                <div className="aboutLabel">blush — lineage</div>
+              <div
+                className="aboutCallout"
+                style={{ borderLeft: "3px solid #e8b4b8" }}
+              >
+                <div className="aboutLabel" style={{ color: "#c47c82" }}>
+                  blush — lineage
+                </div>
                 <p className="p small">
                   corpus: women in computing. ada lovelace, the eniac
                   programmers, apollo rope core memory weavers, grace hopper,
                   the women of bell labs. the computer speaks its own history —
                   the history it was never taught to remember.
                 </p>
-                <p className="p small">
-                  e-ink: slow, reverent text from this corpus. neopixel: soft
-                  lavender. haptic: one long slow pulse.
-                </p>
               </div>
-
-              <div className="aboutCallout">
-                <div className="aboutLabel">blue — poetry</div>
+              <div
+                className="aboutCallout"
+                style={{ borderLeft: "3px solid #87b5d4" }}
+              >
+                <div className="aboutLabel" style={{ color: "#4a85aa" }}>
+                  sky blue — dreamlike
+                </div>
                 <p className="p small">
                   corpus: literary and poetic texts. the computer as poet, not
                   tool. dreamy, abstract, slow generation. language that
-                  doesn&apos;t explain itself.
-                </p>
-                <p className="p small">
-                  e-ink: sparse poetic lines, building word by word. neopixel:
-                  cool steady mint. haptic: two short rhythmic pulses.
+                  doesn&#39;t explain itself.
                 </p>
               </div>
-
-              <div className="aboutCallout">
-                <div className="aboutLabel">mint — textile</div>
+              <div
+                className="aboutCallout"
+                style={{ borderLeft: "3px solid #a8d4c2" }}
+              >
+                <div className="aboutLabel" style={{ color: "#4a9478" }}>
+                  mint — textile
+                </div>
                 <p className="p small">
                   corpus: weaving patterns, jacquard loom history, knit
                   structures, textile computation lineage. the computer
-                  remembers it came from the loom. this button makes that
-                  connection visible and literal.
-                </p>
-                <p className="p small">
-                  e-ink: weaving pattern image alongside generated text.
-                  neopixel: warm blush. haptic: slow double pulse.
+                  remembers it came from the loom.
                 </p>
               </div>
-
-              <div className="aboutCallout">
-                <div className="aboutLabel">yellow — subverted</div>
+              <div
+                className="aboutCallout"
+                style={{ borderLeft: "3px solid #f5e06e" }}
+              >
+                <div className="aboutLabel" style={{ color: "#a88c1a" }}>
+                  yellow — subverted
+                </div>
                 <p className="p small">
                   corpus: real CS texts, error messages, technical
                   documentation, logic gates, binary, data structures — run
                   through the generative engine until they become strange and
-                  tender. the hard computer&apos;s language made soft and
+                  tender. the hard computer&#39;s language made soft and
                   unfamiliar.
-                </p>
-                <p className="p small">
-                  e-ink: computational language transformed into poetry.
-                  neopixel: warm yellow flicker. haptic: three quick irregular
-                  pulses, slightly stuttered.
                 </p>
               </div>
             </div>
 
-            <h2 className="h2">sensory system</h2>
+            <div
+              style={{
+                marginTop: 16,
+                marginBottom: 16,
+                borderRadius: 12,
+                overflow: "hidden",
+              }}
+            >
+              <Image
+                src="/images/about/buttons.jpg"
+                alt="four felt buttons close-up"
+                width={1200}
+                height={800}
+                style={{ width: "100%", height: "auto", display: "block" }}
+              />
+            </div>
+            <h2 className="h2" id="poetry">
+              how the poetry works
+            </h2>
+            <p className="p">
+              most people hear &ldquo;the computer generates text&rdquo; and
+              picture something like a massive model trained on the whole
+              internet, predicting the most likely thing anyone could say. the
+              soft computer is the opposite of that.
+            </p>
+            <p className="p">
+              four buttons, four corpora. each one is a few pages of text chosen
+              on purpose. press blush, the machine speaks in the vocabulary of
+              ada lovelace, the eniac programmers, the apollo rope memory
+              weavers. press yellow, it only has CS documentation and error
+              messages to work with. it can&#39;t reach outside the corpus to
+              find something more likely. it has to stay in the small specific
+              world i built for it.
+            </p>
+            <p className="p">
+              an order-2 markov chain, looking at the previous two words to pick
+              the next one. the math is so small you could do it on paper with a
+              tally chart. n=1 is gibberish. n=3 is the seam where statistics
+              start to feel like writing. n=5 just regurgitates the source.
+            </p>
+            <p className="p">
+              the soft computer doesn&#39;t predict the most likely word. it
+              picks the next word from a list of words it has actually seen, in
+              a small specific world i made for it. that&#39;s the whole model.
+              everything happens locally. no internet, no cloud, no large
+              language model. nothing you say or do leaves this object.
+            </p>
+            <p className="p">
+              you might ask why the output is a poem and not a useful tool. the
+              answer is care. a tool tells you what to do. a poem invites you to
+              interpret. a poem doesn&#39;t optimize anything. it asks you to
+              slow down and pay attention.
+            </p>
+
+            <div
+              style={{
+                marginTop: 16,
+                marginBottom: 16,
+                borderRadius: 12,
+                overflow: "hidden",
+              }}
+            >
+              <Image
+                src="/images/about/diagram-signal-flow.jpg"
+                alt="signal flow diagram: sensors to fruit jam to raspberry pi to e-ink and printer"
+                width={1200}
+                height={800}
+                style={{ width: "100%", height: "auto", display: "block" }}
+              />
+            </div>
+            <div
+              style={{
+                marginTop: 16,
+                marginBottom: 16,
+                borderRadius: 12,
+                overflow: "hidden",
+              }}
+            >
+              <Image
+                src="/images/about/diagram-corpus-mapping.jpg"
+                alt="diagram of four buttons mapped to four corpora"
+                width={1200}
+                height={800}
+                style={{ width: "100%", height: "auto", display: "block" }}
+              />
+            </div>
+            <div
+              style={{
+                marginTop: 16,
+                marginBottom: 16,
+                borderRadius: 12,
+                overflow: "hidden",
+              }}
+            >
+              <Image
+                src="/images/about/eink-display.jpg"
+                alt="e-ink display showing generated poetry"
+                width={1200}
+                height={800}
+                style={{ width: "100%", height: "auto", display: "block" }}
+              />
+            </div>
+            <h2 className="h2" id="os-states">
+              soft os states
+            </h2>
+            <div className="aboutThreeCol">
+              <div className="aboutCard">
+                <div className="aboutLabel">wake</div>
+                <p className="p small">
+                  a short ritual. the display greets you. the haptic pulse
+                  begins. the object orients itself toward presence.
+                </p>
+              </div>
+              <div className="aboutCard">
+                <div className="aboutLabel">play</div>
+                <p className="p small">
+                  active interaction. buttons and trackpad generate poetry word
+                  by word.
+                </p>
+              </div>
+              <div className="aboutCard">
+                <div className="aboutLabel">dream</div>
+                <p className="p small">
+                  idle ambient mode. the display drifts with self-generated
+                  text. breathing slows. the object waits for someone to return.
+                </p>
+              </div>
+            </div>
+            <p className="p">
+              there is no productivity state. there is no notifications state.
+              there is no urgency anywhere in the system.
+            </p>
+
+            <h2 className="h2" id="sensory">
+              sensory system
+            </h2>
             <p className="p">
               the soft computer engages four senses simultaneously — unusual for
               a computing object — plus one often overlooked:
@@ -249,12 +628,7 @@ export default function AboutPage() {
                     with knit wool accents, haptic motor
                   </li>
                   <li>
-                    <strong>sight</strong> — slow poetic text on flexible e-ink,
-                    NeoPixel breathing light through fabric
-                  </li>
-                  <li>
-                    <strong>sound</strong> — ambient breathing via built-in
-                    speaker, tonal shifts with interaction
+                    <strong>sight</strong> — slow poetic text on flexible e-ink
                   </li>
                   <li>
                     <strong>proprioception</strong> — the sense of your own body
@@ -271,43 +645,98 @@ export default function AboutPage() {
               the soft computer asks you to wait, to stay, to notice.
             </p>
 
-            <h2 className="h2">soft os states</h2>
-            <div className="aboutThreeCol">
-              <div className="aboutCard">
-                <div className="aboutLabel">wake</div>
-                <p className="p small">
-                  a short ritual. the display greets you. the NeoPixel brightens
-                  slowly. the haptic pulse begins. the object orients itself
-                  toward presence.
-                </p>
-              </div>
-
-              <div className="aboutCard">
-                <div className="aboutLabel">play</div>
-                <p className="p small">
-                  active interaction. buttons and trackpad generate poetry word
-                  by word. sound shifts with mood. light shifts with state.
-                </p>
-              </div>
-
-              <div className="aboutCard">
-                <div className="aboutLabel">dream</div>
-                <p className="p small">
-                  idle ambient mode. the display drifts with self-generated
-                  text. the NeoPixel dims. breathing slows. the object waits for
-                  someone to return.
-                </p>
-              </div>
-            </div>
-
-            <h2 className="h2">text generation</h2>
+            <h2 className="h2" id="testing">
+              user testing
+            </h2>
             <p className="p">
-              rather than relying on large opaque language models, the soft
-              computer uses lightweight and interpretable methods — small
-              probabilistic systems, curated corpora, and modest models that
-              align with the project&apos;s values of transparency, slowness,
-              and materiality. each of the four buttons biases the system toward
-              a different corpus. the poem is built from touch.
+              testing happened in two phases. with the prototype, conversations
+              with peers and advisors shaped the early decisions: the inputs
+              should be ambiguous, the output slow, the piece something you live
+              with rather than operate.
+            </p>
+            <p className="p">
+              with the actual build, what i didn&#39;t expect was how much it
+              tested people&#39;s patience. the e-ink updates slowly.
+              there&#39;s no progress bar. some people leaned in. others got
+              visibly restless within seconds, reaching for their phone or
+              asking if it was broken. that restlessness was the most
+              interesting finding. the people who stayed described it as
+              calming, even meditative. but getting there required unlearning
+              something.
+            </p>
+            <p className="p">
+              the things people asked for — sound, scent, warmth — are the
+              things i can&#39;t wait to build next.
+            </p>
+
+            <div
+              style={{
+                marginTop: 16,
+                marginBottom: 16,
+                borderRadius: 12,
+                overflow: "hidden",
+              }}
+            >
+              <Image
+                src="/images/about/user-testing.jpg"
+                alt="person interacting with the soft computer"
+                width={1200}
+                height={800}
+                style={{ width: "100%", height: "auto", display: "block" }}
+              />
+            </div>
+            <h2 className="h2" id="coming-back">
+              coming back to where we started
+            </h2>
+            <p className="p">
+              i want to come back to the dial-up. the blue screen of death. the
+              family computer. we had one growing up. but really, it was mine. i
+              was the technical one, the kid who fixed everything for everyone
+              else. computers were the first thing i loved figuring out.
+            </p>
+            <p className="p">
+              i&#39;ve watched technology go from some of the slowest times to
+              what it is now. during my time, we used to wait until 9pm to talk
+              to people for unlimited minutes. twenty years later, we pay for
+              unlimited minutes and don&#39;t call anyone. and what&#39;s
+              strange is that even the current generation, people who never
+              heard a modem, who never waited for a pixelated photo to load line
+              by line, sometimes feel a kind of nostalgia for it. for LimeWire
+              downloads that took an hour and might be a virus. for blowing into
+              a Nintendo cartridge to make it work. for staying up to write the
+              perfect away message.
+            </p>
+            <p className="p subtle" style={{ fontStyle: "italic" }}>
+              we used to log on. now we don&#39;t ever log off.
+            </p>
+            <p className="p">
+              the soft computer is built around constraints on purpose. it has a
+              small corpus, not the whole internet. one poem at a time, not
+              endless content. a receipt you can hold, not a feed you scroll.
+              and a finite memory, like the computers we grew up with — the ones
+              that made you choose what to keep, and what to let go. the
+              constraint isn&#39;t a workaround. the constraint is the point.
+            </p>
+
+            <h2 className="h2" id="whats-next">
+              what&#39;s next
+            </h2>
+            <p className="p">
+              beyond the spring show and berlin, i want to keep building soft
+              peripherals — things that are soft and fully functional. soft
+              keyboards, soft pointing devices, soft screens, soft cases. and i
+              want to keep iterating on the soft computer itself. a v2 with the
+              sensory layers people asked for.
+            </p>
+            <p className="p">
+              the entire project is open source. documentation, patterns, code,
+              and corpus materials are all available so others can take it
+              apart, remix it, and make their own.
+            </p>
+            <p className="p">
+              make your own soft computer. or your own computer of any kind. it
+              doesn&#39;t have to be soft. it just has to be yours. something
+              built around your values, not someone else&#39;s.
             </p>
 
             <h2 className="h2">audience + context</h2>
@@ -315,12 +744,6 @@ export default function AboutPage() {
               <div className="aboutCard">
                 <div className="aboutLabel">who it is for</div>
                 <ul className="aboutList">
-                  <li>
-                    everyone. the soft computer is designed for all ages —
-                    children who touch without hesitation, adults who slow down
-                    and become curious, anyone who has ever felt alienated by
-                    the hardness of machines
-                  </li>
                   <li>
                     creative technologists, makers, artists, and designers
                     seeking alternatives to optimization culture
@@ -332,15 +755,12 @@ export default function AboutPage() {
                 </ul>
               </div>
               <div className="aboutCard">
-                <div className="aboutLabel">where it lives</div>
+                <div className="aboutLabel">out in the world</div>
                 <ul className="aboutList">
                   <li>installation context, public interaction</li>
                   <li>itp thesis show @ nyc resistor, april 2026</li>
                   <li>itp/ima spring show, may 2026</li>
                   <li>open hardware summit, berlin, may 2026</li>
-                  <li>
-                    the object needs only one wall outlet and a stable surface
-                  </li>
                 </ul>
               </div>
             </div>
@@ -348,7 +768,7 @@ export default function AboutPage() {
             <h2 className="h2">documentation + openness</h2>
             <p className="p">
               openness is central. build process, patterns, code, circuit
-              strategies, and corpus materials will be documented so others can
+              strategies, and corpus materials are documented so others can
               adapt the soft computer as a template for gentle, alternative
               interfaces.
             </p>
@@ -357,12 +777,10 @@ export default function AboutPage() {
           <aside className="aboutAside">
             <div className="aboutMeta">
               <div className="aboutMetaTitle">project info</div>
-
               <div className="aboutMetaRow">
                 <div className="aboutMetaKey">project</div>
                 <div className="aboutMetaVal">the soft computer</div>
               </div>
-
               <div className="aboutMetaRow">
                 <div className="aboutMetaKey">author</div>
                 <div className="aboutMetaVal">
@@ -375,14 +793,12 @@ export default function AboutPage() {
                   </a>
                 </div>
               </div>
-
               <div className="aboutMetaRow">
                 <div className="aboutMetaKey">context</div>
                 <div className="aboutMetaVal">
                   nyu itp — interactive telecommunications program
                 </div>
               </div>
-
               <div className="aboutMetaRow">
                 <div className="aboutMetaKey">materials</div>
                 <div className="aboutMetaVal">
@@ -390,7 +806,6 @@ export default function AboutPage() {
                   conductive fabric, flexible e-ink, embedded electronics
                 </div>
               </div>
-
               <div className="aboutMetaRow">
                 <div className="aboutMetaKey">categories</div>
                 <div className="aboutMetaVal">
@@ -398,7 +813,6 @@ export default function AboutPage() {
                   electronic text
                 </div>
               </div>
-
               <div className="aboutMetaRow">
                 <div className="aboutMetaKey">form</div>
                 <div className="aboutMetaVal">
@@ -407,7 +821,6 @@ export default function AboutPage() {
                   industrial felt over carved upholstery foam
                 </div>
               </div>
-
               <div className="aboutMetaRow">
                 <div className="aboutMetaKey">exhibitions</div>
                 <div className="aboutMetaVal">
@@ -449,9 +862,7 @@ export default function AboutPage() {
                   "multisensory design",
                   "proprioception",
                   "machine knitting",
-                  "NeoPixel",
                   "e-ink display",
-                  "all ages",
                   "open hardware",
                 ].map((k) => (
                   <span key={k} className="chip">
@@ -466,7 +877,7 @@ export default function AboutPage() {
               <ul className="aboutList small">
                 <li>
                   alexis clairaut — employed human &ldquo;computers&rdquo; to
-                  predict halley&apos;s comet, 1757
+                  predict halley&#39;s comet, 1757
                 </li>
                 <li>jacquard loom — punched cards as pattern logic, 1804</li>
                 <li>

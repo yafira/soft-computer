@@ -1246,6 +1246,72 @@ a {
   border-color: rgba(120, 90, 180, 0.38);
 }
 
+/* ── about page chapter TOC ── */
+
+.aboutToc {
+  margin-bottom: 32px;
+  padding: 16px 18px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.55);
+  box-shadow: 0 4px 14px rgba(35, 20, 70, 0.06);
+}
+
+.aboutTocLabel {
+  font-size: 11px;
+  font-family: "IBM Plex Mono", monospace;
+  letter-spacing: 0.08em;
+  text-transform: lowercase;
+  opacity: 0.45;
+  font-weight: 600;
+  margin-bottom: 14px;
+}
+
+.aboutTocChapters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.aboutTocChapter {
+  min-width: 120px;
+}
+
+.aboutTocChapterTitle {
+  font-size: 11px;
+  font-family: "IBM Plex Mono", monospace;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: lowercase;
+  color: rgba(43, 33, 64, 0.9);
+  margin-bottom: 6px;
+  padding-bottom: 4px;
+  border-bottom: 1px dashed rgba(60, 35, 110, 0.2);
+}
+
+.aboutTocLinks {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 4px;
+}
+
+.aboutTocLink {
+  font-size: 12px;
+  color: rgba(43, 33, 64, 0.6);
+  text-decoration: none;
+  line-height: 1.4;
+  transition:
+    color 120ms ease,
+    opacity 120ms ease;
+}
+
+.aboutTocLink:hover {
+  color: rgba(100, 70, 160, 0.9);
+  opacity: 1;
+}
+
 /* knowns / unknowns */
 .knownsUnknowns {
   display: grid;
@@ -1446,6 +1512,14 @@ a {
   .logPagination {
     flex-wrap: wrap;
     gap: 8px;
+  }
+
+  .aboutTocChapters {
+    gap: 16px;
+  }
+
+  .aboutTocChapter {
+    min-width: 100px;
   }
 }
 
