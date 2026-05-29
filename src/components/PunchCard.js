@@ -293,7 +293,9 @@ export default function PunchCard({
   function removeBlock(id) {
     setBlocks((prev) => {
       const next = prev.filter((b) => b.id !== id);
-      return next.length === 0 ? [newTextBlock()] : next;
+      const result = next.length === 0 ? [newTextBlock()] : next;
+      blocksRef.current = result;
+      return result;
     });
   }
 
@@ -370,7 +372,7 @@ export default function PunchCard({
         : b.type === "image"
           ? !!b.url
           : b.type === "video"
-            ? !!getEmbedUrl(b.url)
+            ? !!b.url
             : false,
     );
   }, [blocks]);
