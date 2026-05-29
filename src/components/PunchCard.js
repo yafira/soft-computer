@@ -186,9 +186,17 @@ export default function PunchCard({
     };
   }, []);
 
+  const activeRef = useRef(null);
   const openEditor = useCallback(
     (r, c) => {
       if (readOnly) return;
+      // don't reset blocks if already editing this cell
+      if (
+        activeRef.current &&
+        activeRef.current.r === r &&
+        activeRef.current.c === c
+      )
+        return;
       const label = makeEntryLabel(r, c);
       const existing = redisEntries.find(
         (e) =>
@@ -196,6 +204,7 @@ export default function PunchCard({
             .toLowerCase()
             .trim() === label.toLowerCase(),
       );
+      activeRef.current = { r, c };
       setActive({ r, c });
       setBlocks(entryToBlocks(existing));
     },
@@ -203,6 +212,7 @@ export default function PunchCard({
   );
 
   const closeEditor = useCallback(() => {
+    activeRef.current = null;
     setActive(null);
     setBlocks([newTextBlock()]);
   }, []);
