@@ -757,44 +757,10 @@ export default function PunchCard({
                   )}
 
                   {block.type === "video" && (
-                    <div style={{ display: "grid", gap: 8 }}>
-                      <input
-                        className="input"
-                        placeholder="paste vimeo url or embed code"
-                        value={block.url}
-                        onChange={(e) =>
-                          updateBlock(block.id, { url: e.target.value })
-                        }
-                      />
-                      {extractVimeoId(block.url) && (
-                        <div
-                          style={{
-                            position: "relative",
-                            paddingTop: "56.25%",
-                            borderRadius: 8,
-                            overflow: "hidden",
-                          }}
-                        >
-                          <iframe
-                            src={
-                              "https://player.vimeo.com/video/" +
-                              extractVimeoId(block.url) +
-                              "?badge=0&autopause=0"
-                            }
-                            frameBorder="0"
-                            allow="autoplay; fullscreen; picture-in-picture"
-                            style={{
-                              position: "absolute",
-                              top: 0,
-                              left: 0,
-                              width: "100%",
-                              height: "100%",
-                            }}
-                            title="vimeo video"
-                          />
-                        </div>
-                      )}
-                    </div>
+                    <VideoBlock
+                      block={block}
+                      onConfirm={(url) => updateBlock(block.id, { url })}
+                    />
                   )}
                 </div>
               ))}
