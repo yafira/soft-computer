@@ -92,26 +92,38 @@ function clamp(n, a, b) {
 
 function getEmbedUrl(input) {
   if (!input) return null;
+  // vimeo player url
   const vimeoSrc = input.match(/vimeo\.com\/video\/(\d+)/);
   if (vimeoSrc)
     return (
       "https://player.vimeo.com/video/" + vimeoSrc[1] + "?badge=0&autopause=0"
     );
+  // vimeo plain url
   const vimeoUrl = input.match(/vimeo\.com\/(\d+)/);
   if (vimeoUrl)
     return (
       "https://player.vimeo.com/video/" + vimeoUrl[1] + "?badge=0&autopause=0"
     );
+  // youtube watch
   const ytWatch = input.match(/youtube\.com\/watch\?v=([\w-]+)/);
   if (ytWatch) return "https://www.youtube.com/embed/" + ytWatch[1];
+  // youtu.be short
   const ytShort = input.match(/youtu\.be\/([\w-]+)/);
   if (ytShort) return "https://www.youtube.com/embed/" + ytShort[1];
+  // youtube embed
   const ytEmbed = input.match(/youtube\.com\/embed\/([\w-]+)/);
   if (ytEmbed) return "https://www.youtube.com/embed/" + ytEmbed[1];
+  // extract src from iframe embed code
   const iframeSrc = input.match(/src="([^"]+)"/);
   if (iframeSrc) return iframeSrc[1];
-  if (input.startsWith("http")) return input;
+  // bare https url
+  if (input.trim().startsWith("http")) return input.trim();
   return null;
+}
+
+// normalize stored url to always be a clean embed url
+function normalizeVideoUrl(input) {
+  return getEmbedUrl(input) || input;
 }
 
 // separate component so its state is isolated from PunchCard re-renders
@@ -120,7 +132,8 @@ function VideoBlock({ block, onConfirm }) {
   const embedUrl = getEmbedUrl(block.url);
 
   function handleConfirm() {
-    if (getEmbedUrl(input)) onConfirm(input);
+    const normalized = normalizeVideoUrl(input);
+    if (normalized) onConfirm(normalized);
   }
 
   return (
@@ -128,7 +141,7 @@ function VideoBlock({ block, onConfirm }) {
       <div style={{ display: "flex", gap: 8 }}>
         <input
           className="input"
-          placeholder="paste video url or embed code (vimeo, youtube, etc.)"
+          placeholder="paste video url (vimeo.com/123) or embed code"
           value={input}
           onChange={(e) => setInput(e.target.value)}
         />
