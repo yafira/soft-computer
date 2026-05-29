@@ -90,14 +90,78 @@ function clamp(n, a, b) {
   return Math.max(a, Math.min(b, n));
 }
 
-// extract vimeo id from embed code or url
-function extractVimeoId(input) {
+function getEmbedUrl(input) {
   if (!input) return null;
-  const fromSrc = input.match(/vimeo\.com\/video\/(\d+)/);
-  if (fromSrc) return fromSrc[1];
-  const fromUrl = input.match(/vimeo\.com\/(\d+)/);
-  if (fromUrl) return fromUrl[1];
+  const vimeoSrc = input.match(/vimeo\.com\/video\/(\d+)/);
+  if (vimeoSrc)
+    return (
+      "https://player.vimeo.com/video/" + vimeoSrc[1] + "?badge=0&autopause=0"
+    );
+  const vimeoUrl = input.match(/vimeo\.com\/(\d+)/);
+  if (vimeoUrl)
+    return (
+      "https://player.vimeo.com/video/" + vimeoUrl[1] + "?badge=0&autopause=0"
+    );
+  const ytWatch = input.match(/youtube\.com\/watch\?v=([\w-]+)/);
+  if (ytWatch) return "https://www.youtube.com/embed/" + ytWatch[1];
+  const ytShort = input.match(/youtu\.be\/([\w-]+)/);
+  if (ytShort) return "https://www.youtube.com/embed/" + ytShort[1];
+  const ytEmbed = input.match(/youtube\.com\/embed\/([\w-]+)/);
+  if (ytEmbed) return "https://www.youtube.com/embed/" + ytEmbed[1];
+  const iframeSrc = input.match(/src="([^"]+)"/);
+  if (iframeSrc) return iframeSrc[1];
+  if (input.startsWith("http")) return input;
   return null;
+}
+
+// separate component so its state is isolated from PunchCard re-renders
+function VideoBlock({ block, onConfirm }) {
+  const [input, setInput] = useState(block.url || "");
+  const embedUrl = getEmbedUrl(block.url);
+
+  function handleConfirm() {
+    if (getEmbedUrl(input)) onConfirm(input);
+  }
+
+  return (
+    <div style={{ display: "grid", gap: 8 }}>
+      <div style={{ display: "flex", gap: 8 }}>
+        <input
+          className="input"
+          placeholder="paste video url or embed code (vimeo, youtube, etc.)"
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+        />
+        <button type="button" className="btn" onClick={handleConfirm}>
+          set
+        </button>
+      </div>
+      {embedUrl && (
+        <div
+          style={{
+            position: "relative",
+            paddingTop: "56.25%",
+            borderRadius: 8,
+            overflow: "hidden",
+          }}
+        >
+          <iframe
+            src={embedUrl}
+            frameBorder="0"
+            allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media"
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              width: "100%",
+              height: "100%",
+            }}
+            title="video"
+          />
+        </div>
+      )}
+    </div>
+  );
 }
 
 export default function PunchCard({
@@ -295,7 +359,7 @@ export default function PunchCard({
         : b.type === "image"
           ? !!b.url
           : b.type === "video"
-            ? !!extractVimeoId(b.url)
+            ? !!getEmbedUrl(b.url)
             : false,
     );
   }, [blocks]);

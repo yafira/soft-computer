@@ -116,12 +116,31 @@ function getVideoCount(entry) {
   return 0;
 }
 
-function extractVimeoId(input) {
+function getEmbedUrl(input) {
   if (!input) return null;
-  const fromSrc = input.match(/vimeo\.com\/video\/(\d+)/);
-  if (fromSrc) return fromSrc[1];
-  const fromUrl = input.match(/vimeo\.com\/(\d+)/);
-  if (fromUrl) return fromUrl[1];
+  const vimeoSrc = input.match(/vimeo\.com\/video\/(\d+)/);
+  if (vimeoSrc)
+    return (
+      "https://player.vimeo.com/video/" +
+      vimeoSrc[1] +
+      "?badge=0&autopause=0&player_id=0&app_id=58479"
+    );
+  const vimeoUrl = input.match(/vimeo\.com\/(\d+)/);
+  if (vimeoUrl)
+    return (
+      "https://player.vimeo.com/video/" +
+      vimeoUrl[1] +
+      "?badge=0&autopause=0&player_id=0&app_id=58479"
+    );
+  const ytWatch = input.match(/youtube\.com\/watch\?v=([\w-]+)/);
+  if (ytWatch) return "https://www.youtube.com/embed/" + ytWatch[1];
+  const ytShort = input.match(/youtu\.be\/([\w-]+)/);
+  if (ytShort) return "https://www.youtube.com/embed/" + ytShort[1];
+  const ytEmbed = input.match(/youtube\.com\/embed\/([\w-]+)/);
+  if (ytEmbed) return "https://www.youtube.com/embed/" + ytEmbed[1];
+  const iframeSrc = input.match(/src="([^"]+)"/);
+  if (iframeSrc) return iframeSrc[1];
+  if (input.startsWith("http")) return input;
   return null;
 }
 
@@ -155,8 +174,8 @@ function EntryContent({ entry }) {
             );
           }
           if (block.type === "video") {
-            const vimeoId = extractVimeoId(block.url);
-            if (!vimeoId) return null;
+            const embedUrl = getEmbedUrl(block.url);
+            if (!embedUrl) return null;
             return (
               <div
                 key={i}
@@ -169,11 +188,7 @@ function EntryContent({ entry }) {
                 }}
               >
                 <iframe
-                  src={
-                    "https://player.vimeo.com/video/" +
-                    vimeoId +
-                    "?badge=0&autopause=0&player_id=0&app_id=58479"
-                  }
+                  src={embedUrl}
                   frameBorder="0"
                   allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media"
                   style={{
