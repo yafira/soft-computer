@@ -177,6 +177,7 @@ export default function PunchCard({
 
   const [active, setActive] = useState(null);
   const [blocks, setBlocks] = useState([newTextBlock()]);
+  const blocksRef = useRef([newTextBlock()]);
   const [uploading, setUploading] = useState(false);
   const [hover, setHover] = useState(null);
   const [lastDeleted, setLastDeleted] = useState(null);
@@ -282,9 +283,11 @@ export default function PunchCard({
   }, []);
 
   function updateBlock(id, patch) {
-    setBlocks((prev) =>
-      prev.map((b) => (b.id === id ? { ...b, ...patch } : b)),
-    );
+    setBlocks((prev) => {
+      const next = prev.map((b) => (b.id === id ? { ...b, ...patch } : b));
+      blocksRef.current = next;
+      return next;
+    });
   }
 
   function removeBlock(id) {
@@ -295,10 +298,18 @@ export default function PunchCard({
   }
 
   function addTextBlock() {
-    setBlocks((prev) => [...prev, newTextBlock()]);
+    setBlocks((prev) => {
+      const next = [...prev, newTextBlock()];
+      blocksRef.current = next;
+      return next;
+    });
   }
   function addVideoBlock() {
-    setBlocks((prev) => [...prev, newVideoBlock()]);
+    setBlocks((prev) => {
+      const next = [...prev, newVideoBlock()];
+      blocksRef.current = next;
+      return next;
+    });
   }
 
   async function onImagePick(file) {
@@ -377,7 +388,11 @@ export default function PunchCard({
           "Content-Type": "application/json",
           "x-admin-token": ADMIN_TOKEN,
         },
-        body: JSON.stringify({ id, label, content: stripIds(blocks) }),
+        body: JSON.stringify({
+          id,
+          label,
+          content: stripIds(blocksRef.current),
+        }),
       });
       const res = await fetch("/api/logs", { cache: "no-store" });
       const data = await res.json();
@@ -389,7 +404,7 @@ export default function PunchCard({
       setSaving(false);
     }
     closeEditor();
-  }, [readOnly, active, blocks, hasContent, closeEditor]);
+  }, [readOnly, active, hasContent, closeEditor]);
 
   const commitDelete = useCallback(async () => {
     if (readOnly || !active) return;
