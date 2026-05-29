@@ -81,6 +81,11 @@ function validateBlocks(raw) {
         if (!url) return null;
         return { type: "image", url };
       }
+      if (b?.type === "video") {
+        const url = String(b.url || "").trim();
+        if (!url) return null;
+        return { type: "video", url };
+      }
       return null;
     })
     .filter(Boolean);
