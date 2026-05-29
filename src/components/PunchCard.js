@@ -34,6 +34,10 @@ function newImageBlock(url) {
   return { id: crypto.randomUUID(), type: "image", url };
 }
 
+function newVideoBlock(url = "") {
+  return { id: crypto.randomUUID(), type: "video", url };
+}
+
 function stripIds(blocks) {
   return blocks.map(({ id: _id, ...rest }) => rest);
 }
@@ -76,13 +80,24 @@ function stateFromPublishedEntries(entries) {
     if (r < 0 || d < 0 || d > 30) continue;
     const text = String(e?.text || "").trim();
     logs[r][d] = text;
-    punched[r][d] = text.length > 0;
+    punched[r][d] =
+      text.length > 0 || (Array.isArray(e?.content) && e.content.length > 0);
   }
   return { punched, logs };
 }
 
 function clamp(n, a, b) {
   return Math.max(a, Math.min(b, n));
+}
+
+// extract vimeo id from embed code or url
+function extractVimeoId(input) {
+  if (!input) return null;
+  const fromSrc = input.match(/vimeo\.com\/video\/(\d+)/);
+  if (fromSrc) return fromSrc[1];
+  const fromUrl = input.match(/vimeo\.com\/(\d+)/);
+  if (fromUrl) return fromUrl[1];
+  return null;
 }
 
 export default function PunchCard({
@@ -192,7 +207,6 @@ export default function PunchCard({
     setBlocks([newTextBlock()]);
   }, []);
 
-  // block mutations
   function updateBlock(id, patch) {
     setBlocks((prev) =>
       prev.map((b) => (b.id === id ? { ...b, ...patch } : b)),
@@ -208,6 +222,9 @@ export default function PunchCard({
 
   function addTextBlock() {
     setBlocks((prev) => [...prev, newTextBlock()]);
+  }
+  function addVideoBlock() {
+    setBlocks((prev) => [...prev, newVideoBlock()]);
   }
 
   async function onImagePick(file) {
@@ -226,7 +243,6 @@ export default function PunchCard({
     }
   }
 
-  // drag reorder
   function onDragStart(i) {
     dragIdx.current = i;
   }
@@ -234,8 +250,8 @@ export default function PunchCard({
     dragOverIdx.current = i;
   }
   function onDragEnd() {
-    const from = dragIdx.current;
-    const to = dragOverIdx.current;
+    const from = dragIdx.current,
+      to = dragOverIdx.current;
     if (from == null || to == null || from === to) {
       dragIdx.current = null;
       dragOverIdx.current = null;
@@ -264,7 +280,13 @@ export default function PunchCard({
 
   const hasContent = useMemo(() => {
     return blocks.some((b) =>
-      b.type === "text" ? b.value.trim().length > 0 : !!b.url,
+      b.type === "text"
+        ? b.value.trim().length > 0
+        : b.type === "image"
+          ? !!b.url
+          : b.type === "video"
+            ? !!extractVimeoId(b.url)
+            : false,
     );
   }, [blocks]);
 
@@ -362,7 +384,6 @@ export default function PunchCard({
       const tag = document.activeElement?.tagName?.toLowerCase();
       const isTyping = tag === "textarea" || tag === "input";
       const meta = e.metaKey || e.ctrlKey;
-      // don't intercept anything while user is typing in a field
       if (isTyping) return;
       if (e.key === "Escape") {
         e.preventDefault();
@@ -627,7 +648,6 @@ export default function PunchCard({
               </div>
             </div>
 
-            {/* block composer */}
             <div style={{ display: "grid", gap: 8 }}>
               {blocks.map((block, i) => (
                 <div
@@ -658,7 +678,7 @@ export default function PunchCard({
                       onDragEnd={onDragEnd}
                       style={{ userSelect: "none", cursor: "grab" }}
                     >
-                      ⠿ {block.type === "text" ? "text" : "image"}
+                      ⠿ {block.type}
                     </span>
                     <div style={{ display: "flex", gap: 4 }}>
                       <button
@@ -690,7 +710,7 @@ export default function PunchCard({
                     </div>
                   </div>
 
-                  {block.type === "text" ? (
+                  {block.type === "text" && (
                     <textarea
                       className="textarea"
                       rows={4}
@@ -702,7 +722,9 @@ export default function PunchCard({
                       style={{ resize: "vertical" }}
                       autoFocus={i === 0}
                     />
-                  ) : (
+                  )}
+
+                  {block.type === "image" && (
                     <div
                       style={{
                         borderRadius: 8,
@@ -723,11 +745,51 @@ export default function PunchCard({
                       />
                     </div>
                   )}
+
+                  {block.type === "video" && (
+                    <div style={{ display: "grid", gap: 8 }}>
+                      <input
+                        className="input"
+                        placeholder="paste vimeo url or embed code"
+                        value={block.url}
+                        onChange={(e) =>
+                          updateBlock(block.id, { url: e.target.value })
+                        }
+                      />
+                      {extractVimeoId(block.url) && (
+                        <div
+                          style={{
+                            position: "relative",
+                            paddingTop: "56.25%",
+                            borderRadius: 8,
+                            overflow: "hidden",
+                          }}
+                        >
+                          <iframe
+                            src={
+                              "https://player.vimeo.com/video/" +
+                              extractVimeoId(block.url) +
+                              "?badge=0&autopause=0"
+                            }
+                            frameBorder="0"
+                            allow="autoplay; fullscreen; picture-in-picture"
+                            style={{
+                              position: "absolute",
+                              top: 0,
+                              left: 0,
+                              width: "100%",
+                              height: "100%",
+                            }}
+                            title="vimeo video"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
 
-            {/* add block controls */}
             <div
               style={{
                 display: "flex",
@@ -742,7 +804,7 @@ export default function PunchCard({
                 className="btn ghost"
                 onClick={addTextBlock}
               >
-                + text block
+                + text
               </button>
               <label
                 className="btn ghost"
@@ -760,6 +822,13 @@ export default function PunchCard({
                   onChange={(e) => onImagePick(e.target.files?.[0])}
                 />
               </label>
+              <button
+                type="button"
+                className="btn ghost"
+                onClick={addVideoBlock}
+              >
+                + video
+              </button>
             </div>
 
             <div className="punchEditorActions">

@@ -1,5 +1,4 @@
 "use client";
-
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import ReactMarkdown from "react-markdown";
@@ -37,7 +36,18 @@ function parseLabelScore(label) {
 const PAPER_MODE_KEY = "softcomputer-paper-mode";
 const PAGE_SIZE = 8;
 
-function previewText(raw, maxChars = 120) {
+function previewText(entry, maxChars = 120) {
+  // prefer content blocks for preview
+  let raw = "";
+  if (Array.isArray(entry?.content)) {
+    const textBlock = entry.content.find(
+      (b) => b.type === "text" && b.value?.trim(),
+    );
+    if (textBlock) raw = textBlock.value;
+    else if (entry.content.some((b) => b.type === "video")) return "▶ video";
+    else if (entry.content.some((b) => b.type === "image")) return "📎 image";
+  }
+  if (!raw) raw = entry?.text || "";
   const t = (raw || "")
     .trim()
     .replace(/^#{1,6}\s+/gm, "")
@@ -90,18 +100,31 @@ function writePaperMode(mode) {
   } catch {}
 }
 
-// get image count for badge — works with both content blocks and legacy imageUrls
 function getImageCount(entry) {
   if (!entry) return 0;
-  if (Array.isArray(entry.content)) {
+  if (Array.isArray(entry.content))
     return entry.content.filter((b) => b.type === "image").length;
-  }
   if (Array.isArray(entry.imageUrls)) return entry.imageUrls.length;
   if (entry.imageUrl) return 1;
   return 0;
 }
 
-// render content blocks in order, falling back to legacy fields
+function getVideoCount(entry) {
+  if (!entry) return 0;
+  if (Array.isArray(entry.content))
+    return entry.content.filter((b) => b.type === "video").length;
+  return 0;
+}
+
+function extractVimeoId(input) {
+  if (!input) return null;
+  const fromSrc = input.match(/vimeo\.com\/video\/(\d+)/);
+  if (fromSrc) return fromSrc[1];
+  const fromUrl = input.match(/vimeo\.com\/(\d+)/);
+  if (fromUrl) return fromUrl[1];
+  return null;
+}
+
 function EntryContent({ entry }) {
   if (Array.isArray(entry.content) && entry.content.length > 0) {
     return (
@@ -131,6 +154,40 @@ function EntryContent({ entry }) {
               </div>
             );
           }
+          if (block.type === "video") {
+            const vimeoId = extractVimeoId(block.url);
+            if (!vimeoId) return null;
+            return (
+              <div
+                key={i}
+                style={{
+                  position: "relative",
+                  paddingTop: "56.25%",
+                  borderRadius: 12,
+                  overflow: "hidden",
+                  border: "1px solid rgba(60,35,110,0.14)",
+                }}
+              >
+                <iframe
+                  src={
+                    "https://player.vimeo.com/video/" +
+                    vimeoId +
+                    "?badge=0&autopause=0&player_id=0&app_id=58479"
+                  }
+                  frameBorder="0"
+                  allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media"
+                  style={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    width: "100%",
+                    height: "100%",
+                  }}
+                  title="vimeo video"
+                />
+              </div>
+            );
+          }
           if (block.type === "text" && block.value?.trim()) {
             return (
               <div key={i} className="noteBody noteBodyMarkdown">
@@ -152,7 +209,6 @@ function EntryContent({ entry }) {
     : entry.imageUrl
       ? [entry.imageUrl]
       : [];
-
   return (
     <div style={{ display: "grid", gap: 14 }}>
       {imageUrls.map((url, i) => (
@@ -196,7 +252,6 @@ export default function LogNotebookPage({ focus }) {
   const [activeId, setActiveId] = useState(null);
   const [paperMode, setPaperMode] = useState(() => readPaperMode());
   const [page, setPage] = useState(0);
-
   const didInitRef = useRef(false);
   const notePanelRef = useRef(null);
 
@@ -310,7 +365,6 @@ export default function LogNotebookPage({ focus }) {
             </div>
           ) : null}
         </div>
-
         <div className="logTopBar">
           <input
             className="input"
@@ -325,7 +379,6 @@ export default function LogNotebookPage({ focus }) {
             {filtered.length} entr{filtered.length === 1 ? "y" : "ies"}
           </div>
         </div>
-
         {error ? (
           <div className="small" style={{ marginTop: 10, opacity: 0.9 }}>
             <div style={{ marginBottom: 6 }}>failed to load entries.</div>
@@ -340,7 +393,6 @@ export default function LogNotebookPage({ focus }) {
           </div>
         ) : null}
       </section>
-
       <section className="logGrid">
         <div className="panel logCol">
           <div className="panelTitleRow">
@@ -349,7 +401,6 @@ export default function LogNotebookPage({ focus }) {
               page {safePage + 1} / {totalPages}
             </div>
           </div>
-
           <div className="entryList">
             {!loaded ? (
               <div className="emptyState">loading…</div>
@@ -361,6 +412,7 @@ export default function LogNotebookPage({ focus }) {
               pagedEntries.map((e) => {
                 const isActiveRow = e?.id === activeId;
                 const imgCount = getImageCount(e);
+                const vidCount = getVideoCount(e);
                 return (
                   <button
                     key={e.id}
@@ -374,19 +426,25 @@ export default function LogNotebookPage({ focus }) {
                   >
                     <div className="entryRowTop">
                       <div className="chip">{e.label}</div>
-                      {imgCount > 0 && (
-                        <span className="small subtle">
-                          📎{imgCount > 1 ? ` ${imgCount}` : ""}
-                        </span>
-                      )}
+                      <div style={{ display: "flex", gap: 6 }}>
+                        {vidCount > 0 && (
+                          <span className="small subtle">
+                            ▶{vidCount > 1 ? ` ${vidCount}` : ""}
+                          </span>
+                        )}
+                        {imgCount > 0 && (
+                          <span className="small subtle">
+                            📎{imgCount > 1 ? ` ${imgCount}` : ""}
+                          </span>
+                        )}
+                      </div>
                     </div>
-                    <div className="entryPreview">{previewText(e?.text)}</div>
+                    <div className="entryPreview">{previewText(e)}</div>
                   </button>
                 );
               })
             )}
           </div>
-
           {filtered.length > PAGE_SIZE ? (
             <div className="logPagination">
               <button
@@ -413,7 +471,6 @@ export default function LogNotebookPage({ focus }) {
             </div>
           ) : null}
         </div>
-
         <div className="panel logCol" ref={notePanelRef}>
           <div className="panelTitleRow">
             <div className="h2">notes</div>
@@ -431,9 +488,8 @@ export default function LogNotebookPage({ focus }) {
               ))}
             </div>
           </div>
-
           {activeEntry ? (
-            <article className={`notePaper is-${paperMode}`}>
+            <article className={"notePaper is-" + paperMode}>
               <div className="noteHeader">
                 <div className="h2" style={{ margin: 0 }}>
                   {activeEntry.label}
@@ -442,7 +498,7 @@ export default function LogNotebookPage({ focus }) {
               <EntryContent entry={activeEntry} />
             </article>
           ) : (
-            <div className={`notePaper is-${paperMode} emptyState`}>
+            <div className={"notePaper is-" + paperMode + " emptyState"}>
               select an entry to read it.
             </div>
           )}
