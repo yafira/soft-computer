@@ -87,8 +87,16 @@ export default function AboutPage() {
                     ],
                   },
                   {
-                    title: "what&#39;s next",
+                    title: "what's next",
                     links: [["#whats-next", "v2 + open source"]],
+                  },
+                  {
+                    title: "the mini",
+                    links: [
+                      ["#mini", "the soft computer mini"],
+                      ["#mini-how", "how it works"],
+                      ["#mini-materials", "materials"],
+                    ],
                   },
                 ].map((chapter) => (
                   <div key={chapter.title} className="aboutTocChapter">
@@ -541,11 +549,6 @@ export default function AboutPage() {
             <h2 className="h2" id="buttons">
               four buttons, four answers
             </h2>
-            <p className="p">
-              each button represents a different relationship to computation.
-              each one answers the central question differently. together they
-              tell the complete story of the soft computer.
-            </p>
             <div
               style={{
                 marginTop: 16,
@@ -565,6 +568,11 @@ export default function AboutPage() {
                 }}
               />
             </div>
+            <p className="p">
+              each button represents a different relationship to computation.
+              each one answers the central question differently. together they
+              tell the complete story of the soft computer.
+            </p>
             <div className="aboutCallouts">
               <div
                 className="aboutCallout"
@@ -878,6 +886,216 @@ export default function AboutPage() {
               built around your values, not someone else&#39;s.
             </p>
 
+            <h2 className="h2" id="mini">
+              the soft computer mini
+            </h2>
+            <p className="p">
+              in may 2026 i was selected as a fellow at the open hardware summit
+              in berlin, where i presented a new object alongside the original
+              thesis: the soft computer mini.
+            </p>
+            <p className="p">
+              the mini is a working prototype and travel-sized extension of the
+              soft computer — designed to survive a plane ride and live on a
+              busy summit table. the original soft computer was a textile-based
+              computing object exploring calm technology, feminist hci, and
+              anti-optimization design. the mini takes its conceptual lineage —
+              embodied input, generative text as ritual, textile as substrate —
+              and compresses it into a hand-sized tarot device.
+            </p>
+
+            {/* mini hero — full width */}
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                marginTop: 16,
+                marginBottom: 16,
+              }}
+            >
+              <img
+                src="https://ie6wpryluu0khsu3.public.blob.vercel-storage.com/concept/1780193852975-mini-7pIyOFREyG2VnEW7eYqLxIJaGCAx3j.png"
+                alt="the soft computer mini — full object"
+                style={{
+                  width: "70%",
+                  height: "70%",
+                  display: "block",
+                  borderRadius: 12,
+                }}
+              />
+            </div>
+
+            <h2 className="h2" id="mini-how">
+              how it works
+            </h2>
+            <p className="p">
+              the device sits at rest on the table. a single ascii glyph rests
+              on the e-ink screen. when a visitor touches the flower-shaped
+              trackpad, the device wakes into an intro screen and invites a
+              choice. six lavender felt mood keys represent six elemental
+              corpora — care, dream, craft, code, bloom, void — each with its
+              own thematic dictionary of titles, lines, and a sigil.
+            </p>
+            <p className="p">
+              the visitor presses a key to arm an element, then presses the
+              wider machine-knit space bar to draw a card. at the moment of
+              commitment, the haptic motor hums beneath the knit. the e-ink
+              renders a one-of-a-kind tarot card composed live: a border, a
+              glyph, a title, a divider, three randomly chosen lines, the
+              element&#39;s name, and a closing border.
+            </p>
+            <p className="p">
+              with eight titles and eighteen lines per element, the device holds
+              approximately 39,000 unique compositions across the six elemental
+              decks. visitors never see the same card twice.
+            </p>
+
+            {/* open view — in how it works section */}
+            <div
+              style={{
+                marginTop: 16,
+                marginBottom: 16,
+                borderRadius: 12,
+                overflow: "hidden",
+              }}
+            >
+              <img
+                src="https://ie6wpryluu0khsu3.public.blob.vercel-storage.com/concept/1780193878924-mini3-AhtTCS6Wqy6rzeOrZun1SZbcAzuFRk.png"
+                alt="the soft computer mini — open view showing keys and e-ink"
+                style={{
+                  width: "100%",
+                  height: "auto",
+                  display: "block",
+                  borderRadius: 12,
+                }}
+              />
+            </div>
+
+            <div className="aboutCallouts">
+              <div
+                className="aboutCallout"
+                style={{ borderLeft: "3px solid #e8b4b8" }}
+              >
+                <div className="aboutLabel">care</div>
+                <p className="p small">
+                  corpus: tenderness, maintenance, attention, the labor of
+                  keeping things alive.
+                </p>
+              </div>
+              <div
+                className="aboutCallout"
+                style={{ borderLeft: "3px solid #87b5d4" }}
+              >
+                <div className="aboutLabel">dream</div>
+                <p className="p small">
+                  corpus: literary and poetic texts. language that doesn&#39;t
+                  explain itself.
+                </p>
+              </div>
+              <div
+                className="aboutCallout"
+                style={{ borderLeft: "3px solid #a8d4c2" }}
+              >
+                <div className="aboutLabel">craft</div>
+                <p className="p small">
+                  corpus: weaving, knitting, textile history, making as
+                  thinking.
+                </p>
+              </div>
+              <div
+                className="aboutCallout"
+                style={{ borderLeft: "3px solid #c4b5e8" }}
+              >
+                <div className="aboutLabel">code</div>
+                <p className="p small">
+                  corpus: CS documentation and error messages run through the
+                  engine until they become strange and tender.
+                </p>
+              </div>
+              <div
+                className="aboutCallout"
+                style={{ borderLeft: "3px solid #f5c4d4" }}
+              >
+                <div className="aboutLabel">bloom</div>
+                <p className="p small">
+                  corpus: growth, cycles, nature, emergence.
+                </p>
+              </div>
+              <div
+                className="aboutCallout"
+                style={{ borderLeft: "3px solid #b0b0b0" }}
+              >
+                <div className="aboutLabel">void</div>
+                <p className="p small">
+                  corpus: absence, silence, the space between signals.
+                </p>
+              </div>
+            </div>
+
+            <h2 className="h2" id="mini-materials">
+              materials + construction
+            </h2>
+            <p className="p">
+              the body is industrial-grade wool felt — dense, holding its shape
+              over time. the six mood keys and the flower trackpad are built as
+              felt sandwiches: a colored wool felt top, a felt spacer with a
+              centered hole, a copper-tape pad on a craft foam base, and a
+              conductive fabric pad sewn to the underside of the top. press the
+              felt and the two pads meet through the hole, closing the circuit.
+            </p>
+            <p className="p">
+              the draw bar is the structural and material exception: a small
+              machine-knit panel in lavender wool-cotton from the KH-930 used
+              for the original thesis. the knit is soft against the finger,
+              distinct in texture from the felt around it, and continues the
+              textile language of the object upward into the input surface. a
+              small haptic motor lives directly beneath the knit, humming on
+              every draw.
+            </p>
+
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+                gap: 12,
+                marginTop: 16,
+                marginBottom: 16,
+              }}
+            >
+              <img
+                src="https://ie6wpryluu0khsu3.public.blob.vercel-storage.com/concept/1780193891812-mini4-BvLQvdHETBkjykLYgFqWt20DjeSbrL.png"
+                alt="wiring detail of the soft computer mini"
+                style={{
+                  width: "100%",
+                  height: "auto",
+                  display: "block",
+                  borderRadius: 12,
+                }}
+              />
+              <img
+                src="https://ie6wpryluu0khsu3.public.blob.vercel-storage.com/concept/1780193867707-mini2-2W0eVKeidFKpIaG66QWO1iURbhxvS5.png"
+                alt="knit draw bar and felt keys detail"
+                style={{
+                  width: "100%",
+                  height: "auto",
+                  display: "block",
+                  borderRadius: 12,
+                }}
+              />
+            </div>
+
+            <div className="aboutCallouts">
+              <div className="aboutCallout">
+                <div className="aboutLabel">exhibited at</div>
+                <ul className="aboutList">
+                  <li>
+                    open hardware summit, berlin, may 2026 — presented as an
+                    open hardware summit fellow
+                  </li>
+                </ul>
+              </div>
+            </div>
+
             <h2 className="h2">audience + context</h2>
             <div className="aboutTwoCol">
               <div className="aboutCard">
@@ -964,7 +1182,7 @@ export default function AboutPage() {
                 <div className="aboutMetaKey">exhibitions</div>
                 <div className="aboutMetaVal">
                   itp thesis show @ nyc resistor, itp/ima spring show, open
-                  hardware summit berlin
+                  hardware summit berlin (fellow 2026)
                 </div>
               </div>
             </div>
