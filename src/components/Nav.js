@@ -14,13 +14,11 @@ export default function Nav() {
         }}
       >
         <Link href="/" style={{ textDecoration: "none" }}>
-          <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
-            <div style={{ fontWeight: 700, letterSpacing: "-0.02em" }}>
-              the soft computer
-            </div>
+          <div className="brandRow">
+            <span className="brandName">the soft computer</span>
           </div>
         </Link>
-        <nav style={{ display: "flex", gap: 14, alignItems: "center" }}>
+        <nav className="nav">
           <Link href="/about" className="kbd">
             about
           </Link>

@@ -1,5 +1,5 @@
-@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=Kalam:wght@400&display=swap");
+@import url("https://db.onlinewebfonts.com/c/4571adf8e6d8270ea61a4f43a3ef31d2?family=Departure+Mono");
 
 :root {
   --bg: #fbfaff;
@@ -16,6 +16,8 @@
   --shadow-tight: 0 6px 18px rgba(35, 20, 70, 0.12);
 
   --radius: 18px;
+
+  --font-mono: "Departure Mono", "IBM Plex Mono", monospace;
 }
 
 * {
@@ -30,14 +32,7 @@ body {
 body {
   margin: 0;
   color: var(--ink);
-  font-family:
-    ui-sans-serif,
-    system-ui,
-    -apple-system,
-    Segoe UI,
-    Roboto,
-    Helvetica,
-    Arial;
+  font-family: var(--font-mono);
 
   background:
     radial-gradient(
@@ -97,8 +92,18 @@ a {
 }
 
 .brandName {
-  font-weight: 760;
-  letter-spacing: -0.02em;
+  font-family: var(--font-mono);
+  font-size: 18px;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  color: var(--ink);
+}
+
+.brandSub {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  opacity: 0.45;
+  letter-spacing: 0.06em;
 }
 
 .nav {
@@ -134,26 +139,31 @@ a {
 
 .h1 {
   font-size: 32px;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.01em;
   margin: 6px 0 8px;
+  font-family: var(--font-mono);
 }
 
 .h2 {
   font-size: 16px;
-  font-weight: 720;
-  letter-spacing: -0.01em;
+  font-weight: 700;
+  letter-spacing: 0.01em;
   margin: 0;
+  font-family: var(--font-mono);
 }
 
 .p {
   color: var(--ink2);
-  line-height: 1.55;
+  line-height: 1.65;
   margin: 0 0 12px;
+  font-family: var(--font-mono);
+  font-size: 13px;
 }
 
 .small {
-  font-size: 12px;
+  font-size: 11px;
   color: rgba(43, 33, 64, 0.66);
+  font-family: var(--font-mono);
 }
 
 .subtle {
@@ -169,7 +179,8 @@ a {
   border: 1px solid var(--border-strong);
   background: rgba(255, 255, 255, 0.75);
   box-shadow: 0 2px 0 rgba(60, 35, 110, 0.06);
-  font-size: 12px;
+  font-size: 11px;
+  font-family: var(--font-mono);
   color: rgba(43, 33, 64, 0.86);
   transition:
     transform 120ms ease,
@@ -309,6 +320,8 @@ a {
   border: 1px dashed rgba(60, 35, 110, 0.22);
   background: rgba(255, 255, 255, 0.6);
   color: rgba(43, 33, 64, 0.7);
+  font-family: var(--font-mono);
+  font-size: 11px;
 }
 
 /* chips + buttons + inputs */
@@ -322,8 +335,9 @@ a {
   border: 1px solid rgba(60, 35, 110, 0.18);
   background: rgba(233, 222, 250, 0.55);
   color: rgba(43, 33, 64, 0.86);
-  font-size: 12px;
-  letter-spacing: 0.2px;
+  font-size: 11px;
+  font-family: var(--font-mono);
+  letter-spacing: 0.02em;
   white-space: nowrap;
 }
 
@@ -334,7 +348,8 @@ a {
   color: rgba(43, 33, 64, 0.92);
   padding: 8px 12px;
   border-radius: 12px;
-  font-size: 12px;
+  font-size: 11px;
+  font-family: var(--font-mono);
   cursor: pointer;
   box-shadow: 0 2px 0 rgba(60, 35, 110, 0.06);
   transition:
@@ -369,6 +384,8 @@ a {
   border: 1px solid rgba(60, 35, 110, 0.18);
   background: rgba(255, 255, 255, 0.85);
   color: rgba(43, 33, 64, 0.92);
+  font-family: var(--font-mono);
+  font-size: 11px;
   outline: none;
   resize: vertical;
 }
@@ -518,6 +535,8 @@ a {
   border: 1px solid rgba(60, 35, 110, 0.18);
   background: rgba(255, 255, 255, 0.85);
   color: rgba(43, 33, 64, 0.92);
+  font-family: var(--font-mono);
+  font-size: 11px;
   outline: none;
 }
 
@@ -619,7 +638,8 @@ a {
 .entryText {
   color: rgba(43, 33, 64, 0.88);
   line-height: 1.55;
-  font-size: 14px;
+  font-size: 13px;
+  font-family: var(--font-mono);
   white-space: pre-wrap;
 }
 
@@ -630,6 +650,7 @@ a {
   border: 1px solid rgba(60, 35, 110, 0.18);
   background: rgba(255, 255, 255, 0.85);
   color: rgba(43, 33, 64, 0.92);
+  font-family: var(--font-mono);
   outline: none;
   resize: vertical;
 }
@@ -644,14 +665,8 @@ a {
   outline: none;
   resize: vertical;
   line-height: 1.55;
-  font-family:
-    ui-sans-serif,
-    system-ui,
-    -apple-system,
-    Segoe UI,
-    Roboto,
-    Helvetica,
-    Arial;
+  font-family: var(--font-mono);
+  font-size: 11px;
 }
 
 .notebookNotesActions {
@@ -667,14 +682,7 @@ a {
   white-space: pre-wrap;
   line-height: 1.55;
   color: rgba(43, 33, 64, 0.88);
-  font-family:
-    ui-sans-serif,
-    system-ui,
-    -apple-system,
-    Segoe UI,
-    Roboto,
-    Helvetica,
-    Arial;
+  font-family: var(--font-mono);
 }
 
 .logTopBar {
@@ -716,6 +724,7 @@ a {
   border-radius: 16px;
   padding: 12px;
   box-shadow: 0 8px 22px rgba(34, 20, 70, 0.08);
+  font-family: var(--font-mono);
   transition:
     transform 120ms ease,
     border 120ms ease,
@@ -744,7 +753,8 @@ a {
 .entryPreview {
   color: rgba(35, 26, 64, 0.92);
   line-height: 1.45;
-  font-size: 14px;
+  font-size: 11px;
+  font-family: var(--font-mono);
   overflow: hidden;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -757,8 +767,8 @@ a {
   border-radius: 18px;
   padding: 16px;
   min-height: 420px;
-  font-family: "IBM Plex Mono", monospace;
-  font-size: 15px;
+  font-family: var(--font-mono);
+  font-size: 11px;
   background-color: rgba(255, 255, 255, 0.82);
   background-image:
     linear-gradient(rgba(90, 70, 140, 0.08) 1px, transparent 1px),
@@ -780,8 +790,8 @@ a {
 .noteBody {
   white-space: pre-wrap;
   line-height: 1.75;
-  font-size: 15px;
-  font-family: "IBM Plex Mono", monospace;
+  font-size: 11px;
+  font-family: var(--font-mono);
   word-break: break-word;
 }
 
@@ -831,8 +841,8 @@ a {
 
 /* markdown rendering */
 .noteBodyMarkdown {
-  font-family: "IBM Plex Mono", monospace;
-  font-size: 15px;
+  font-family: var(--font-mono);
+  font-size: 11px;
   line-height: 1.75;
   word-break: break-word;
 }
@@ -872,35 +882,35 @@ a {
 }
 
 .noteBodyMarkdown code {
-  font-family: "IBM Plex Mono", monospace;
-  font-size: 13px;
+  font-family: var(--font-mono);
+  font-size: 11px;
   background: rgba(233, 222, 250, 0.4);
   padding: 1px 5px;
   border-radius: 4px;
 }
 
 .noteBodyMarkdown h1 {
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 700;
   margin: 0 0 10px;
   color: rgba(43, 33, 64, 0.92);
-  font-family: "IBM Plex Mono", monospace;
+  font-family: var(--font-mono);
 }
 
 .noteBodyMarkdown h2 {
-  font-size: 15px;
+  font-size: 13px;
   font-weight: 700;
   margin: 0 0 8px;
   color: rgba(43, 33, 64, 0.92);
-  font-family: "IBM Plex Mono", monospace;
+  font-family: var(--font-mono);
 }
 
 .noteBodyMarkdown h3 {
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 700;
   margin: 0 0 6px;
   color: rgba(43, 33, 64, 0.92);
-  font-family: "IBM Plex Mono", monospace;
+  font-family: var(--font-mono);
 }
 
 .conceptAdmin {
@@ -921,6 +931,7 @@ a {
   border: 1px solid rgba(60, 35, 110, 0.18);
   background: rgba(255, 255, 255, 0.85);
   color: rgba(43, 33, 64, 0.92);
+  font-family: var(--font-mono);
   overflow-x: auto;
 }
 
@@ -990,14 +1001,16 @@ a {
 }
 
 .resourcesGroupTitle {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
-  letter-spacing: 0.2px;
+  font-family: var(--font-mono);
+  letter-spacing: 0.02em;
   text-transform: lowercase;
 }
 
 .resourcesGroupCount {
-  font-size: 12px;
+  font-size: 11px;
+  font-family: var(--font-mono);
   opacity: 0.75;
   padding: 3px 8px;
   border-radius: 999px;
@@ -1031,7 +1044,8 @@ a {
 .resourcesTitle {
   display: inline-block;
   font-weight: 600;
-  font-size: 14px;
+  font-size: 13px;
+  font-family: var(--font-mono);
   line-height: 1.25;
 }
 
@@ -1072,20 +1086,21 @@ a {
 
 .aboutMain .h2 {
   margin: 28px 0 10px;
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 11px;
+  font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: lowercase;
   opacity: 0.55;
   border-bottom: 1px dashed rgba(60, 35, 110, 0.15);
   padding-bottom: 6px;
-  font-family: "IBM Plex Mono", monospace;
+  font-family: var(--font-mono);
 }
 
 .aboutMain .p {
-  font-size: 14px;
+  font-size: 13px;
   line-height: 1.75;
   color: rgba(43, 33, 64, 0.82);
+  font-family: var(--font-mono);
 }
 
 .aboutCallouts {
@@ -1115,8 +1130,8 @@ a {
   text-transform: lowercase;
   opacity: 0.6;
   margin-bottom: 10px;
-  font-weight: 600;
-  font-family: "IBM Plex Mono", monospace;
+  font-weight: 700;
+  font-family: var(--font-mono);
 }
 
 .aboutList {
@@ -1127,8 +1142,9 @@ a {
 }
 
 .aboutList li {
-  font-size: 13.5px;
+  font-size: 13px;
   line-height: 1.6;
+  font-family: var(--font-mono);
   color: rgba(43, 33, 64, 0.82);
 }
 
@@ -1191,9 +1207,9 @@ a {
   letter-spacing: 0.08em;
   text-transform: lowercase;
   opacity: 0.55;
-  font-weight: 600;
+  font-weight: 700;
   margin-bottom: 12px;
-  font-family: "IBM Plex Mono", monospace;
+  font-family: var(--font-mono);
 }
 
 .aboutMetaRow {
@@ -1214,12 +1230,13 @@ a {
   font-size: 11px;
   opacity: 0.55;
   letter-spacing: 0.04em;
-  font-family: "IBM Plex Mono", monospace;
+  font-family: var(--font-mono);
 }
 
 .aboutMetaVal {
-  font-size: 13px;
-  line-height: 1.4;
+  font-size: 11px;
+  line-height: 1.5;
+  font-family: var(--font-mono);
   color: rgba(43, 33, 64, 0.9);
 }
 
@@ -1236,7 +1253,7 @@ a {
     background 140ms ease,
     border-color 140ms ease;
   cursor: default;
-  font-family: "IBM Plex Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 11px;
 }
 
@@ -1259,11 +1276,11 @@ a {
 
 .aboutTocLabel {
   font-size: 11px;
-  font-family: "IBM Plex Mono", monospace;
+  font-family: var(--font-mono);
   letter-spacing: 0.08em;
   text-transform: lowercase;
   opacity: 0.45;
-  font-weight: 600;
+  font-weight: 700;
   margin-bottom: 14px;
 }
 
@@ -1279,7 +1296,7 @@ a {
 
 .aboutTocChapterTitle {
   font-size: 11px;
-  font-family: "IBM Plex Mono", monospace;
+  font-family: var(--font-mono);
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: lowercase;
@@ -1298,7 +1315,8 @@ a {
 }
 
 .aboutTocLink {
-  font-size: 12px;
+  font-size: 11px;
+  font-family: var(--font-mono);
   color: rgba(43, 33, 64, 0.6);
   text-decoration: none;
   line-height: 1.4;
@@ -1335,12 +1353,12 @@ a {
 }
 
 .kuTitle {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: lowercase;
   color: rgba(43, 33, 64, 0.9);
-  font-family: "IBM Plex Mono", monospace;
+  font-family: var(--font-mono);
 }
 
 .kuSubtitle {
@@ -1349,7 +1367,7 @@ a {
   margin-top: 2px;
   margin-bottom: 12px;
   letter-spacing: 0.02em;
-  font-family: "IBM Plex Mono", monospace;
+  font-family: var(--font-mono);
 }
 
 .kuMiniTitle {
@@ -1360,7 +1378,7 @@ a {
   margin-top: 14px;
   margin-bottom: 8px;
   opacity: 0.6;
-  font-family: "IBM Plex Mono", monospace;
+  font-family: var(--font-mono);
 }
 
 .kuBlock ul {
@@ -1371,8 +1389,9 @@ a {
 }
 
 .kuBlock li {
-  font-size: 13px;
+  font-size: 11px;
   line-height: 1.55;
+  font-family: var(--font-mono);
   opacity: 0.82;
 }
 
@@ -1400,8 +1419,9 @@ a {
 
 .logText {
   margin-top: 8px;
-  font-size: 13px;
+  font-size: 11px;
   line-height: 1.55;
+  font-family: var(--font-mono);
   color: rgba(43, 33, 64, 0.82);
 }
 
@@ -1444,7 +1464,7 @@ a {
   }
 
   .h1 {
-    font-size: 24px;
+    font-size: 22px;
   }
 
   .panel {
@@ -1453,48 +1473,43 @@ a {
 
   .notePaper {
     padding: 12px;
-    font-size: 13px;
+    font-size: 11px;
     min-height: 300px;
   }
 
   .noteBody,
   .noteBodyMarkdown {
-    font-size: 13px;
+    font-size: 11px;
     line-height: 1.65;
   }
 
   .noteBodyMarkdown h1 {
-    font-size: 15px;
+    font-size: 14px;
   }
-
   .noteBodyMarkdown h2 {
-    font-size: 13px;
-  }
-
-  .noteBodyMarkdown h3 {
     font-size: 12px;
+  }
+  .noteBodyMarkdown h3 {
+    font-size: 11px;
   }
 
   .noteBodyMarkdown p,
   .noteBodyMarkdown li {
-    font-size: 13px;
+    font-size: 11px;
     line-height: 1.65;
   }
 
   .logGrid {
     gap: 10px;
   }
-
   .logCol {
     min-height: unset;
   }
-
   .entryRow {
     padding: 10px;
   }
-
   .entryPreview {
-    font-size: 13px;
+    font-size: 11px;
   }
 
   .miniRow {
@@ -1517,7 +1532,6 @@ a {
   .aboutTocChapters {
     gap: 16px;
   }
-
   .aboutTocChapter {
     min-width: 100px;
   }
@@ -1568,7 +1582,7 @@ a {
 
 .softOS__title {
   font-size: 11px;
-  font-family: "IBM Plex Mono", monospace;
+  font-family: var(--font-mono);
   letter-spacing: 0.06em;
   opacity: 0.45;
   margin-left: 4px;
@@ -1576,8 +1590,8 @@ a {
 
 .softOS__state {
   margin-left: auto;
-  font-size: 10px;
-  font-family: "IBM Plex Mono", monospace;
+  font-size: 11px;
+  font-family: var(--font-mono);
   opacity: 0.3;
   letter-spacing: 0.08em;
 }
@@ -1598,9 +1612,8 @@ a {
 
 .softOS__text {
   margin: 0;
-  font-family: "IBM Plex Mono", monospace;
-  font-size: 15px;
-  font-weight: 450;
+  font-family: var(--font-mono);
+  font-size: 11px;
   line-height: 1.85;
   color: rgba(30, 24, 10, 0.82);
   transition: color 1.2s ease;
