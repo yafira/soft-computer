@@ -17,6 +17,9 @@ export default function Nav() {
           <Link href="/process" className="kbd">
             process
           </Link>
+          <Link href="/make" className="kbd">
+            make
+          </Link>
           <Link href="/resources" className="kbd">
             resources
           </Link>
