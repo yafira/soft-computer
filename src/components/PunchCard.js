@@ -335,7 +335,11 @@ export default function PunchCard({
         access: "public",
         handleUploadUrl: "/api/blob",
       });
-      setBlocks((prev) => [...prev, newImageBlock(blob.url)]);
+      setBlocks((prev) => {
+        const next = [...prev, newImageBlock(blob.url)];
+        blocksRef.current = next;
+        return next;
+      });
     } catch (e) {
       console.error("image upload failed", e);
     } finally {
