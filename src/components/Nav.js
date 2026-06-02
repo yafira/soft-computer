@@ -2,20 +2,12 @@ import Link from "next/link";
 
 export default function Nav() {
   return (
-    <header style={{ padding: "18px 18px 0" }}>
-      <div
-        style={{
-          maxWidth: 980,
-          margin: "0 auto",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: 12,
-        }}
-      >
+    <header className="siteHeader">
+      <div className="siteHeaderInner">
         <Link href="/" style={{ textDecoration: "none" }}>
           <div className="brandRow">
-            <span className="brandName">the soft computer</span>
+            <span className="brandName">soft.computer</span>
+            <span className="brandSub">process memory</span>
           </div>
         </Link>
         <nav className="nav">
