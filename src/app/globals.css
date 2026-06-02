@@ -29,6 +29,14 @@ body {
   height: 100%;
 }
 
+html,
+body,
+* {
+  cursor:
+    url("/flower-blk.png") 8 8,
+    auto !important;
+}
+
 body {
   margin: 0;
   color: var(--ink);
