@@ -901,7 +901,7 @@ export default function AboutPage() {
               computing object exploring calm technology, feminist hci, and
               anti-optimization design. the mini takes its conceptual lineage —
               embodied input, generative text as ritual, textile as substrate —
-              and compresses it into a hand-sized tarot device.
+              and compresses it into a portable laptop-sized tarot device.
             </p>
 
             {/* mini hero — full width */}
@@ -1181,8 +1181,8 @@ export default function AboutPage() {
               <div className="aboutMetaRow">
                 <div className="aboutMetaKey">exhibitions</div>
                 <div className="aboutMetaVal">
-                  periphery - itp thesis's show @ nyc resistor, itp/ima spring show, open
-                  hardware summit berlin (fellow 2026)
+                  periphery - itp thesis's show @ nyc resistor, itp/ima spring
+                  show, open hardware summit berlin (fellow 2026)
                 </div>
               </div>
             </div>
