@@ -309,15 +309,18 @@ a {
 /* timeline preview */
 .miniList {
   display: grid;
+  /* date column fits the widest chip, shared by every row */
+  grid-template-columns: max-content 1fr;
   gap: 10px;
   margin-top: 12px;
 }
 
 .miniRow {
   display: grid;
-  grid-template-columns: 88px 1fr;
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
   align-items: flex-start;
-  gap: 12px;
+  gap: 16px;
   padding: 12px;
   border-radius: 16px;
   border: 1px solid rgba(60, 35, 110, 0.14);
@@ -355,6 +358,7 @@ a {
 /* chips + buttons + inputs */
 .chip {
   display: inline-flex;
+  white-space: nowrap;
   align-items: center;
   justify-content: center;
   height: 28px;
@@ -1546,8 +1550,7 @@ a {
   }
 
   .miniRow {
-    grid-template-columns: 72px 1fr;
-    gap: 8px;
+    gap: 10px;
     padding: 10px;
   }
 
