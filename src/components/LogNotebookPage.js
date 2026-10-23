@@ -3,35 +3,13 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { labelScore } from "@/lib/logDates";
 
 const PublishLogsButton = dynamic(
   () => import("@/components/PublishLogsButton"),
   { ssr: false },
 );
 
-const MONTH_ORDER = [
-  { label: "may", year: 2026 },
-  { label: "apr", year: 2026 },
-  { label: "mar", year: 2026 },
-  { label: "feb", year: 2026 },
-  { label: "jan", year: 2026 },
-  { label: "dec", year: 2025 },
-  { label: "nov", year: 2025 },
-  { label: "oct", year: 2025 },
-  { label: "sep", year: 2025 },
-];
-
-function parseLabelScore(label) {
-  const parts = String(label || "")
-    .toLowerCase()
-    .trim()
-    .split(/\s+/);
-  const mName = parts[0];
-  const d = parseInt(parts[1]) || 0;
-  const idx = MONTH_ORDER.findIndex((m) => m.label === mName);
-  const monthScore = idx < 0 ? -1 : MONTH_ORDER.length - 1 - idx;
-  return monthScore * 31 + d;
-}
 
 const PAPER_MODE_KEY = "softcomputer-paper-mode";
 const PAGE_SIZE = 8;
@@ -293,7 +271,7 @@ export default function LogNotebookPage({ focus }) {
     const snap = await fetchLiveLogs();
     const list = Array.isArray(snap.entries) ? snap.entries : [];
     const sorted = [...list].sort(
-      (a, b) => parseLabelScore(b.label) - parseLabelScore(a.label),
+      (a, b) => labelScore(b.label) - labelScore(a.label),
     );
     setEntries(sorted);
     setError(snap.error || "");

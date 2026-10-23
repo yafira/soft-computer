@@ -356,7 +356,7 @@ export default function AdminLogEditor() {
             <input
               className="input"
               style={{ maxWidth: 320 }}
-              placeholder="label (e.g. apr 11)"
+              placeholder="label (e.g. oct 22)"
               value={label}
               onChange={(e) => setLabel(e.target.value)}
             />

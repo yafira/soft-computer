@@ -2,20 +2,12 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { upload } from "@vercel/blob/client";
+import { formatLabel, monthRange, parseLabel } from "@/lib/logDates";
 
 const ADMIN_TOKEN = process.env.NEXT_PUBLIC_ADMIN_LOG_TOKEN || "";
 
-const MONTHS = [
-  { label: "sep", year: 2025 },
-  { label: "oct", year: 2025 },
-  { label: "nov", year: 2025 },
-  { label: "dec", year: 2025 },
-  { label: "jan", year: 2026 },
-  { label: "feb", year: 2026 },
-  { label: "mar", year: 2026 },
-  { label: "apr", year: 2026 },
-  { label: "may", year: 2026 },
-];
+// sep 2025 through this month, one row each
+const MONTHS = monthRange();
 
 function makeId(r, c) {
   const { label, year } = MONTHS[r];
@@ -23,7 +15,20 @@ function makeId(r, c) {
 }
 
 function makeEntryLabel(r, c) {
-  return `${MONTHS[r].label} ${c + 1}`;
+  return formatLabel(MONTHS[r].m, c + 1, MONTHS[r].year);
+}
+
+// which row a label belongs to, or -1
+function rowForLabel(label) {
+  const p = parseLabel(label);
+  if (!p) return -1;
+  return MONTHS.findIndex((m) => m.m === p.m && m.year === p.y);
+}
+
+function sameDay(a, b) {
+  const pa = parseLabel(a);
+  const pb = parseLabel(b);
+  return Boolean(pa && pb && pa.m === pb.m && pa.d === pb.d && pa.y === pb.y);
 }
 
 function newTextBlock(value = "") {
@@ -70,13 +75,10 @@ function stateFromPublishedEntries(entries) {
     Array.from({ length: 31 }, () => ""),
   );
   for (const e of entries || []) {
-    const raw = String(e?.label || "")
-      .toLowerCase()
-      .trim();
-    const parts = raw.split(/\s+/);
-    if (parts.length < 2) continue;
-    const r = MONTHS.findIndex((m) => m.label === parts[0]);
-    const d = Number(parts[1]) - 1;
+    const p = parseLabel(e?.label);
+    if (!p) continue;
+    const r = rowForLabel(e?.label);
+    const d = p.d - 1;
     if (r < 0 || d < 0 || d > 30) continue;
     const text = String(e?.text || "").trim();
     logs[r][d] = text;
@@ -224,8 +226,10 @@ export default function PunchCard({
   const geo = useMemo(() => {
     const rows = MONTHS.length;
     const cols = 31;
+    // card grows a row at a time so new months don't squish the old ones
+    const ROW_H = 21.5;
     const W = 1200,
-      H = 460;
+      H = 268 + rows * ROW_H;
     const cardMarginX = 46,
       cardMarginY = 36;
     const leftMargin = 110,
@@ -276,12 +280,7 @@ export default function PunchCard({
       )
         return;
       const label = makeEntryLabel(r, c);
-      const existing = redisEntries.find(
-        (e) =>
-          String(e?.label || "")
-            .toLowerCase()
-            .trim() === label.toLowerCase(),
-      );
+      const existing = redisEntries.find((e) => sameDay(e?.label, label));
       activeRef.current = { r, c };
       setActive({ r, c });
       setBlocks(entryToBlocks(existing));
@@ -410,6 +409,7 @@ export default function PunchCard({
         body: JSON.stringify({
           id,
           label,
+          year: MONTHS[r].year,
           content: stripIds(blocksRef.current),
         }),
       });
@@ -469,6 +469,7 @@ export default function PunchCard({
         body: JSON.stringify({
           id,
           label,
+          year: MONTHS[r].year,
           content: [{ type: "text", value: text }],
         }),
       });
@@ -579,6 +580,7 @@ export default function PunchCard({
       <div className="punchStack">
         <div
           className="punchCanvas"
+          style={{ aspectRatio: `${geo.W} / ${geo.H}` }}
           ref={containerRef}
           onMouseMove={onMove}
           onMouseLeave={() => setHover(null)}
@@ -620,7 +622,8 @@ export default function PunchCard({
                 y={geo.cardY + 40}
                 className="punchTitle"
               >
-                soft computer — process memory 2025–2026
+                soft computer — process memory {MONTHS[0].year}–
+                {MONTHS[MONTHS.length - 1].year}
               </text>
 
               {Array.from({ length: geo.cols }).map((_, c) => (
@@ -644,10 +647,22 @@ export default function PunchCard({
                 />
               ))}
 
-              {MONTHS.map(({ label }, r) => {
+              {MONTHS.map(({ label, m, year }, r) => {
                 const cy = geo.gridY + r * geo.rowH + geo.rowH / 2;
+                // mark where each year starts
+                const showYear = r === 0 || m === 0;
                 return (
                   <g key={`row-${r}`}>
+                    {showYear ? (
+                      <text
+                        x={geo.gridX - 52}
+                        y={cy}
+                        className="punchYear"
+                        textAnchor="end"
+                      >
+                        {year}
+                      </text>
+                    ) : null}
                     <text
                       x={geo.gridX - 12}
                       y={cy}
@@ -749,7 +764,8 @@ export default function PunchCard({
           <div className="punchEditorBlock">
             <div className="punchEditorHeader">
               <div className="chip">
-                {MONTHS[active.r].label} {active.c + 1}
+                {MONTHS[active.r].label} {active.c + 1}{" "}
+                {MONTHS[active.r].year}
               </div>
               <div className="small subtle">
                 esc = close • cmd/ctrl+backspace = delete • cmd/ctrl+z = undo

@@ -1,33 +1,9 @@
 import { NextResponse } from "next/server";
 import { redis } from "@/lib/redis";
+import { formatLabel, labelScore, parseLabel, withYear } from "@/lib/logDates";
 
 const KEY = "softcomputer:logs";
 const ADMIN_TOKEN = process.env.ADMIN_LOG_TOKEN || "";
-
-const months = [
-  "jan",
-  "feb",
-  "mar",
-  "apr",
-  "may",
-  "jun",
-  "jul",
-  "aug",
-  "sep",
-  "oct",
-  "nov",
-  "dec",
-];
-
-function parseLabel(label) {
-  const parts = String(label || "")
-    .toLowerCase()
-    .trim()
-    .split(/\s+/);
-  const m = months.indexOf(parts[0]);
-  const d = parseInt(parts[1]) || 0;
-  return m * 31 + d;
-}
 
 function isAuthorized(req) {
   if (!ADMIN_TOKEN) return false;
@@ -113,7 +89,7 @@ export async function POST(req) {
   }
   try {
     const body = await req.json().catch(() => ({}));
-    const { id, label, content: rawContent } = body;
+    const { id, label, year, content: rawContent } = body;
 
     if (!label?.trim()) {
       return NextResponse.json({ error: "label required" }, { status: 400 });
@@ -128,9 +104,20 @@ export async function POST(req) {
     const raw = await redis.get(KEY);
     const existing = Array.isArray(raw) ? raw : [];
 
+    // the punch card knows the exact year, so trust it when it's sent.
+    // otherwise new entries typed without a year get one, so "oct 22" doesn't land in 2025
+    const isEdit = Boolean(id) && existing.some((e) => e.id === id);
+    const parsed = parseLabel(label);
+    const finalLabel =
+      parsed && Number.isInteger(year)
+        ? formatLabel(parsed.m, parsed.d, year)
+        : isEdit
+          ? label.trim()
+          : withYear(label);
+
     const entry = {
       id: id || globalThis.crypto.randomUUID(),
-      label: label.trim(),
+      label: finalLabel,
       content,
       text: compat.text,
       imageUrls: compat.imageUrls,
@@ -139,7 +126,7 @@ export async function POST(req) {
 
     const filtered = existing.filter((e) => e.id !== entry.id);
     const sorted = [entry, ...filtered].sort(
-      (a, b) => parseLabel(b.label) - parseLabel(a.label),
+      (a, b) => labelScore(b.label) - labelScore(a.label),
     );
 
     await redis.set(KEY, sorted);

@@ -1,31 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { labelScore } from "@/lib/logDates";
 
-// sept 2025 → may 2026, newest first
-const MONTH_ORDER = [
-  { label: "may", year: 2026 },
-  { label: "apr", year: 2026 },
-  { label: "mar", year: 2026 },
-  { label: "feb", year: 2026 },
-  { label: "jan", year: 2026 },
-  { label: "dec", year: 2025 },
-  { label: "nov", year: 2025 },
-  { label: "oct", year: 2025 },
-  { label: "sep", year: 2025 },
-];
-
-function parseLabelScore(label) {
-  const parts = String(label || "")
-    .toLowerCase()
-    .trim()
-    .split(/\s+/);
-  const mName = parts[0];
-  const d = parseInt(parts[1]) || 0;
-  const idx = MONTH_ORDER.findIndex((m) => m.label === mName);
-  const monthScore = idx < 0 ? -1 : MONTH_ORDER.length - 1 - idx;
-  return monthScore * 31 + d;
-}
 
 function previewText(raw, maxChars = 120) {
   const t = (raw || "")
@@ -63,7 +40,7 @@ export default function TimelinePreview() {
     const snap = await fetchLiveLogs();
     const list = Array.isArray(snap.entries) ? snap.entries : [];
     const sorted = [...list].sort(
-      (a, b) => parseLabelScore(b.label) - parseLabelScore(a.label),
+      (a, b) => labelScore(b.label) - labelScore(a.label),
     );
     setEntries(sorted);
     setLoaded(true);

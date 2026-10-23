@@ -491,6 +491,11 @@ a {
   fill: rgba(43, 33, 64, 0.78);
 }
 
+.punchYear {
+  font-size: 11px;
+  fill: rgba(43, 33, 64, 0.45);
+}
+
 .punchSlot {
   fill: rgba(255, 255, 255, 0.14);
   stroke: rgba(60, 35, 110, 0.28);
