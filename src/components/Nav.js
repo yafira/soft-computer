@@ -3,25 +3,15 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-const PAGES = ["about", "process", "make", "resources", "log"];
+const PAGES = ["about", "process", "make", "language", "resources", "log"];
 
 function Flower() {
-  const petals = [0, 1, 2, 3, 4].map((i) => {
-    const a = ((i * 72 - 90) * Math.PI) / 180;
-    return (
-      <circle
-        key={i}
-        cx={(50 + 26 * Math.cos(a)).toFixed(2)}
-        cy={(50 + 26 * Math.sin(a)).toFixed(2)}
-        r="24"
-      />
-    );
-  });
   return (
-    <svg viewBox="0 0 100 100" width="18" height="18" fill="currentColor" aria-hidden="true">
-      {petals}
-      <circle cx="50" cy="50" r="20" />
-    </svg>
+    <span
+      className="blossom"
+      style={{ width: 18, height: 18 }}
+      aria-hidden="true"
+    />
   );
 }
 

@@ -1998,3 +1998,48 @@ body {
 .legendSwatch.punched {
   fill: #161616;
 }
+
+/* language page: the step-by-step markov chain */
+.chainDemo {
+  display: grid;
+  gap: 14px;
+  margin: 18px 0 26px;
+  padding: 16px;
+  border: 2px solid #161616;
+}
+
+.chainRow,
+.chainOptions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.chainLine {
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.6;
+}
+
+.chainKey {
+  background: #161616;
+  color: #e9e8e2;
+  padding: 1px 6px;
+}
+
+.chainBox {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border: 1px dashed #161616;
+}
+
+/* the blossom, cut from the real screen's image */
+.blossom {
+  display: inline-block;
+  flex: none;
+  background: currentColor;
+  -webkit-mask: url("/blossom.png") center / contain no-repeat;
+  mask: url("/blossom.png") center / contain no-repeat;
+}

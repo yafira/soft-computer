@@ -72,7 +72,8 @@
 }
 
 .bootFlower {
-  width: clamp(220px, 46vmin, 520px);
+  display: block;
+  width: clamp(260px, 58vmin, 680px);
   aspect-ratio: 1;
 }
 
@@ -134,7 +135,24 @@
 }
 
 /* icons stack down the left edge and wrap into a new column, like a desktop */
+.desk {
+  position: relative;
+}
+
+/* a faint blossom behind the folders, like a desktop wallpaper */
+.deskBlossom {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: clamp(280px, 70vmin, 820px);
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  opacity: 0.08;
+  pointer-events: none;
+}
+
 .folders {
+  position: relative;
   display: grid;
   grid-auto-flow: column;
   grid-template-rows: repeat(auto-fill, 96px);
