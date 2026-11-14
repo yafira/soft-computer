@@ -1839,9 +1839,13 @@ body {
   background: #e9e8e2;
 }
 
+/* hovering the close box draws an x in it */
 .osClose:hover,
 .osClose:focus-visible {
-  background: #161616;
+  background:
+    linear-gradient(45deg, transparent 44%, #161616 44% 56%, transparent 56%),
+    linear-gradient(-45deg, transparent 44%, #161616 44% 56%, transparent 56%),
+    #e9e8e2;
   outline: none;
 }
 
