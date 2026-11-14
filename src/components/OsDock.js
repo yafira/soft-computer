@@ -16,7 +16,8 @@ export default function OsDock() {
     if (pathname !== "/") window.__softAwake = true;
   }, [pathname]);
 
-  if (pathname === "/") return null;
+  // no dock on the homepage (it has its own) or in admin (kept plain)
+  if (pathname === "/" || pathname.startsWith("/admin")) return null;
 
   function press(key) {
     try {

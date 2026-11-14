@@ -2063,3 +2063,20 @@ body {
   box-shadow: none;
   background: #f3f2ec;
 }
+
+/* admin: a plain strip of links above an ordinary scrolling page */
+.adminBar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 18px;
+  padding: 10px 18px;
+  border-bottom: 2px solid #161616;
+  font-size: 13px;
+}
+
+.adminBar a:hover,
+.adminBar a:focus-visible {
+  background: #161616;
+  color: #e9e8e2;
+  outline: none;
+}

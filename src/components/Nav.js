@@ -22,6 +22,18 @@ export default function Nav() {
 
   const here = pathname.split("/")[1] || "";
 
+  // admin is the working view: no window, no dock, just a plain strip of links
+  if (here === "admin") {
+    return (
+      <header className="adminBar">
+        <Link href="/">soft os</Link>
+        <Link href="/admin">admin</Link>
+        <Link href="/admin/log">log editor</Link>
+        <Link href="/log">public log</Link>
+      </header>
+    );
+  }
+
   return (
     <>
       <header className="osBar">
