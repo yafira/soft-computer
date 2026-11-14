@@ -33,9 +33,20 @@ the site behaves like the object's operating system. every page stays inside the
 the homepage runs in this order:
 
 1. **flower** — the screen waits with the blossom, like the real one does
+
+   ![the flower on the e-ink screen, with the matrix pad and four felt buttons below](docs/readme/01-flower.jpg)
+
 2. **hello** — touch the matrix pad (or press enter) and it says hello
+
+   ![the hello screen: hello, i am the soft computer](docs/readme/02-hello.jpg)
+
 3. **desktop** — press enter to reach the folders: about, process, make, language, resources, log
+
+   ![the desktop, with folders down the left and a faint blossom behind them](docs/readme/03-desktop.jpg)
+
 4. **play** — press a felt button, or the play button, and a poem fills the screen
+
+   ![a generated poem from the textile corpus filling the screen](docs/readme/04-play.jpg)
 
 controls:
 
@@ -48,6 +59,8 @@ controls:
 | `esc` or home | leave play and go back to the folders |
 
 folders open their page in a window inside the screen. the close box in the title bar goes back to the desktop. the screen does a full e-ink refresh flicker on each change, which is skipped for anyone with reduced motion turned on. photos sit in grey and show their color on hover.
+
+![the language page open in a window inside the screen](docs/readme/05-language.jpg)
 
 where things live:
 
