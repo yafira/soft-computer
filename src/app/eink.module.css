@@ -641,6 +641,29 @@
     width: 100%;
   }
 
+  /* once the pad has been touched it goes away, and the buttons share one row with home/play */
+  .padGone {
+    display: none;
+  }
+
+  .dockNoPad {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .dockNoPad .felts {
+    flex: 1 1 auto;
+    width: auto;
+    justify-content: flex-start;
+    gap: 8px;
+  }
+
+  .dockNoPad .side {
+    margin-left: auto;
+  }
+
   .padSvg {
     width: 104px;
   }

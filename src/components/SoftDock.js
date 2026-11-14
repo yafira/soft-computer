@@ -13,7 +13,7 @@ const PAD_GAP = 16;
 
 // the matrix pad: row and column threads crossing on a fabric square.
 // it works as the presence detector, so touching it is how you get in
-function Trackpad({ onTouch }) {
+function Trackpad({ onTouch, gone }) {
   const [at, setAt] = useState(null);
   const dwell = useRef(null);
 
@@ -52,7 +52,7 @@ function Trackpad({ onTouch }) {
   const bottom = y(ROWS - 1);
 
   return (
-    <div className={s.pad}>
+    <div className={s.pad + (gone ? " " + s.padGone : "")}>
       <svg
         viewBox={"0 0 " + (right + PAD_X) + " " + (bottom + PAD_Y + 14)}
         className={s.padSvg}
@@ -113,10 +113,11 @@ function Trackpad({ onTouch }) {
 }
 
 // the bottom of the frame: matrix pad, felt buttons, and whatever sits on the right
-export default function SoftDock({ active, onPress, onTouch, side }) {
+// padGone: on phones the pad leaves once it has been touched, to give the screen more room
+export default function SoftDock({ active, onPress, onTouch, side, padGone }) {
   return (
-    <footer className={s.dock}>
-      <Trackpad onTouch={onTouch} />
+    <footer className={s.dock + (padGone ? " " + s.dockNoPad : "")}>
+      <Trackpad onTouch={onTouch} gone={padGone} />
       <div className={s.felts}>
         {Object.entries(BUTTONS).map(([key, b]) => (
           <button

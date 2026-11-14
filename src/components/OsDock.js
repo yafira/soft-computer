@@ -31,6 +31,7 @@ export default function OsDock() {
       active={null}
       onPress={press}
       onTouch={() => {}}
+      padGone
       side={
         <Link href="/" className={s.play}>
           home

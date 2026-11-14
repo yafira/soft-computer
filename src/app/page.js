@@ -374,6 +374,7 @@ export default function HomePage() {
         active={playing ? corpus : null}
         onPress={press}
         onTouch={touchPad}
+        padGone={Boolean(stage) && stage !== "boot"}
         side={
           <>
             {stage === "desktop" && playing && (
