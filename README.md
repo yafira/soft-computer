@@ -15,15 +15,51 @@ a [Next.js](https://nextjs.org) app (app router) with a few distinct areas:
 
 | route | what it is |
 |---|---|
-| `/` | the soft computer's generative text engine, running in-browser — the same corpus + markov chain logic as the physical object |
+| `/` | soft os — the whole page is the soft computer's e-ink screen, with its matrix pad and four felt buttons underneath. runs the same corpus + markov chain logic as the physical object, in-browser |
 | `/about` | full project write-up: concept, materials, electronics, corpus design, user testing |
 | `/process` | process notes |
 | `/make` | a build guide for anyone who wants to make their own soft computer |
+| `/language` | how the soft computer writes: the four corpora, how a markov chain works (with a step-by-step demo), and why some of it doesn't make sense |
 | `/resources` | reading list, pulled live from a zotero collection |
 | `/log` | dated process log / notebook |
 | `/punch` | a punch-card-style calendar view of log entries |
 | `/timeline` | project timeline |
 | `/admin` | password-gated log editor (not for public use) |
+
+## soft os
+
+the site behaves like the object's operating system. every page stays inside the same frame: the `soft os` bar on top, the e-ink screen in the middle, the matrix pad and felt buttons along the bottom.
+
+the homepage runs in this order:
+
+1. **flower** — the screen waits with the blossom, like the real one does
+2. **hello** — touch the matrix pad (or press enter) and it says hello
+3. **desktop** — press enter to reach the folders: about, process, make, language, resources, log
+4. **play** — press a felt button, or the play button, and a poem fills the screen
+
+controls:
+
+| input | what it does |
+|---|---|
+| matrix pad | presence: wakes the screen, moves on from hello, draws a new poem during play |
+| felt buttons (or keys `1`–`4`) | pick a corpus — lineage, dreamlike, textile, subverted — and start play |
+| `enter` | wake / continue |
+| arrow keys | move between folders |
+| `esc` or home | leave play and go back to the folders |
+
+folders open their page in a window inside the screen. the close box in the title bar goes back to the desktop. the screen does a full e-ink refresh flicker on each change, which is skipped for anyone with reduced motion turned on. photos sit in grey and show their color on hover.
+
+where things live:
+
+| file | what's in it |
+|---|---|
+| `src/app/page.js` | the homepage: flower, hello, desktop, play |
+| `src/app/eink.module.css` | styles for the screen, pad, and felt buttons |
+| `src/lib/softText.js` | the four corpora and the order-2 markov chain |
+| `src/lib/feltButtons.js` | the felt buttons' colors and names |
+| `src/components/SoftDock.js` | matrix pad + felt buttons, shared by every page |
+| `src/components/Nav.js`, `OsDock.js` | the bar, window title, and dock around the other pages |
+| `src/components/ChainDemo.js` | the step-by-step markov demo on `/language` |
 
 ## stack
 
@@ -46,7 +82,7 @@ open [http://localhost:3000](http://localhost:3000).
 
 ### environment variables
 
-most of the site (the home page corpus engine, `/about`, `/make`) runs with no configuration. the following are only needed for the pieces that talk to external services:
+most of the site (the homepage, `/about`, `/make`, `/language`) runs with no configuration. the following are only needed for the pieces that talk to external services:
 
 ```bash
 # upstash redis — log, punch card, concept images
@@ -67,7 +103,7 @@ ZOTERO_COLLECTION_KEY=
 ZOTERO_API_KEY=
 ```
 
-copy these into a `.env.local` file. none of this is required just to browse the site locally or read through `/about` and `/make`.
+copy these into a `.env.local` file. none of this is required just to browse the site locally or read through `/about`, `/make`, and `/language`.
 
 ## deploy
 

@@ -2047,3 +2047,19 @@ body {
   -webkit-mask: url("/blossom.png") center / contain no-repeat;
   mask: url("/blossom.png") center / contain no-repeat;
 }
+
+/* window polish: no shadow line between the title bar and the page under it */
+.osTitle {
+  box-shadow: 5px 0 0 #161616;
+}
+
+/* square corners and hard edges inside every window, like the rest of soft os */
+.osBar ~ main.wrap * {
+  border-radius: 0 !important;
+}
+
+.punchEditorBlock {
+  border: 2px solid #161616;
+  box-shadow: none;
+  background: #f3f2ec;
+}
