@@ -1,3 +1,4 @@
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@400&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=Kalam:wght@400&display=swap");
 @import url("https://db.onlinewebfonts.com/c/4571adf8e6d8270ea61a4f43a3ef31d2?family=Departure+Mono");
 
@@ -33,7 +34,10 @@ html,
 body,
 * {
   cursor:
-    url("/flower-blk.png") 8 8,
+    url("/cursor-arrow.png") 1 1,
+    auto !important;
+  cursor:
+    image-set(url("/cursor-arrow.png") 1x, url("/cursor-arrow@2x.png") 2x) 1 1,
     auto !important;
 }
 
@@ -1724,4 +1728,273 @@ a {
   50% {
     opacity: 0;
   }
+}
+
+/* soft os: every page sits inside the e-ink operating system */
+:root {
+  --bg: #e9e8e2;
+  --bg2: #e9e8e2;
+  --panel: #efeee9;
+  --ink: #161616;
+  --ink2: rgba(22, 22, 22, 0.76);
+  --border: rgba(22, 22, 22, 0.5);
+  --border-strong: #161616;
+  --shadow: 4px 4px 0 #161616;
+  --shadow-tight: 3px 3px 0 #161616;
+  --radius: 0px;
+}
+
+/* a page never leaves the frame: bar on top, the page in a window, pad and buttons below */
+body:has(.osBar) {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  overflow: hidden;
+}
+
+body {
+  background: #e9e8e2;
+}
+
+.osBar {
+  flex: none;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 6px 16px;
+  padding: 8px 18px;
+  background: #e9e8e2;
+  border-bottom: 2px solid #161616;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+}
+
+.osHome {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  justify-self: start;
+}
+
+.osMenu {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.osItem {
+  padding: 3px 10px;
+}
+
+.osItem:hover,
+.osItem:focus-visible,
+.osItemOn,
+.osHome:hover {
+  background: #161616;
+  color: #e9e8e2;
+  outline: none;
+}
+
+.osTime {
+  justify-self: end;
+}
+
+.osTitle,
+.osBar ~ main.wrap {
+  width: calc(100% - 40px);
+  max-width: 1100px;
+  border: 2px solid #161616;
+  background: #e9e8e2;
+  box-shadow: 5px 5px 0 #161616;
+}
+
+.osTitle {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  flex: none;
+  margin: 18px auto 0;
+  padding: 5px 10px;
+  background-image: repeating-linear-gradient(
+    0deg,
+    #161616 0 2px,
+    transparent 2px 5px
+  );
+}
+
+.osTitleName {
+  padding: 0 12px;
+  background: #e9e8e2;
+  font-size: 13px;
+}
+
+.osClose {
+  position: absolute;
+  left: 8px;
+  top: 50%;
+  width: 16px;
+  height: 16px;
+  margin-top: -8px;
+  border: 2px solid #161616;
+  background: #e9e8e2;
+}
+
+.osClose:hover,
+.osClose:focus-visible {
+  background: #161616;
+  outline: none;
+}
+
+/* the window body scrolls inside the screen */
+.osBar ~ main.wrap {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  margin: 0 auto 24px;
+  border-top: 0;
+}
+
+/* everything that is not a photo stays grey, like the panel */
+.osBar ~ main.wrap > :not(:has(img, video)):not(img, video),
+.osBar ~ main.wrap :has(img, video) > :not(:has(img, video)):not(img, video) {
+  filter: grayscale(1) contrast(1.06);
+}
+
+/* photos sit in grey too, and show their color under the cursor */
+.osBar ~ main.wrap img,
+.osBar ~ main.wrap video {
+  filter: grayscale(1) contrast(1.06);
+  transition: filter 200ms steps(2);
+}
+
+.osBar ~ main.wrap img:hover,
+.osBar ~ main.wrap video:hover {
+  filter: none;
+}
+
+/* no hover on touch screens, so photos stay in color there */
+@media (hover: none) {
+  .osBar ~ main.wrap img,
+  .osBar ~ main.wrap video {
+    filter: none;
+  }
+}
+
+.osRefresh {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  pointer-events: none;
+}
+
+.osRefresh i {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+}
+
+.osRefresh i:nth-child(1) {
+  background: #fff;
+  mix-blend-mode: difference;
+  animation: osInv 640ms steps(1) both;
+}
+
+.osRefresh i:nth-child(2) {
+  background: #161616;
+  animation: osBlk 640ms steps(1) both;
+}
+
+.osRefresh i:nth-child(3) {
+  background: #e9e8e2;
+  animation: osWht 640ms steps(1) both;
+}
+
+@keyframes osInv {
+  0% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  75% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes osBlk {
+  0% {
+    opacity: 1;
+  }
+  25% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes osWht {
+  0% {
+    opacity: 0;
+  }
+  25% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@media (max-width: 700px) {
+  .osBar {
+    grid-template-columns: 1fr auto;
+  }
+
+  .osMenu {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    justify-content: flex-start;
+    margin-left: -10px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .osRefresh {
+    display: none;
+  }
+}
+
+/* the punch card in soft os: paper card on the panel, holes in ink */
+.punchCanvas {
+  border-radius: 0;
+  background: #e9e8e2;
+  border: 2px solid #161616;
+  box-shadow: 4px 4px 0 #161616;
+}
+
+.punchCard {
+  fill: #f3f2ec;
+}
+
+.punchNotch {
+  fill: #e9e8e2;
+}
+
+.punchCardCutStroke {
+  stroke: #161616;
+}
+
+.punchSlot {
+  stroke: rgba(22, 22, 22, 0.45);
+}
+
+.punchSlot.punched,
+.legendSwatch.punched {
+  fill: #161616;
 }

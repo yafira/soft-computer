@@ -1,5 +1,6 @@
 import "./globals.css";
 import Nav from "../components/Nav";
+import OsDock from "../components/OsDock";
 
 export const metadata = {
   title: "soft.computer",
@@ -12,6 +13,7 @@ export default function RootLayout({ children }) {
       <body>
         <Nav />
         <main className="wrap">{children}</main>
+        <OsDock />
       </body>
     </html>
   );

@@ -1,6 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import s from "./eink.module.css";
+import SoftDock from "../components/SoftDock";
+import { BUTTONS } from "../lib/feltButtons";
 
 const RAW_CORPORA = {
   blush: `
@@ -120,23 +125,6 @@ for (const [k, v] of Object.entries(RAW_CORPORA)) {
   CHAINS[k] = buildChain(v, 2);
 }
 
-const BUTTONS = {
-  blush: { bg: "#fce8ea", dot: "#d4909a", shadow: "#f2cdd1", label: "lineage" },
-  blue: {
-    bg: "#deeef8",
-    dot: "#7aaec8",
-    shadow: "#c2dff0",
-    label: "dreamlike",
-  },
-  mint: { bg: "#d6f0e8", dot: "#7ec4aa", shadow: "#b8e0d2", label: "textile" },
-  yellow: {
-    bg: "#fdf5c8",
-    dot: "#c8a83a",
-    shadow: "#f7e99a",
-    label: "subverted",
-  },
-};
-
 const CORPUS_LABELS = {
   blush: "lineage",
   blue: "dreamlike",
@@ -144,447 +132,406 @@ const CORPUS_LABELS = {
   yellow: "subverted",
 };
 
-let windowCounter = 0;
+const FOLDERS = [
+  { href: "/about", label: "about" },
+  { href: "/process", label: "process" },
+  { href: "/make", label: "make" },
+  { href: "/resources", label: "resources" },
+  { href: "/log", label: "log" },
+];
 
-function SoftWindow({ id, corpus, onClose, initialX, initialY, isMobile }) {
-  const col = BUTTONS[corpus];
-  const [displayText, setDisplayText] = useState("");
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [isDreaming, setIsDreaming] = useState(false);
-  const [pos, setPos] = useState({ x: initialX, y: initialY });
-  const [dragging, setDragging] = useState(false);
-  const dragStart = useRef(null);
-  const wordTimerRef = useRef(null);
-  const dreamTimerRef = useRef(null);
-  const regenTimerRef = useRef(null);
+// stays true while moving between pages, resets on a reload
+let awake = false;
 
-  function clearAll() {
-    clearTimeout(wordTimerRef.current);
-    clearTimeout(dreamTimerRef.current);
-    clearTimeout(regenTimerRef.current);
-  }
-
-  function startGeneration() {
-    clearAll();
-    setIsGenerating(true);
-    setIsDreaming(false);
-    const text = generate(CHAINS[corpus], 30);
-    const words = text.split(" ").filter((w) => w && w !== "undefined");
-    let i = 0;
-    setDisplayText("");
-
-    function addWord() {
-      if (i < words.length) {
-        const w = words[i];
-        if (w) setDisplayText((prev) => (prev ? prev + " " + w : w));
-        i++;
-        wordTimerRef.current = setTimeout(addWord, 300 + Math.random() * 220);
-      } else {
-        setIsGenerating(false);
-        dreamTimerRef.current = setTimeout(() => {
-          setIsDreaming(true);
-          regenTimerRef.current = setTimeout(() => startGeneration(), 3500);
-        }, 7000);
-      }
-    }
-    addWord();
-  }
-
-  useEffect(() => {
-    const t = setTimeout(() => startGeneration(), 400);
-    return () => {
-      clearAll();
-      clearTimeout(t);
-    };
-  }, []);
-
-  // drag handlers — desktop only
-  function onMouseDown(e) {
-    if (isMobile) return;
-    setDragging(true);
-    dragStart.current = { mx: e.clientX, my: e.clientY, px: pos.x, py: pos.y };
-  }
-
-  useEffect(() => {
-    if (!dragging) return;
-    function onMouseMove(e) {
-      const dx = e.clientX - dragStart.current.mx;
-      const dy = e.clientY - dragStart.current.my;
-      setPos({ x: dragStart.current.px + dx, y: dragStart.current.py + dy });
-    }
-    function onMouseUp() {
-      setDragging(false);
-    }
-    window.addEventListener("mousemove", onMouseMove);
-    window.addEventListener("mouseup", onMouseUp);
-    return () => {
-      window.removeEventListener("mousemove", onMouseMove);
-      window.removeEventListener("mouseup", onMouseUp);
-    };
-  }, [dragging]);
-
-  const windowStyle = isMobile
-    ? {
-        width: "min(480px, 100%)",
-      }
-    : {
-        position: "fixed",
-        left: pos.x,
-        top: pos.y,
-        width: 480,
-        zIndex: 100 + id,
-        cursor: dragging ? "grabbing" : "auto",
-      };
-
+function Flower({ size }) {
+  const petals = [0, 1, 2, 3, 4].map((i) => {
+    const a = ((i * 72 - 90) * Math.PI) / 180;
+    return (
+      <circle
+        key={i}
+        cx={(50 + 26 * Math.cos(a)).toFixed(2)}
+        cy={(50 + 26 * Math.sin(a)).toFixed(2)}
+        r="24"
+      />
+    );
+  });
   return (
-    <div className="softOS" style={windowStyle}>
-      {/* title bar */}
-      <div
-        className="softOS__titlebar"
-        style={{
-          cursor: isMobile ? "auto" : "grab",
-          background: col.bg + "99",
-        }}
-        onMouseDown={onMouseDown}
-      >
-        <div className="softOS__dots">
-          <div
-            className="softOS__dot"
-            style={{ background: "#f5a0a0", cursor: "pointer" }}
-            onClick={onClose}
-            title="close"
-          />
-          {["#f5d080", "#a0d4a0"].map((c) => (
-            <div key={c} className="softOS__dot" style={{ background: c }} />
-          ))}
-        </div>
-        <div className="softOS__title">
-          soft.computer — {CORPUS_LABELS[corpus]}
-        </div>
-        <div className="softOS__state">
-          {isDreaming ? "dream" : isGenerating ? "play" : "wake"}
-        </div>
-      </div>
-
-      {/* display */}
-      <div
-        className={
-          "softOS__display" + (isDreaming ? " softOS__display--dreaming" : "")
-        }
-      >
-        <p
-          className={
-            "softOS__text" + (isDreaming ? " softOS__text--dreaming" : "")
-          }
-        >
-          {displayText}
-          {isGenerating && (
-            <span className="softOS__cursor" style={{ background: col.dot }} />
-          )}
-        </p>
-      </div>
-
-      {/* regenerate button */}
-      <div
-        style={{
-          padding: "10px 20px 14px",
-          display: "flex",
-          justifyContent: "center",
-          background: "rgba(248,246,255,0.85)",
-          borderTop: "1px solid rgba(60,35,110,0.08)",
-        }}
-      >
-        <button
-          type="button"
-          onClick={() => startGeneration()}
-          style={{
-            background: col.bg,
-            border: "none",
-            borderRadius: 999,
-            padding: "5px 16px",
-            fontSize: 11,
-            fontFamily: "var(--font-mono)",
-            color: col.dot,
-            cursor: "pointer",
-            opacity: isGenerating ? 0.5 : 1,
-          }}
-          disabled={isGenerating}
-        >
-          draw again
-        </button>
-      </div>
-    </div>
+    <svg
+      viewBox="0 0 100 100"
+      width={size}
+      height={size}
+      fill="currentColor"
+      aria-hidden="true"
+    >
+      {petals}
+      <circle cx="50" cy="50" r="20" />
+    </svg>
   );
 }
 
-export default function HomePage() {
-  const [windows, setWindows] = useState([]);
-  const [isMobile, setIsMobile] = useState(false);
-  const [activeCorpus, setActiveCorpus] = useState(null);
-  const [mobileText, setMobileText] = useState("");
-  const [mobileGenerating, setMobileGenerating] = useState(false);
-  const [mobileDreaming, setMobileDreaming] = useState(false);
-  const [mobilePulse, setMobilePulse] = useState(null);
-  const mobileWordTimer = useRef(null);
-  const mobileDreamTimer = useRef(null);
-  const mobileRegenTimer = useRef(null);
+function FolderIcon() {
+  return (
+    <svg viewBox="0 0 64 52" className={s.folderIcon} aria-hidden="true">
+      <defs>
+        <pattern id="sc-dither" width="4" height="4" patternUnits="userSpaceOnUse">
+          <rect width="2" height="2" fill="currentColor" />
+          <rect x="2" y="2" width="2" height="2" fill="currentColor" />
+        </pattern>
+      </defs>
+      <path
+        d="M3 8 h20 l6 7 h32 v34 h-58 z"
+        fill="var(--paper)"
+        stroke="currentColor"
+        strokeWidth="3"
+        strokeLinejoin="round"
+      />
+      <path d="M3 22 h58" stroke="currentColor" strokeWidth="3" />
+      <rect x="9" y="29" width="46" height="14" fill="url(#sc-dither)" />
+    </svg>
+  );
+}
+
+// same pacing as before: words arrive one at a time, then the screen rests, dreams, and draws again
+function useSoftText(corpus, run) {
+  const [words, setWords] = useState([]);
+  const [ghost, setGhost] = useState("");
+  const [mode, setMode] = useState("wake");
+  const [cycle, setCycle] = useState(0);
+  const shown = useRef([]);
 
   useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < 768);
-    check();
-    window.addEventListener("resize", check);
-    return () => window.removeEventListener("resize", check);
-  }, []);
+    if (!corpus) return;
+    const timers = [];
+    const later = (fn, ms) => timers.push(setTimeout(fn, ms));
 
-  // mobile generation
-  function mobileClearAll() {
-    clearTimeout(mobileWordTimer.current);
-    clearTimeout(mobileDreamTimer.current);
-    clearTimeout(mobileRegenTimer.current);
-  }
-
-  function mobileStartGeneration(corpus) {
-    mobileClearAll();
-    setMobileGenerating(true);
-    setMobileDreaming(false);
-    const text = generate(CHAINS[corpus], 30);
-    const words = text.split(" ").filter((w) => w && w !== "undefined");
-    let i = 0;
-    setMobileText("");
-
-    function addWord() {
-      if (i < words.length) {
-        const w = words[i];
-        if (w) setMobileText((prev) => (prev ? prev + " " + w : w));
-        i++;
-        mobileWordTimer.current = setTimeout(
-          addWord,
-          300 + Math.random() * 220,
-        );
-      } else {
-        setMobileGenerating(false);
-        mobileDreamTimer.current = setTimeout(() => {
-          setMobileDreaming(true);
-          mobileRegenTimer.current = setTimeout(
-            () => mobileStartGeneration(corpus),
-            3500,
-          );
-        }, 7000);
+    later(() => {
+      const list = generate(CHAINS[corpus], 30)
+        .split(" ")
+        .filter((w) => w && w !== "undefined");
+      setGhost(shown.current.join(" "));
+      shown.current = [];
+      setWords([]);
+      setMode("play");
+      let i = 0;
+      function addWord() {
+        if (i < list.length) {
+          shown.current = list.slice(0, i + 1);
+          setWords(shown.current);
+          i++;
+          later(addWord, 300 + Math.random() * 220);
+        } else {
+          setMode("wake");
+          later(() => {
+            setMode("dream");
+            later(() => setCycle((c) => c + 1), 3500);
+          }, 7000);
+        }
       }
-    }
-    addWord();
+      addWord();
+    }, 400);
+
+    return () => timers.forEach(clearTimeout);
+  }, [corpus, run, cycle]);
+
+  return { words, ghost, mode, id: run + "-" + cycle };
+}
+
+export default function HomePage() {
+  const router = useRouter();
+  // null = blank paper, then "boot" (flower), "hello", "desktop"
+  const [stage, setStage] = useState(null);
+  const [corpus, setCorpus] = useState(null);
+  const [playing, setPlaying] = useState(false);
+  const [run, setRun] = useState(0);
+  const [flash, setFlash] = useState(0);
+  const flashTimer = useRef(null);
+  const folderRefs = useRef([]);
+
+  const { words, mode, id } = useSoftText(
+    stage === "desktop" && playing ? corpus : null,
+    run,
+  );
+
+  // full e-ink refresh: the screen flickers, and the content swaps while it is black
+  function refresh(swap) {
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    setFlash((f) => f + 1);
+    clearTimeout(flashTimer.current);
+    flashTimer.current = setTimeout(swap, reduce ? 150 : 260);
   }
 
+  function remember() {
+    awake = true;
+  }
+
+  // every fresh load starts at the flower; coming back from a page lands on the desktop,
+  // and a felt button pressed on another page lands straight in play
   useEffect(() => {
     const t = setTimeout(() => {
-      setActiveCorpus("blush");
-      mobileStartGeneration("blush");
-    }, 600);
+      let play = null;
+      try {
+        play = window.sessionStorage.getItem("softcomputer-play");
+        window.sessionStorage.removeItem("softcomputer-play");
+      } catch {}
+      const back = awake || window.__softAwake;
+      refresh(() => {
+        if (play && BUTTONS[play]) {
+          setCorpus(play);
+          setPlaying(true);
+          setStage("desktop");
+        } else {
+          setStage(back ? "desktop" : "boot");
+        }
+      });
+    }, 250);
     return () => {
-      mobileClearAll();
       clearTimeout(t);
+      clearTimeout(flashTimer.current);
     };
   }, []);
 
-  function handleMobileButton(corpus) {
-    setActiveCorpus(corpus);
-    setMobilePulse(corpus);
-    setTimeout(() => setMobilePulse(null), 500);
-    mobileStartGeneration(corpus);
+  // the flower waits, like the real screen, until someone touches the matrix pad
+  function wake() {
+    if (stage !== "boot") return;
+    refresh(() => setStage("hello"));
   }
 
-  // desktop: open new window
-  function openWindow(corpus) {
-    const id = ++windowCounter;
-    const offset = (windows.length % 6) * 30;
-    const x = Math.max(40, (window.innerWidth - 480) / 2 + offset - 60);
-    const y = Math.max(80, (window.innerHeight - 400) / 2 + offset - 40);
-    setWindows((prev) => [...prev, { id, corpus, x, y }]);
+  // enter (or a touch on the pad) goes on to the desktop
+  function goOn() {
+    if (stage !== "hello") return;
+    remember();
+    refresh(() => setStage("desktop"));
   }
 
-  function closeWindow(id) {
-    setWindows((prev) => prev.filter((w) => w.id !== id));
+  // a felt button always leads to play, with that button's text
+  function press(key) {
+    if (!stage || stage === "boot") return;
+    remember();
+    if (stage === "hello" || !playing) {
+      refresh(() => {
+        setCorpus(key);
+        setPlaying(true);
+        setStage("desktop");
+      });
+      return;
+    }
+    setCorpus(key);
+    setRun((r) => r + 1);
   }
 
-  const col = activeCorpus ? BUTTONS[activeCorpus] : BUTTONS.blush;
+  function openPlay() {
+    refresh(() => {
+      setCorpus((c) => c || "blush");
+      setPlaying(true);
+    });
+  }
 
-  // ── mobile layout ──
-  if (isMobile) {
-    return (
-      <main className="softOS__page">
-        <div className="softOS">
-          <div className="softOS__titlebar">
-            <div className="softOS__dots">
-              {["#f5a0a0", "#f5d080", "#a0d4a0"].map((c) => (
-                <div
-                  key={c}
-                  className="softOS__dot"
-                  style={{ background: c }}
-                />
+  function closePlay() {
+    refresh(() => setPlaying(false));
+  }
+
+  // presence: touching the pad moves things along, or stirs a resting poem
+  function touchPad() {
+    if (stage === "boot") {
+      wake();
+    } else if (stage === "hello") {
+      goOn();
+    } else if (stage === "desktop" && playing && mode !== "play") {
+      setRun((r) => r + 1);
+    }
+  }
+
+  function openFolder(e, href) {
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.button === 1) return;
+    e.preventDefault();
+    refresh(() => router.push(href));
+  }
+
+  // keyboard stands in for the hardware too: 1-4 are the felt buttons, arrows walk the folders
+  useEffect(() => {
+    if (!stage) return;
+    const keys = Object.keys(BUTTONS);
+    function onKey(e) {
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      const n = Number(e.key);
+      if (n >= 1 && n <= keys.length) {
+        press(keys[n - 1]);
+        return;
+      }
+      if (e.key === "Enter" && stage === "boot") {
+        wake();
+        return;
+      }
+      if (e.key === "Enter" && stage === "hello") {
+        goOn();
+        return;
+      }
+      if (stage !== "desktop") return;
+      if (e.key === "Escape" && playing) {
+        closePlay();
+        return;
+      }
+      const dir =
+        e.key === "ArrowRight" || e.key === "ArrowDown"
+          ? 1
+          : e.key === "ArrowLeft" || e.key === "ArrowUp"
+            ? -1
+            : 0;
+      if (!dir) return;
+      e.preventDefault();
+      const els = folderRefs.current.filter(Boolean);
+      const at = els.indexOf(document.activeElement);
+      const next = at === -1 ? 0 : (at + dir + els.length) % els.length;
+      els[next].focus();
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  });
+
+  return (
+    <div className={s.computer}>
+      <div className={s.screen}>
+        {stage === "boot" && (
+          <section className={s.boot} onClick={wake}>
+            <span className={s.bootFlower}>
+              <Flower size="100%" />
+            </span>
+            <p className={s.bootHint}>touch the matrix pad</p>
+          </section>
+        )}
+
+        {stage && stage !== "boot" && (
+          <header className={s.bar}>
+            <span className={s.barName}>
+              <Flower size={18} />
+              soft os
+            </span>
+            <span className={s.barMid}>
+              {stage === "desktop" && playing ? mode : ""}
+            </span>
+            <span>404 time not found</span>
+          </header>
+        )}
+
+        {stage === "hello" && (
+          <section className={s.hello} onClick={goOn}>
+            <div className={s.helloText}>
+              <h1 className={s.helloTitle}>
+                hello, i am
+                <br />
+                the soft computer.
+              </h1>
+              <p>
+                what can a soft computer do
+                <br />
+                that a hard computer never could?
+              </p>
+              <p>
+                what becomes possible when we design
+                <br />
+                around care rather than command?
+              </p>
+              <p className={s.helloHint}>
+                press a button to begin
+                <br />
+                or press enter to continue
+              </p>
+            </div>
+            <footer className={s.helloFoot}>
+              warning: this computer prefers slowness.
+              <br />[ soft computer v1.0 ]
+            </footer>
+          </section>
+        )}
+
+        {stage === "desktop" && !playing && (
+          <section className={s.desk}>
+            <nav className={s.folders} aria-label="pages">
+              {FOLDERS.map((f, i) => (
+                <Link
+                  key={f.href}
+                  href={f.href}
+                  className={s.folder}
+                  ref={(el) => {
+                    folderRefs.current[i] = el;
+                  }}
+                  onClick={(e) => openFolder(e, f.href)}
+                >
+                  <FolderIcon />
+                  <span className={s.folderLabel}>{f.label}</span>
+                </Link>
               ))}
-            </div>
-            <div className="softOS__title">
-              soft.computer — {activeCorpus ? CORPUS_LABELS[activeCorpus] : ""}
-            </div>
-            <div className="softOS__state">
-              {mobileDreaming ? "dream" : mobileGenerating ? "play" : "wake"}
-            </div>
-          </div>
-          <div
-            className={
-              "softOS__display" +
-              (mobileDreaming ? " softOS__display--dreaming" : "")
-            }
-          >
-            <p
+            </nav>
+          </section>
+        )}
+
+        {stage === "desktop" && playing && (
+          <section className={s.playScreen}>
+            <div
+              key={run}
               className={
-                "softOS__text" +
-                (mobileDreaming ? " softOS__text--dreaming" : "")
+                s.playBody + (mode === "dream" ? " " + s.dreaming : "")
               }
             >
-              {mobileText}
-              {mobileGenerating && (
-                <span
-                  className="softOS__cursor"
-                  style={{ background: col.dot }}
-                />
-              )}
-            </p>
+              <p className={s.poem}>
+                {words.map((w, i) => (
+                  <span key={id + "-" + i} className={s.word}>
+                    {w}{" "}
+                  </span>
+                ))}
+                {mode === "play" && <span className={s.caret} />}
+              </p>
+            </div>
+            <footer className={s.playFoot}>
+              <span>[ {CORPUS_LABELS[corpus]} ]</span>
+              <button
+                type="button"
+                className={s.again}
+                onClick={() => setRun((r) => r + 1)}
+                disabled={mode === "play"}
+              >
+                draw again
+              </button>
+              <button type="button" className={s.again} onClick={closePlay}>
+                home
+              </button>
+            </footer>
+          </section>
+        )}
+
+        {flash > 0 && (
+          <div key={flash} className={s.refresh} aria-hidden="true">
+            <i className={s.inv} />
+            <i className={s.blk} />
+            <i className={s.wht} />
           </div>
-          <div className="softOS__buttons">
-            {Object.entries(BUTTONS).map(([key, c]) => {
-              const isActive = activeCorpus === key;
-              const isPulsing = mobilePulse === key;
-              let cls = "softOS__btn";
-              if (isActive) cls += " softOS__btn--active";
-              if (isPulsing) cls += " softOS__btn--pulse";
-              return (
-                <button
-                  key={key}
-                  type="button"
-                  className={cls}
-                  onClick={() => handleMobileButton(key)}
-                  aria-label={c.label}
-                  style={{
-                    background: c.bg,
-                    boxShadow: isActive
-                      ? "0 6px 20px " +
-                        c.shadow +
-                        "99, inset 0 -2px 4px " +
-                        c.shadow +
-                        "44"
-                      : "0 3px 8px rgba(0,0,0,0.08), inset 0 -2px 3px rgba(0,0,0,0.06)",
-                  }}
-                />
-              );
-            })}
-          </div>
-        </div>
-        <style>{`@keyframes scblink { 0%, 100% { opacity: 0.7; } 50% { opacity: 0; } }`}</style>
-      </main>
-    );
-  }
-
-  // ── desktop layout ──
-  return (
-    <main style={{ minHeight: "100vh", position: "relative" }}>
-      {/* open windows */}
-      {windows.map((w) => (
-        <SoftWindow
-          key={w.id}
-          id={w.id}
-          corpus={w.corpus}
-          onClose={() => closeWindow(w.id)}
-          initialX={w.x}
-          initialY={w.y}
-          isMobile={false}
-        />
-      ))}
-
-      {/* empty state hint */}
-      {windows.length === 0 && (
-        <div
-          style={{
-            position: "fixed",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            textAlign: "center",
-            pointerEvents: "none",
-          }}
-        >
-          <p
-            style={{
-              fontFamily: "var(--font-mono)",
-              fontSize: 11,
-              color: "rgba(43,33,64,0.35)",
-              letterSpacing: "0.06em",
-            }}
-          >
-            press a button to open a window
-          </p>
-        </div>
-      )}
-
-      {/* fixed button bar */}
-      <div
-        style={{
-          position: "fixed",
-          bottom: 32,
-          left: "50%",
-          transform: "translateX(-50%)",
-          display: "flex",
-          gap: 20,
-          alignItems: "center",
-          background: "rgba(248,246,255,0.88)",
-          backdropFilter: "blur(12px)",
-          border: "1px solid rgba(60,35,110,0.12)",
-          borderRadius: 999,
-          padding: "14px 28px",
-          boxShadow:
-            "0 8px 32px rgba(35,20,70,0.12), 0 2px 8px rgba(35,20,70,0.06)",
-          zIndex: 200,
-        }}
-      >
-        {Object.entries(BUTTONS).map(([key, c]) => (
-          <button
-            key={key}
-            type="button"
-            onClick={() => openWindow(key)}
-            aria-label={c.label}
-            title={c.label}
-            style={{
-              width: 44,
-              height: 44,
-              borderRadius: "50%",
-              border: "none",
-              background: c.bg,
-              cursor: "pointer",
-              transition: "all 140ms ease",
-              boxShadow:
-                "0 3px 10px " +
-                c.shadow +
-                "88, inset 0 -2px 3px rgba(0,0,0,0.06)",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = "scale(1.12)";
-              e.currentTarget.style.boxShadow =
-                "0 6px 18px " +
-                c.shadow +
-                "bb, inset 0 -2px 4px rgba(0,0,0,0.08)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = "scale(1)";
-              e.currentTarget.style.boxShadow =
-                "0 3px 10px " +
-                c.shadow +
-                "88, inset 0 -2px 3px rgba(0,0,0,0.06)";
-            }}
-          />
-        ))}
+        )}
       </div>
 
-      <style>{`@keyframes scblink { 0%, 100% { opacity: 0.7; } 50% { opacity: 0; } }`}</style>
-    </main>
+      <SoftDock
+        active={playing ? corpus : null}
+        onPress={press}
+        onTouch={touchPad}
+        side={
+          <>
+            {stage === "desktop" && playing && (
+              <button type="button" className={s.play} onClick={closePlay}>
+                home
+              </button>
+            )}
+            {stage === "desktop" && !playing && (
+              <button type="button" className={s.play} onClick={openPlay}>
+                play
+              </button>
+            )}
+            <span className={s.keys}>
+              1–4 buttons
+              <br />
+              arrows + enter
+            </span>
+          </>
+        }
+      />
+    </div>
   );
 }
