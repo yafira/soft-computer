@@ -1,17 +1,17 @@
 import Link from "next/link";
 
 export const metadata = {
-  title: "make • soft.computer",
+  title: "diy • soft.computer",
   description:
     "a guide to making your own soft computer — materials, electronics, knitting, corpus, and code.",
 };
 
-export default function MakePage() {
+export default function DiyPage() {
   return (
     <main className="wrap">
       <section className="panel">
         <div className="h1" style={{ marginBottom: 6 }}>
-          make
+          diy
         </div>
         <p className="p subtle" style={{ marginTop: 0 }}>
           a guide to building your own soft computer. this is not a strict

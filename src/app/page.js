@@ -12,7 +12,7 @@ import { CHAINS, CORPUS_LABELS, generate } from "../lib/softText";
 const FOLDERS = [
   { href: "/about", label: "about" },
   { href: "/process", label: "process" },
-  { href: "/make", label: "make" },
+  { href: "/diy", label: "diy" },
   { href: "/language", label: "language" },
   { href: "/resources", label: "resources" },
   { href: "/log", label: "log" },

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-const PAGES = ["about", "process", "make", "language", "resources", "log"];
+const PAGES = ["about", "process", "diy", "language", "resources", "log"];
 
 function Flower() {
   return (

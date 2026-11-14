@@ -18,7 +18,7 @@ a [Next.js](https://nextjs.org) app (app router) with a few distinct areas:
 | `/` | soft os — the whole page is the soft computer's e-ink screen, with its matrix pad and four felt buttons underneath. runs the same corpus + markov chain logic as the physical object, in-browser |
 | `/about` | full project write-up: concept, materials, electronics, corpus design, user testing |
 | `/process` | process notes |
-| `/make` | a build guide for anyone who wants to make their own soft computer |
+| `/diy` | a build guide for anyone who wants to make their own soft computer |
 | `/language` | how the soft computer writes: the four corpora, how a markov chain works (with a step-by-step demo), and why some of it doesn't make sense |
 | `/resources` | reading list, pulled live from a zotero collection |
 | `/log` | dated process log / notebook |
@@ -40,7 +40,7 @@ the homepage runs in this order:
 
    ![the hello screen: hello, i am the soft computer](docs/readme/02-hello.jpg)
 
-3. **desktop** — press enter to reach the folders: about, process, make, language, resources, log
+3. **desktop** — press enter to reach the folders: about, process, diy, language, resources, log
 
    ![the desktop, with folders down the left and a faint blossom behind them](docs/readme/03-desktop.jpg)
 
@@ -95,7 +95,7 @@ open [http://localhost:3000](http://localhost:3000).
 
 ### environment variables
 
-most of the site (the homepage, `/about`, `/make`, `/language`) runs with no configuration. the following are only needed for the pieces that talk to external services:
+most of the site (the homepage, `/about`, `/diy`, `/language`) runs with no configuration. the following are only needed for the pieces that talk to external services:
 
 ```bash
 # upstash redis — log, punch card, concept images
@@ -116,7 +116,7 @@ ZOTERO_COLLECTION_KEY=
 ZOTERO_API_KEY=
 ```
 
-copy these into a `.env.local` file. none of this is required just to browse the site locally or read through `/about`, `/make`, and `/language`.
+copy these into a `.env.local` file. none of this is required just to browse the site locally or read through `/about`, `/diy`, and `/language`.
 
 ## deploy
 
@@ -124,10 +124,10 @@ the easiest path is [Vercel](https://vercel.com/new), which the live site runs o
 
 ## license + use
 
-the write-ups, patterns, corpus text, and build documentation for the physical object are open — see [`/make`](https://thesoft.computer/make) if you want to build your own soft computer. this repo (the website code itself) is shared for reference; if you're reusing substantial chunks of it, a credit back to [thesoft.computer](https://thesoft.computer) is appreciated.
+the write-ups, patterns, corpus text, and build documentation for the physical object are open — see [`/diy`](https://thesoft.computer/diy) if you want to build your own soft computer. this repo (the website code itself) is shared for reference; if you're reusing substantial chunks of it, a credit back to [thesoft.computer](https://thesoft.computer) is appreciated.
 
 ## about the project
 
 the soft computer started as a thesis at [NYU ITP](https://itp.nyu.edu/thesis/archive/2026/12305-yafira-martinez/) and is continuing to grow beyond it. full documentation lives at [thesoft.computer/about](https://thesoft.computer/about).
 
-made by [yafira martinez](https://yafira.xyz).
+made by [yafira (electrocute)](https://yafira.xyz).
