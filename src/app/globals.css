@@ -2266,3 +2266,80 @@ body {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+/* 404: plain and big */
+.notFound {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  padding: 24px;
+  background: #e9e8e2;
+  box-shadow: inset 0 0 90px rgba(0, 0, 0, 0.08);
+  color: #161616;
+  text-align: center;
+  font-family: var(--font-mono);
+}
+
+/* same paper grain as the homepage screen */
+.notFound::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.14;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .6 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+}
+
+/* the 404 sits in a black box and blinks like a cursor */
+.notFoundCode {
+  margin: 0;
+  padding: 0.08em 0.16em 0.12em;
+  background: #161616;
+  color: #e9e8e2;
+  font-size: clamp(120px, 30vw, 360px);
+  font-weight: 400;
+  line-height: 0.9;
+  letter-spacing: -0.02em;
+}
+
+.notFoundBlink {
+  animation: notFoundBlink 2.4s steps(1) infinite;
+}
+
+@keyframes notFoundBlink {
+  50% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .notFoundBlink {
+    animation: none;
+  }
+}
+
+.notFoundText {
+  margin: 0;
+  font-size: clamp(22px, 4vw, 44px);
+}
+
+.notFoundHome {
+  margin-top: 18px;
+  padding: 6px 18px;
+  border: 2px solid #161616;
+  box-shadow: 3px 3px 0 #161616;
+  font-size: 14px;
+}
+
+.notFoundHome:hover,
+.notFoundHome:focus-visible {
+  background: #161616;
+  color: #e9e8e2;
+  outline: none;
+}
