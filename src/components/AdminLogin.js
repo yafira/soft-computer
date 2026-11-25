@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-// shown on admin pages until the password is entered
+// shown on admin pages until the password is entered, as an old system dialog
 export default function AdminLogin() {
   const router = useRouter();
   const [password, setPassword] = useState("");
@@ -21,27 +22,51 @@ export default function AdminLogin() {
       setStatus("");
       router.refresh();
     } else {
-      setStatus("that's not it");
+      setStatus("that's not it. try again.");
+      setPassword("");
     }
   }
 
   return (
-    <main className="wrap">
-      <form className="panel adminLogin" onSubmit={onSubmit}>
-        <div className="h2">admin</div>
-        <input
-          className="input"
-          type="password"
-          autoComplete="current-password"
-          placeholder="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          autoFocus
-        />
-        <button type="submit" className="btn">
-          sign in
-        </button>
-        {status && <span className="small subtle">{status}</span>}
+    <main className="loginScreen">
+      <form className="loginDialog" onSubmit={onSubmit}>
+        <div className="loginTitle">
+          <span className="loginTitleName">sign in</span>
+        </div>
+        <div className="loginBody">
+          <span className="blossom loginBlossom" aria-hidden="true" />
+          <div className="loginFields">
+            <p className="loginText">
+              welcome to soft os.
+              <br />
+              enter the password to open admin.
+            </p>
+            <label className="loginLabel">
+              password
+              <input
+                className="loginInput"
+                type="password"
+                autoComplete="current-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                autoFocus
+              />
+            </label>
+            <p className="loginStatus" role="status">
+              {status}
+            </p>
+          </div>
+        </div>
+        <div className="loginActions">
+          <Link href="/" className="loginButton">
+            cancel
+          </Link>
+          <span className="loginDefault">
+            <button type="submit" className="loginButton">
+              sign in
+            </button>
+          </span>
+        </div>
       </form>
     </main>
   );
