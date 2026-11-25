@@ -4,6 +4,20 @@ const nextConfig = {
   async redirects() {
     return [{ source: "/make", destination: "/diy", permanent: true }];
   },
+  // the tiny soft computer workshop site lives in its own project,
+  // served here so it shows up at thesoft.computer/tiny
+  async rewrites() {
+    return [
+      {
+        source: "/tiny",
+        destination: "https://tiny-soft-computer.vercel.app/tiny",
+      },
+      {
+        source: "/tiny/:path*",
+        destination: "https://tiny-soft-computer.vercel.app/tiny/:path*",
+      },
+    ];
+  },
   images: {
     remotePatterns: [
       {
