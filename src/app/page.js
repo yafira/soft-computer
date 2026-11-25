@@ -13,6 +13,8 @@ const FOLDERS = [
   { href: "/about", label: "about" },
   { href: "/process", label: "process" },
   { href: "/diy", label: "diy" },
+  // the workshop site is its own project, served at /tiny, so it opens as a full page load
+  { href: "/tiny", label: "workshop", hard: true },
   { href: "/language", label: "language" },
   { href: "/resources", label: "resources" },
   { href: "/log", label: "log" },
@@ -204,10 +206,10 @@ export default function HomePage() {
     }
   }
 
-  function openFolder(e, href) {
+  function openFolder(e, href, hard) {
     if (e.metaKey || e.ctrlKey || e.shiftKey || e.button === 1) return;
     e.preventDefault();
-    refresh(() => router.push(href));
+    refresh(() => (hard ? window.location.assign(href) : router.push(href)));
   }
 
   // keyboard stands in for the hardware too: 1-4 are the felt buttons, arrows walk the folders
@@ -313,11 +315,12 @@ export default function HomePage() {
                 <Link
                   key={f.href}
                   href={f.href}
+                  prefetch={f.hard ? false : undefined}
                   className={s.folder}
                   ref={(el) => {
                     folderRefs.current[i] = el;
                   }}
-                  onClick={(e) => openFolder(e, f.href)}
+                  onClick={(e) => openFolder(e, f.href, f.hard)}
                 >
                   <FolderIcon />
                   <span className={s.folderLabel}>{f.label}</span>
