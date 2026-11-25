@@ -1,13 +1,11 @@
 import { NextResponse } from "next/server";
+import { isAdminRequest } from "@/lib/adminAuth";
 import { redis } from "@/lib/redis";
 
 const KEY = "softcomputer:logs";
-const ADMIN_TOKEN = process.env.ADMIN_LOG_TOKEN || "";
-
+// signed-in admin, or a script sending the server-side token
 function isAuthorized(req) {
-  if (!ADMIN_TOKEN) return false;
-  const got = (req.headers.get("x-admin-token") || "").trim();
-  return got === ADMIN_TOKEN.trim();
+  return isAdminRequest(req, "ADMIN_LOG_TOKEN");
 }
 
 function cleanEntry(e) {
@@ -26,7 +24,7 @@ function cleanEntry(e) {
 }
 
 export async function POST(req) {
-  if (!isAuthorized(req)) {
+  if (!(await isAuthorized(req))) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
   try {

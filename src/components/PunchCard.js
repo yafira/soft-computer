@@ -4,8 +4,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { upload } from "@vercel/blob/client";
 import { formatLabel, monthRange, parseLabel } from "@/lib/logDates";
 
-const ADMIN_TOKEN = process.env.NEXT_PUBLIC_ADMIN_LOG_TOKEN || "";
-
 // sep 2025 through this month, one row each
 const MONTHS = monthRange();
 
@@ -404,7 +402,6 @@ export default function PunchCard({
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-admin-token": ADMIN_TOKEN,
         },
         body: JSON.stringify({
           id,
@@ -437,7 +434,6 @@ export default function PunchCard({
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
-          "x-admin-token": ADMIN_TOKEN,
         },
         body: JSON.stringify({ id }),
       });
@@ -464,7 +460,6 @@ export default function PunchCard({
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-admin-token": ADMIN_TOKEN,
         },
         body: JSON.stringify({
           id,

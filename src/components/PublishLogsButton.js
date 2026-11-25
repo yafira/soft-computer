@@ -4,10 +4,7 @@ import { useCallback, useState } from "react";
 
 const STORAGE_KEY = "softcomputer_process_2026";
 
-// IMPORTANT:
-// - this must match your Vercel env var name: ADMIN_LOG_TOKEN
-// - and MUST be exposed to the browser with NEXT_PUBLIC_
-const CLIENT_ADMIN_TOKEN = process.env.NEXT_PUBLIC_ADMIN_LOG_TOKEN || "";
+// publishing needs you to be signed in at /admin
 
 const months = [
   "jan",
@@ -103,7 +100,6 @@ export default function PublishLogsButton() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-admin-token": CLIENT_ADMIN_TOKEN,
         },
         body: JSON.stringify({ entries }),
       });

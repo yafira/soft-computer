@@ -2080,3 +2080,28 @@ body {
   color: #e9e8e2;
   outline: none;
 }
+
+.adminSignOut {
+  margin-left: auto;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+}
+
+.adminSignOut:hover,
+.adminSignOut:focus-visible {
+  background: #161616;
+  color: #e9e8e2;
+  outline: none;
+}
+
+.adminLogin {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  max-width: 460px;
+  margin: 40px auto;
+}

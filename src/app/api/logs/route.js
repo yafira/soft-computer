@@ -1,13 +1,12 @@
 import { NextResponse } from "next/server";
+import { isAdminRequest } from "@/lib/adminAuth";
 import { redis } from "@/lib/redis";
 import { formatLabel, labelScore, parseLabel, withYear } from "@/lib/logDates";
 
 const KEY = "softcomputer:logs";
-const ADMIN_TOKEN = process.env.ADMIN_LOG_TOKEN || "";
-
+// signed-in admin, or a script sending the server-side token
 function isAuthorized(req) {
-  if (!ADMIN_TOKEN) return false;
-  return (req.headers.get("x-admin-token") || "").trim() === ADMIN_TOKEN.trim();
+  return isAdminRequest(req, "ADMIN_LOG_TOKEN");
 }
 
 // migrate legacy entry to content blocks — images go at end
@@ -84,7 +83,7 @@ export async function GET() {
 }
 
 export async function POST(req) {
-  if (!isAuthorized(req)) {
+  if (!(await isAuthorized(req))) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
   try {
@@ -138,7 +137,7 @@ export async function POST(req) {
 }
 
 export async function DELETE(req) {
-  if (!isAuthorized(req)) {
+  if (!(await isAuthorized(req))) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
   try {

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { ADMIN_COOKIE, adminCookieValue } from "@/lib/adminAuth";
 
 const PASSWORD = process.env.ADMIN_LOG_PASSWORD;
 
@@ -13,7 +14,7 @@ export async function POST(req) {
 
     const res = NextResponse.json({ ok: true });
 
-    res.cookies.set("softcomputer_admin", "yes", {
+    res.cookies.set(ADMIN_COOKIE, await adminCookieValue(), {
       httpOnly: true,
       secure: true,
       sameSite: "strict",

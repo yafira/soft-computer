@@ -1,5 +1,6 @@
 import { put } from "@vercel/blob";
 import { kv } from "@/lib/kv";
+import { isAdminRequest } from "@/lib/adminAuth";
 
 export const runtime = "nodejs";
 
@@ -7,7 +8,9 @@ export async function POST(req) {
   const form = await req.formData();
 
   const token = form.get("token");
-  if (token !== process.env.ADMIN_UPLOAD_TOKEN) {
+  const tokenOk =
+    !!process.env.ADMIN_UPLOAD_TOKEN && token === process.env.ADMIN_UPLOAD_TOKEN;
+  if (!tokenOk && !(await isAdminRequest(req, "ADMIN_UPLOAD_TOKEN"))) {
     return new Response("unauthorized", { status: 401 });
   }
 

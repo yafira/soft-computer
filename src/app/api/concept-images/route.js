@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { isAdminRequest } from "@/lib/adminAuth";
 import { Redis } from "@upstash/redis";
 
 const redis = new Redis({
@@ -7,12 +8,9 @@ const redis = new Redis({
 });
 
 const KEY = "softcomputer:concept-images";
-const ADMIN_TOKEN = process.env.ADMIN_UPLOAD_TOKEN || "";
-
+// signed-in admin, or a script sending the server-side token
 function isAuthorized(req) {
-  if (!ADMIN_TOKEN) return false;
-  const got = req.headers.get("x-admin-token") || "";
-  return got && got === ADMIN_TOKEN;
+  return isAdminRequest(req, "ADMIN_UPLOAD_TOKEN");
 }
 
 function safeArray(value) {
@@ -34,7 +32,7 @@ export async function GET() {
 
 export async function POST(req) {
   try {
-    if (!isAuthorized(req)) {
+    if (!(await isAuthorized(req))) {
       return NextResponse.json({ error: "unauthorized" }, { status: 401 });
     }
     const body = await req.json().catch(() => ({}));
@@ -78,7 +76,7 @@ export async function POST(req) {
 
 export async function PATCH(req) {
   try {
-    if (!isAuthorized(req)) {
+    if (!(await isAuthorized(req))) {
       return NextResponse.json({ error: "unauthorized" }, { status: 401 });
     }
     const body = await req.json().catch(() => ({}));
@@ -105,7 +103,7 @@ export async function PATCH(req) {
 
 export async function DELETE(req) {
   try {
-    if (!isAuthorized(req)) {
+    if (!(await isAuthorized(req))) {
       return NextResponse.json({ error: "unauthorized" }, { status: 401 });
     }
     const body = await req.json().catch(() => ({}));

@@ -1,11 +1,8 @@
 export async function saveLogToRedis({ label, text }) {
-  const token = process.env.NEXT_PUBLIC_ADMIN_LOG_TOKEN || "";
-
   const res = await fetch("/api/logs", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "x-admin-token": token,
     },
     body: JSON.stringify({ label, text }),
   });

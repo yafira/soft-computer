@@ -30,6 +30,16 @@ export default function Nav() {
         <Link href="/admin">admin</Link>
         <Link href="/admin/log">log editor</Link>
         <Link href="/log">public log</Link>
+        <button
+          type="button"
+          className="adminSignOut"
+          onClick={async () => {
+            await fetch("/admin/logout", { method: "POST" });
+            window.location.reload();
+          }}
+        >
+          sign out
+        </button>
       </header>
     );
   }
