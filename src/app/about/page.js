@@ -1092,6 +1092,11 @@ export default function AboutPage() {
                     open hardware summit, berlin, may 2026 — presented as an
                     open hardware summit fellow
                   </li>
+                  <li>
+                    they make you write your poems: artistic practices amid
+                    automated cognition, onassis onx, new york, october 2026
+                  </li>
+                  <li>girl irl, no such thing, brooklyn, november 2026</li>
                 </ul>
               </div>
             </div>
@@ -1118,6 +1123,8 @@ export default function AboutPage() {
                   <li>itp thesis show @ nyc resistor, april 2026</li>
                   <li>itp/ima spring show, may 2026</li>
                   <li>open hardware summit, berlin, may 2026</li>
+                  <li>onassis onx, new york, october 2026</li>
+                  <li>girl irl @ no such thing, brooklyn, november 2026</li>
                 </ul>
               </div>
             </div>
@@ -1181,8 +1188,9 @@ export default function AboutPage() {
               <div className="aboutMetaRow">
                 <div className="aboutMetaKey">exhibitions</div>
                 <div className="aboutMetaVal">
-                  periphery - itp thesis's show @ nyc resistor, itp/ima spring
-                  show, open hardware summit berlin (fellow 2026)
+                  periphery - itp thesis&#39;s show @ nyc resistor, itp/ima spring
+                  show, open hardware summit berlin (fellow 2026), they make
+                  you write your poems @ onassis onx, girl irl @ no such thing
                 </div>
               </div>
             </div>
