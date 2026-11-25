@@ -122,34 +122,56 @@ function getEmbedUrl(input) {
   return null;
 }
 
+// one photo shows whole; three or more in a row become a grid of squares
+function Photos({ urls, start = 0 }) {
+  if (urls.length < 3) {
+    return urls.map((url, i) => (
+      <div key={url + i} className="logPhoto">
+        <img src={url} alt={`image ${start + i + 1}`} />
+      </div>
+    ));
+  }
+  const cols = urls.length === 4 ? 2 : 3;
+  return (
+    <div className="logPhotoGrid" style={{ "--cols": cols }}>
+      {urls.map((url, i) => (
+        <a
+          key={url + i}
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="logPhotoTile"
+        >
+          <img src={url} alt={`image ${start + i + 1}`} loading="lazy" />
+        </a>
+      ))}
+    </div>
+  );
+}
+
+// photos next to each other in an entry are shown together
+function groupBlocks(content) {
+  const groups = [];
+  content.forEach((block, i) => {
+    const last = groups[groups.length - 1];
+    if (block.type === "image" && last?.type === "photos") {
+      last.urls.push(block.url);
+    } else if (block.type === "image") {
+      groups.push({ type: "photos", urls: [block.url], start: i });
+    } else {
+      groups.push({ ...block, index: i });
+    }
+  });
+  return groups;
+}
+
 function EntryContent({ entry }) {
   if (Array.isArray(entry.content) && entry.content.length > 0) {
     return (
       <div style={{ display: "grid", gap: 14 }}>
-        {entry.content.map((block, i) => {
-          if (block.type === "image") {
-            return (
-              <div
-                key={i}
-                style={{
-                  borderRadius: 12,
-                  overflow: "hidden",
-                  border: "1px solid rgba(60,35,110,0.14)",
-                  background: "#fff",
-                }}
-              >
-                <img
-                  src={block.url}
-                  alt={`image ${i + 1}`}
-                  style={{
-                    width: "100%",
-                    display: "block",
-                    objectFit: "contain",
-                    maxHeight: 400,
-                  }}
-                />
-              </div>
-            );
+        {groupBlocks(entry.content).map((block, i) => {
+          if (block.type === "photos") {
+            return <Photos key={i} urls={block.urls} start={block.start} />;
           }
           if (block.type === "video") {
             const embedUrl = getEmbedUrl(block.url);
@@ -204,28 +226,7 @@ function EntryContent({ entry }) {
       : [];
   return (
     <div style={{ display: "grid", gap: 14 }}>
-      {imageUrls.map((url, i) => (
-        <div
-          key={i}
-          style={{
-            borderRadius: 12,
-            overflow: "hidden",
-            border: "1px solid rgba(60,35,110,0.14)",
-            background: "#fff",
-          }}
-        >
-          <img
-            src={url}
-            alt={`image ${i + 1}`}
-            style={{
-              width: "100%",
-              display: "block",
-              objectFit: "contain",
-              maxHeight: 400,
-            }}
-          />
-        </div>
-      ))}
+      <Photos urls={imageUrls} />
       {entry.text?.trim() && (
         <div className="noteBody noteBodyMarkdown">
           <ReactMarkdown remarkPlugins={[remarkGfm]}>
